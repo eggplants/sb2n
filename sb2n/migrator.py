@@ -142,15 +142,17 @@ class Migrator:
             Migration result for this page
         """
         try:
-            # Get page details
-            page_detail = scrapbox.get_page_detail(page_title)
+            # Get page text
             page_text = scrapbox.get_page_text(page_title)
+
+            page_detail = scrapbox.get_page_detail(page_title)
+            created_timestamp = page_detail.created
 
             # Extract tags
             tags = ScrapboxParser.extract_tags(page_text)
 
             # Convert creation date
-            created_date = datetime.fromtimestamp(page_detail.created, tz=timezone.utc)
+            created_date = datetime.fromtimestamp(created_timestamp, tz=timezone.utc)
 
             # Generate Scrapbox URL
             scrapbox_url = scrapbox.get_page_url(page_title)

@@ -43,13 +43,18 @@ class ScrapboxParser:
     def extract_tags(text: str) -> list[str]:
         """Extract hashtags from text.
 
+        Excludes hashtags inside inline code (backticks).
+
         Args:
             text: Text to parse
 
         Returns:
             List of tag names (without # prefix)
         """
-        return ScrapboxParser.TAG_PATTERN.findall(text)
+        # Remove inline code (backticks) to avoid extracting tags from code
+        # Match both single backticks and triple backticks
+        text_without_code = re.sub(r"`[^`]*`", "", text)
+        return ScrapboxParser.TAG_PATTERN.findall(text_without_code)
 
     @staticmethod
     def extract_image_urls(text: str) -> list[str]:

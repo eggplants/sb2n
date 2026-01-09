@@ -12,6 +12,17 @@ def test_extract_tags() -> None:
     assert tags == ["test", "multiple", "tags"]
 
 
+def test_extract_tags_ignores_inline_code() -> None:
+    """Test that tags inside inline code are ignored."""
+    text = "Link internal pages with brackets like this: `[link text]` or like this `#link`"
+    tags = ScrapboxParser.extract_tags(text)
+    assert tags == []
+
+    text_with_real_tag = "This is a real #tag but `#notag` is in code"
+    tags = ScrapboxParser.extract_tags(text_with_real_tag)
+    assert tags == ["tag"]
+
+
 def test_extract_image_urls() -> None:
     """Test image URL extraction."""
     text = "[https://example.com/image.jpg] and [https://gyazo.com/abc123]"
