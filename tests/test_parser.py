@@ -85,6 +85,17 @@ def test_parse_bold_text() -> None:
     assert parsed.rich_text[1].text == "bold text"
 
 
+def test_parse_bold_asterisk_text() -> None:
+    """Test bold text parsing with asterisk notation."""
+    line = "This is [* bold text] in a paragraph"
+    parsed = ScrapboxParser.parse_line(line)
+    assert parsed.line_type == "paragraph"
+    assert parsed.rich_text is not None
+    assert any(elem.bold for elem in parsed.rich_text)
+    bold_elem = next(elem for elem in parsed.rich_text if elem.bold)
+    assert bold_elem.text == "bold text"
+
+
 def test_parse_strikethrough_text() -> None:
     """Test strikethrough text parsing."""
     line = "This has [- strikethrough] text"
@@ -92,6 +103,17 @@ def test_parse_strikethrough_text() -> None:
     assert parsed.line_type == "paragraph"
     assert parsed.rich_text is not None
     assert any(elem.strikethrough for elem in parsed.rich_text)
+
+
+def test_parse_italic_text() -> None:
+    """Test italic text parsing."""
+    line = "This has [/ italic] text"
+    parsed = ScrapboxParser.parse_line(line)
+    assert parsed.line_type == "paragraph"
+    assert parsed.rich_text is not None
+    assert any(elem.italic for elem in parsed.rich_text)
+    italic_elem = next(elem for elem in parsed.rich_text if elem.italic)
+    assert italic_elem.text == "italic"
 
 
 def test_parse_underline_text() -> None:
@@ -130,6 +152,13 @@ def test_parse_external_link_with_text() -> None:
     assert parsed.content == "https://google.com"
     assert parsed.link_text == "Google"
 
+    # Format: [multi word text url]
+    line = "[simple syntax https://scrapbox.io/help/Syntax]"
+    parsed = ScrapboxParser.parse_line(line)
+    assert parsed.line_type == "external_link"
+    assert parsed.content == "https://scrapbox.io/help/Syntax"
+    assert parsed.link_text == "simple syntax"
+
 
 def test_parse_quote() -> None:
     """Test quote block parsing."""
@@ -137,6 +166,13 @@ def test_parse_quote() -> None:
     parsed = ScrapboxParser.parse_line(line)
     assert parsed.line_type == "quote"
     assert parsed.content == "This is a quote"
+    assert parsed.rich_text is not None
+
+    # Test quote without space after >
+    line = ">quote without space"
+    parsed = ScrapboxParser.parse_line(line)
+    assert parsed.line_type == "quote"
+    assert parsed.content == "quote without space"
     assert parsed.rich_text is not None
 
 
@@ -166,3 +202,32 @@ def test_parse_mixed_decorations() -> None:
     assert len(parsed.rich_text) >= 3
     assert any(elem.bold for elem in parsed.rich_text)
     assert any(elem.code for elem in parsed.rich_text)
+
+
+def test_parse_inline_link_with_decorations() -> None:
+    """Test parsing text with inline links and decorations."""
+    line = " Highlight text to [* bold], [- strikethrough], and [/ italicize] or use our [simple syntax https://scrapbox.io/help/Syntax] to style"
+    parsed = ScrapboxParser.parse_line(line)
+    assert parsed.line_type == "list"
+    assert parsed.rich_text is not None
+
+    # Check for bold element
+    bold_elems = [elem for elem in parsed.rich_text if elem.bold]
+    assert len(bold_elems) > 0
+    assert bold_elems[0].text == "bold"
+
+    # Check for strikethrough element
+    strike_elems = [elem for elem in parsed.rich_text if elem.strikethrough]
+    assert len(strike_elems) > 0
+    assert strike_elems[0].text == "strikethrough"
+
+    # Check for italic element
+    italic_elems = [elem for elem in parsed.rich_text if elem.italic]
+    assert len(italic_elems) > 0
+    assert italic_elems[0].text == "italicize"
+
+    # Check for link element
+    link_elems = [elem for elem in parsed.rich_text if elem.link_url]
+    assert len(link_elems) > 0
+    assert link_elems[0].text == "simple syntax"
+    assert link_elems[0].link_url == "https://scrapbox.io/help/Syntax"

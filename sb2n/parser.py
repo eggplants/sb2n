@@ -68,12 +68,20 @@ class ScrapboxParser:
     HEADING_PATTERN = re.compile(r"^\[(\*+)\s+(.+)\]$")
     CODE_BLOCK_PATTERN = re.compile(r"^code:(.+)$")
     TABLE_PATTERN = re.compile(r"^table:(.+)$")
-    QUOTE_PATTERN = re.compile(r"^>\s+(.+)$")
+    QUOTE_PATTERN = re.compile(r"^>\s*(.+)$")
     LINK_PATTERN = re.compile(r"\[([^\]]+)\]")
     # External link with display text: [text url] or [url text]
-    EXTERNAL_LINK_PATTERN = re.compile(r"\[([^\s\]]+)\s+(https?://[^\]]+)\]|\[(https?://[^\s\]]+)\s+([^\]]+)\]")
+    # Matches: [text with spaces https://url] or [https://url text with spaces]
+    # Negative lookahead to exclude decoration patterns: [* ], [- ], [/ ], [_ ], [[ ]]
+    EXTERNAL_LINK_PATTERN = re.compile(
+        r"\[(?![*\-/_\[])"  # Not followed by decoration markers
+        r"(.+?)\s+(https?://[^\s\]]+)\]"  # [text url] format
+        r"|\[(https?://[^\s\]]+)\s+(.+?)\]"  # [url text] format
+    )
     # Text decorations
     BOLD_PATTERN = re.compile(r"\[\[([^\]]+)\]\]")
+    BOLD_ASTERISK_PATTERN = re.compile(r"\[\*\s+([^\]]+)\]")  # [* text] inline bold
+    ITALIC_PATTERN = re.compile(r"\[/\s+([^\]]+)\]")
     STRIKETHROUGH_PATTERN = re.compile(r"\[-\s+([^\]]+)\]")
     UNDERLINE_PATTERN = re.compile(r"\[_\s+([^\]]+)\]")
     INLINE_CODE_PATTERN = re.compile(r"`([^`]+)`")
@@ -199,8 +207,9 @@ class ScrapboxParser:
             return ParsedLine(original=line, line_type="image", content=image_urls[0])
 
         # External link with display text: [text url] or [url text]
+        # Only treat as external_link if the entire line is the link
         external_link_match = ScrapboxParser.EXTERNAL_LINK_PATTERN.search(stripped)
-        if external_link_match:
+        if external_link_match and external_link_match.group(0) == stripped:
             # Check which group matched
             if external_link_match.group(1):  # [text url] format
                 link_text = external_link_match.group(1)
@@ -218,9 +227,7 @@ class ScrapboxParser:
         # Regular URL (bookmark)
         urls = ScrapboxParser.extract_urls(stripped)
         if urls and stripped.startswith("[") and stripped.endswith("]"):
-            return ParsedLine(original=line, line_type="url", content=urls[0])
-
-        # List item (indented)
+            return ParsedLine(original=line, line_type="url", content=urls[0])  # List item (indented)
         if indent_level > 0:
             # Parse rich text for list items
             rich_text = ScrapboxParser._parse_rich_text(stripped)
@@ -327,26 +334,47 @@ class ScrapboxParser:
         # This is a basic implementation that handles non-nested decorations
 
         # First, let's find all decoration matches with their positions
-        decorations: list[tuple[int, int, str, str]] = [
+        decorations: list[tuple[int, int, str, str, str | None]] = [
             # Bold: `[[text]]`
             *[
-                (match.start(), match.end(), "bold", match.group(1))
+                (match.start(), match.end(), "bold", match.group(1), None)
                 for match in ScrapboxParser.BOLD_PATTERN.finditer(text)
+            ],
+            # Bold asterisk: `[* text]`
+            *[
+                (match.start(), match.end(), "bold", match.group(1), None)
+                for match in ScrapboxParser.BOLD_ASTERISK_PATTERN.finditer(text)
+            ],
+            # Italic: `[/ text]`
+            *[
+                (match.start(), match.end(), "italic", match.group(1), None)
+                for match in ScrapboxParser.ITALIC_PATTERN.finditer(text)
             ],
             # Strikethrough: `[- text]`
             *[
-                (match.start(), match.end(), "strikethrough", match.group(1))
+                (match.start(), match.end(), "strikethrough", match.group(1), None)
                 for match in ScrapboxParser.STRIKETHROUGH_PATTERN.finditer(text)
             ],
             # Underline: `[_ text]`
             *[
-                (match.start(), match.end(), "underline", match.group(1))
+                (match.start(), match.end(), "underline", match.group(1), None)
                 for match in ScrapboxParser.UNDERLINE_PATTERN.finditer(text)
             ],
             # Inline code: `code`
             *[
-                (match.start(), match.end(), "code", match.group(1))
+                (match.start(), match.end(), "code", match.group(1), None)
                 for match in ScrapboxParser.INLINE_CODE_PATTERN.finditer(text)
+            ],
+            # External links: [text url] or [url text]
+            *[
+                (
+                    match.start(),
+                    match.end(),
+                    "link",
+                    match.group(1) if match.group(1) else match.group(4),
+                    match.group(2) if match.group(1) else match.group(3),
+                )
+                for match in ScrapboxParser.EXTERNAL_LINK_PATTERN.finditer(text)
             ],
         ]
 
@@ -354,12 +382,21 @@ class ScrapboxParser:
         if not decorations:
             return [RichTextElement(text=text)]
 
-        # Sort by position
-        decorations.sort(key=lambda x: x[0])
+        # Sort by position, then by length (shorter matches first to handle nested patterns)
+        decorations.sort(key=lambda x: (x[0], x[1] - x[0]))
+
+        # Remove overlapping decorations (keep the first one at each position)
+        filtered_decorations: list[tuple[int, int, str, str, str | None]] = []
+        last_end = 0
+        for decoration in decorations:
+            start = decoration[0]
+            if start >= last_end:
+                filtered_decorations.append(decoration)
+                last_end = decoration[1]
 
         # Build elements
         last_pos = 0
-        for start, end, style, content in decorations:
+        for start, end, style, content, url in filtered_decorations:
             # Add plain text before this decoration
             if start > last_pos:
                 plain_text = text[last_pos:start]
@@ -370,12 +407,16 @@ class ScrapboxParser:
             element = RichTextElement(text=content)
             if style == "bold":
                 element.bold = True
+            elif style == "italic":
+                element.italic = True
             elif style == "strikethrough":
                 element.strikethrough = True
             elif style == "underline":
                 element.underline = True
             elif style == "code":
                 element.code = True
+            elif style == "link":
+                element.link_url = url
             elements.append(element)
 
             last_pos = end
