@@ -1,0 +1,120 @@
+"""Command-line interface for sb2n."""
+
+import argparse
+import logging
+import sys
+from pathlib import Path
+
+from sb2n.config import Config
+from sb2n.migrator import Migrator
+
+
+def setup_logging(verbose: bool = False) -> None:
+    """Set up logging configuration.
+
+    Args:
+        verbose: If True, set log level to DEBUG
+    """
+    level = logging.DEBUG if verbose else logging.INFO
+    logging.basicConfig(
+        level=level,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    )
+
+
+def migrate_command(args: argparse.Namespace) -> int:
+    """Execute the migrate command.
+
+    Args:
+        args: Parsed command-line arguments
+
+    Returns:
+        Exit code (0 for success, 1 for failure)
+    """
+    try:
+        # Load configuration
+        env_file = Path(args.env_file) if args.env_file else None
+        config = Config.from_env(env_file)
+        config.validate()
+
+        # Create and run migrator
+        migrator = Migrator(config, dry_run=args.dry_run, limit=args.limit)
+        summary = migrator.migrate_all()
+
+        # Return success only if all pages migrated successfully
+        if summary.failed == 0:
+            return 0
+        return 1
+
+    except ValueError as e:
+        logging.error(f"Configuration error: {e}")
+        return 1
+    except Exception as e:
+        logging.exception(f"Migration failed: {e}")
+        return 1
+
+
+def main() -> None:
+    """Main entry point for CLI."""
+    parser = argparse.ArgumentParser(
+        prog="sb2n",
+        description="Scrapbox to Notion migration tool",
+    )
+
+    parser.add_argument(
+        "--version",
+        action="version",
+        version="%(prog)s 0.1.0",
+    )
+
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        action="store_true",
+        help="Enable verbose output (DEBUG level logging)",
+    )
+
+    subparsers = parser.add_subparsers(dest="command", help="Available commands")
+
+    # migrate command
+    migrate_parser = subparsers.add_parser(
+        "migrate",
+        help="Migrate all pages from Scrapbox to Notion",
+    )
+
+    migrate_parser.add_argument(
+        "--env-file",
+        type=str,
+        help="Path to .env file (default: .env in current directory)",
+    )
+
+    migrate_parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Run without making actual changes to Notion",
+    )
+
+    migrate_parser.add_argument(
+        "-n",
+        "--limit",
+        type=int,
+        help="Limit the number of pages to migrate (default: all pages)",
+    )
+
+    args = parser.parse_args()
+
+    # Set up logging
+    setup_logging(args.verbose)
+
+    # Handle commands
+    if args.command == "migrate":
+        exit_code = migrate_command(args)
+        sys.exit(exit_code)
+    else:
+        parser.print_help()
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()

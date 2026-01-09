@@ -18,7 +18,11 @@ classifiers = [
   "Typing :: Typed",
 ]
 dynamic = [ "version" ]
-dependencies = [  ]
+dependencies = [
+  "notion-client>=2.7",
+  "python-dotenv>=1",
+  "scrapbox-client>=0.1",
+]
 
 urls.repository = "https://github.com/eggplants/sb2n"
 scripts.sb2n = "sb2n.main:main"

@@ -1,10 +1,12 @@
 {
   "language": "en_US",
   "words": [
+    "%2Bxx",
     "asyncio",
     "cooldown",
     "Cosence",
     "docformat",
+    "dotenv",
     "euxo",
     "Helpfeel",
     "junitxml",

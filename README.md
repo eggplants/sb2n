@@ -26,12 +26,44 @@ pipx install sb2n
 
 ## Usage
 
-TBD
+### 1. Set up environment variables
 
-### CLI
+Create a `.env` file in your project directory. (See: [`.env.example`](.env.example))
 
-```shellsession
+### 2. Prepare Notion Database
+
+Create a database in Notion with the following properties:
+
+- **Title** (Title) - Page title
+- **Scrapbox URL** (URL) - Link to original Scrapbox page
+- **Created Date** (Date) - Original creation date
+- **Tags** (Multi-select) - Tags from Scrapbox
+
+### 3. Run migration
+
+```sh
+# Basic migration
+sb2n migrate
+
+# Specify custom .env file
+sb2n migrate --env-file /path/to/.env
+
+# Dry run (no actual changes)
+sb2n migrate --dry-run
+
+# Migrate only first 10 pages
+sb2n migrate -n 10
+
+# Combine options: dry run with limit
+sb2n migrate --dry-run -n 5
+
+# Enable verbose logging
+sb2n -v migrate
 ```
+
+## Development
+
+See [docs/specification.md](docs/specification.md) for detailed specifications.
 
 ## License
 
