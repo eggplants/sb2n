@@ -1,0 +1,35 @@
+{
+  "language": "en_US",
+  "words": [
+    "asyncio",
+    "cooldown",
+    "Cosence",
+    "docformat",
+    "euxo",
+    "Helpfeel",
+    "junitxml",
+    "pdoc",
+    "pipefail",
+    "pipx",
+    "pydocstyle",
+    "pymarkdown",
+    "pymarkdownlnt",
+    "pypi",
+    "pyproject",
+    "pytest",
+    "PYTHONUNBUFFERED",
+    "scrapbox",
+    "sdist",
+    "shellsession",
+    "venv"
+  ],
+  "dictionaries": [],
+  "ignorePaths": [
+    ".gitignore",
+    ".cspell.json"
+  ],
+  "features": {
+    "weighted-suggestions": true
+  },
+  "useGitignore": true
+}
