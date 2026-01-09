@@ -17,10 +17,13 @@ from pydantic_api.notion.models.objects import (
     ImageBlock,
     Page,
     ParagraphBlock,
+    QuoteBlock,
 )
 
 if TYPE_CHECKING:
     from datetime import datetime
+
+    from sb2n.parser import RichTextElement
 
 logger = logging.getLogger(__name__)
 
@@ -195,41 +198,67 @@ class NotionService:
             logger.exception("Failed to append blocks to page: %(page_id)s", {"page_id": page_id})
             raise
 
-    def create_paragraph_block(self, text: str) -> ParagraphBlock:
+    def create_paragraph_block(self, text: str | list[RichTextElement]) -> ParagraphBlock:
         """Create a paragraph block.
 
         Args:
-            text: Paragraph text content
+            text: Paragraph text content (plain string or rich text elements)
 
         Returns:
             Paragraph block object
         """
-        return ParagraphBlock.new(rich_text=text)
+        if isinstance(text, str):
+            return ParagraphBlock.new(rich_text=text)
+        else:
+            rich_text_array = self._convert_rich_text_elements(text)
+            return ParagraphBlock(
+                type="paragraph",
+                paragraph={"rich_text": rich_text_array, "color": "default"},  # type: ignore[typeddict-item]
+            )
 
-    def create_heading_block(self, text: str, level: int = 2) -> Heading2Block | Heading3Block:
+    def create_heading_block(self, text: str | list[RichTextElement], level: int = 2) -> Heading2Block | Heading3Block:
         """Create a heading block.
 
         Args:
-            text: Heading text content
+            text: Heading text content (plain string or rich text elements)
             level: Heading level (2 or 3)
 
         Returns:
             Heading block object
         """
-        if level == 2:  # noqa: PLR2004
-            return Heading2Block.new(rich_text=text)
-        return Heading3Block.new(rich_text=text)
+        if isinstance(text, str):
+            if level == 2:  # noqa: PLR2004
+                return Heading2Block.new(rich_text=text)
+            return Heading3Block.new(rich_text=text)
+        else:
+            rich_text_array = self._convert_rich_text_elements(text)
+            if level == 2:  # noqa: PLR2004
+                return Heading2Block(
+                    type="heading_2",
+                    heading_2={"rich_text": rich_text_array, "color": "default", "is_toggleable": False},  # type: ignore[typeddict-item]
+                )
+            return Heading3Block(
+                type="heading_3",
+                heading_3={"rich_text": rich_text_array, "color": "default", "is_toggleable": False},  # type: ignore[typeddict-item]
+            )
 
-    def create_bulleted_list_block(self, text: str) -> BulletedListItemBlock:
+    def create_bulleted_list_block(self, text: str | list[RichTextElement]) -> BulletedListItemBlock:
         """Create a bulleted list item block.
 
         Args:
-            text: List item text content
+            text: List item text content (plain string or rich text elements)
 
         Returns:
             Bulleted list item block object
         """
-        return BulletedListItemBlock.new(rich_text=text)
+        if isinstance(text, str):
+            return BulletedListItemBlock.new(rich_text=text)
+        else:
+            rich_text_array = self._convert_rich_text_elements(text)
+            return BulletedListItemBlock(
+                type="bulleted_list_item",
+                bulleted_list_item={"rich_text": rich_text_array, "color": "default"},  # type: ignore[typeddict-item]
+            )
 
     def create_code_block(self, code: str, language: str = "plain text") -> CodeBlock:
         """Create a code block.
@@ -297,13 +326,68 @@ class NotionService:
         else:
             return file_upload_id
 
-    def create_bookmark_block(self, url: str) -> BookmarkBlock:
+    def create_bookmark_block(self, url: str, caption: str | None = None) -> BookmarkBlock:
         """Create a bookmark block.
 
         Args:
             url: URL to bookmark
+            caption: Optional caption for the bookmark
 
         Returns:
             Bookmark block object
         """
         return BookmarkBlock.new(url=url)
+
+    def create_quote_block(self, text: str | list[RichTextElement]) -> QuoteBlock:
+        """Create a quote block.
+
+        Args:
+            text: Quote text content (plain string or rich text elements)
+
+        Returns:
+            Quote block object
+        """
+        if isinstance(text, str):
+            return QuoteBlock.new(rich_text=text)
+        else:
+            rich_text_array = self._convert_rich_text_elements(text)
+            return QuoteBlock(
+                type="quote",
+                quote={"rich_text": rich_text_array, "color": "default"},  # type: ignore[typeddict-item]
+            )
+
+    def _convert_rich_text_elements(self, elements: list[RichTextElement]) -> list[dict]:
+        """Convert RichTextElement list to Notion rich_text format.
+
+        Args:
+            elements: List of rich text elements
+
+        Returns:
+            List of Notion rich_text objects
+        """
+        result = []
+        for elem in elements:
+            annotations = {
+                "bold": elem.bold,
+                "italic": elem.italic,
+                "strikethrough": elem.strikethrough,
+                "underline": elem.underline,
+                "code": elem.code,
+            }
+            
+            if elem.link_url:
+                # Link with annotations
+                result.append({
+                    "type": "text",
+                    "text": {"content": elem.text, "link": {"url": elem.link_url}},
+                    "annotations": annotations,
+                })
+            else:
+                # Plain text with annotations
+                result.append({
+                    "type": "text",
+                    "text": {"content": elem.text},
+                    "annotations": annotations,
+                })
+        
+        return result

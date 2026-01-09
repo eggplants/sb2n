@@ -3,7 +3,7 @@
 import logging
 from typing import TYPE_CHECKING
 
-from sb2n.parser import ParsedLine, ScrapboxParser
+from sb2n.parser import ParsedLine, RichTextElement, ScrapboxParser
 
 if TYPE_CHECKING:
     from pydantic_api.notion.models.objects import BlockObject
@@ -54,7 +54,7 @@ class NotionBlockConverter:
         )
         return blocks
 
-    def _convert_line_to_block(self, parsed_line: ParsedLine) -> BlockObject | None:  # noqa: PLR0911
+    def _convert_line_to_block(self, parsed_line: ParsedLine) -> BlockObject | None:  # noqa: PLR0911, PLR0912
         """Convert a single parsed line to a Notion block.
 
         Args:
@@ -70,7 +70,14 @@ class NotionBlockConverter:
         # Heading blocks
         if parsed_line.line_type in ["heading_2", "heading_3"]:
             level = int(parsed_line.line_type.split("_")[1])
-            return self.notion_service.create_heading_block(parsed_line.content, level)
+            # Use rich_text if available, otherwise use plain content
+            text = parsed_line.rich_text if parsed_line.rich_text else parsed_line.content
+            return self.notion_service.create_heading_block(text, level)
+
+        # Quote blocks
+        if parsed_line.line_type == "quote":
+            text = parsed_line.rich_text if parsed_line.rich_text else parsed_line.content
+            return self.notion_service.create_quote_block(text)
 
         # Code blocks
         if parsed_line.line_type == "code":
@@ -80,17 +87,38 @@ class NotionBlockConverter:
         if parsed_line.line_type == "image":
             return self._create_image_block(parsed_line.content)
 
+        # External link with display text
+        if parsed_line.line_type == "external_link":
+            # Create a paragraph with a link
+            if parsed_line.link_text:
+                link_element = RichTextElement(
+                    text=parsed_line.link_text,
+                    link_url=parsed_line.content,
+                )
+                return self.notion_service.create_paragraph_block([link_element])
+            else:
+                # Fallback to bookmark
+                return self.notion_service.create_bookmark_block(parsed_line.content)
+
         # URL/Bookmark blocks
         if parsed_line.line_type == "url":
             return self.notion_service.create_bookmark_block(parsed_line.content)
 
+        # Table start (create as paragraph for now - full table support would require more complex logic)
+        if parsed_line.line_type == "table_start":
+            # For now, just create a heading to indicate table start
+            # Full table implementation would require parsing subsequent lines
+            return self.notion_service.create_heading_block(f"Table: {parsed_line.table_name}", 3)
+
         # List items
         if parsed_line.line_type == "list":
-            return self.notion_service.create_bulleted_list_block(parsed_line.content)
+            text = parsed_line.rich_text if parsed_line.rich_text else parsed_line.content
+            return self.notion_service.create_bulleted_list_block(text)
 
         # Paragraphs
         if parsed_line.content:
-            return self.notion_service.create_paragraph_block(parsed_line.content)
+            text = parsed_line.rich_text if parsed_line.rich_text else parsed_line.content
+            return self.notion_service.create_paragraph_block(text)
 
         return None
 

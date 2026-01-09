@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from sb2n.parser import ScrapboxParser
+from sb2n.parser import RichTextElement, ScrapboxParser
 
 
 def test_extract_tags() -> None:
@@ -72,3 +72,97 @@ This is a paragraph.
     assert len(parsed_lines) > 0
     assert parsed_lines[0].line_type == "heading_2"
     assert any(line.line_type == "list" for line in parsed_lines)
+
+
+def test_parse_bold_text() -> None:
+    """Test bold text parsing."""
+    line = "This is [[bold text]] in a paragraph"
+    parsed = ScrapboxParser.parse_line(line)
+    assert parsed.line_type == "paragraph"
+    assert parsed.rich_text is not None
+    assert len(parsed.rich_text) == 3  # plain + bold + plain
+    assert parsed.rich_text[1].bold is True
+    assert parsed.rich_text[1].text == "bold text"
+
+
+def test_parse_strikethrough_text() -> None:
+    """Test strikethrough text parsing."""
+    line = "This has [- strikethrough] text"
+    parsed = ScrapboxParser.parse_line(line)
+    assert parsed.line_type == "paragraph"
+    assert parsed.rich_text is not None
+    assert any(elem.strikethrough for elem in parsed.rich_text)
+
+
+def test_parse_underline_text() -> None:
+    """Test underline text parsing."""
+    line = "This has [_ underline] text"
+    parsed = ScrapboxParser.parse_line(line)
+    assert parsed.line_type == "paragraph"
+    assert parsed.rich_text is not None
+    assert any(elem.underline for elem in parsed.rich_text)
+
+
+def test_parse_inline_code() -> None:
+    """Test inline code parsing."""
+    line = "Use `print()` to output text"
+    parsed = ScrapboxParser.parse_line(line)
+    assert parsed.line_type == "paragraph"
+    assert parsed.rich_text is not None
+    assert any(elem.code for elem in parsed.rich_text)
+    code_elem = next(elem for elem in parsed.rich_text if elem.code)
+    assert code_elem.text == "print()"
+
+
+def test_parse_external_link_with_text() -> None:
+    """Test external link with display text parsing."""
+    # Format: [text url]
+    line = "[Google https://google.com]"
+    parsed = ScrapboxParser.parse_line(line)
+    assert parsed.line_type == "external_link"
+    assert parsed.content == "https://google.com"
+    assert parsed.link_text == "Google"
+
+    # Format: [url text]
+    line = "[https://google.com Google]"
+    parsed = ScrapboxParser.parse_line(line)
+    assert parsed.line_type == "external_link"
+    assert parsed.content == "https://google.com"
+    assert parsed.link_text == "Google"
+
+
+def test_parse_quote() -> None:
+    """Test quote block parsing."""
+    line = "> This is a quote"
+    parsed = ScrapboxParser.parse_line(line)
+    assert parsed.line_type == "quote"
+    assert parsed.content == "This is a quote"
+    assert parsed.rich_text is not None
+
+
+def test_parse_table_start() -> None:
+    """Test table start parsing."""
+    line = "table:MyTable"
+    parsed = ScrapboxParser.parse_line(line)
+    assert parsed.line_type == "table_start"
+    assert parsed.content == "MyTable"
+    assert parsed.table_name == "MyTable"
+
+
+def test_parse_rich_text_elements() -> None:
+    """Test rich text element creation."""
+    elem = RichTextElement(text="Hello", bold=True)
+    assert elem.text == "Hello"
+    assert elem.bold is True
+    assert elem.italic is False
+
+
+def test_parse_mixed_decorations() -> None:
+    """Test parsing text with multiple decorations."""
+    line = "Normal [[bold]] and `code` text"
+    parsed = ScrapboxParser.parse_line(line)
+    assert parsed.line_type == "paragraph"
+    assert parsed.rich_text is not None
+    assert len(parsed.rich_text) >= 3
+    assert any(elem.bold for elem in parsed.rich_text)
+    assert any(elem.code for elem in parsed.rich_text)
