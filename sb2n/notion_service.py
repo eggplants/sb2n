@@ -15,13 +15,14 @@ from pydantic_api.notion.models.objects import (
     Heading2Block,
     Heading3Block,
     ImageBlock,
-    Page,
     ParagraphBlock,
     QuoteBlock,
 )
 
 if TYPE_CHECKING:
     from datetime import datetime
+
+    from notion_client.typing import SyncAsync
 
     from sb2n.parser import RichTextElement
 
@@ -120,7 +121,7 @@ class NotionService:
         scrapbox_url: str,
         created_date: datetime,
         tags: list[str],
-    ) -> Page:
+    ) -> dict | SyncAsync:
         """Create a new page in the Notion database.
 
         Args:
@@ -138,13 +139,22 @@ class NotionService:
         logger.debug("Creating Notion page: %(title)s", {"title": title})
 
         properties = {
-            "Title": {"title": [{"text": {"content": title}}]},
-            "Scrapbox URL": {"url": scrapbox_url},
-            "Created Date": {"date": {"start": created_date.isoformat()}},
+            "Title": {
+                "type": "title",
+                "title": [{"type": "text", "text": {"content": title}}],
+            },
+            "Scrapbox URL": {"type": "url", "url": scrapbox_url},
+            "Created Date": {
+                "type": "date",
+                "date": {"start": created_date.isoformat()},
+            },
         }
 
         if tags:
-            properties["Tags"] = {"multi_select": [{"name": tag} for tag in tags]}
+            properties["Tags"] = {
+                "type": "multi_select",
+                "multi_select": [{"name": tag} for tag in tags],
+            }
 
         try:
             # Create request object
@@ -155,14 +165,15 @@ class NotionService:
 
             # Execute request
             response_dict = self.client.pages.create(**create_request.model_dump(mode="json", exclude_none=True))  # type: ignore[union-attr]
-            response = Page.model_validate(response_dict)
 
-            logger.info("Created page: %(title)s (ID: %(id)s)", {"title": title, "id": response.id})
+            # Return raw dict instead of validating with Page model
+            # because pydantic-api-models-notion may not support all parent types (e.g., data_source_id)
+            logger.info("Created page: %(title)s (ID: %(id)s)", {"title": title, "id": response_dict["id"]})  # ty:ignore[not-subscriptable]
         except Exception:
             logger.exception("Failed to create page: %(title)s", {"title": title})
             raise
         else:
-            return response
+            return response_dict
 
     def append_blocks(self, page_id: UUID, blocks: list[BlockObject]) -> None:
         """Append blocks to a Notion page.
@@ -185,8 +196,11 @@ class NotionService:
             batch_size = 100
             for i in range(0, len(blocks), batch_size):
                 batch = blocks[i : i + batch_size]
-                # Convert pydantic models to dicts
-                batch_dicts = [block.model_dump(mode="json", exclude_none=True) for block in batch]
+                # Convert pydantic models to dicts, or use dict directly
+                batch_dicts = [
+                    block.model_dump(mode="json", exclude_none=True) if hasattr(block, "model_dump") else block
+                    for block in batch
+                ]
                 self.client.blocks.children.append(block_id=str(page_id), children=batch_dicts)
                 logger.debug(
                     "Appended batch %(batch_num)d (%(count)d blocks)",
@@ -209,12 +223,11 @@ class NotionService:
         """
         if isinstance(text, str):
             return ParagraphBlock.new(rich_text=text)
-        else:
-            rich_text_array = self._convert_rich_text_elements(text)
-            return ParagraphBlock(
-                type="paragraph",
-                paragraph={"rich_text": rich_text_array, "color": "default"},  # type: ignore[typeddict-item]
-            )
+        rich_text_array = self._convert_rich_text_elements(text)
+        return ParagraphBlock(
+            type="paragraph",
+            paragraph={"rich_text": rich_text_array, "color": "default"},  # type: ignore[typeddict-item]
+        )
 
     def create_heading_block(self, text: str | list[RichTextElement], level: int = 2) -> Heading2Block | Heading3Block:
         """Create a heading block.
@@ -230,17 +243,16 @@ class NotionService:
             if level == 2:  # noqa: PLR2004
                 return Heading2Block.new(rich_text=text)
             return Heading3Block.new(rich_text=text)
-        else:
-            rich_text_array = self._convert_rich_text_elements(text)
-            if level == 2:  # noqa: PLR2004
-                return Heading2Block(
-                    type="heading_2",
-                    heading_2={"rich_text": rich_text_array, "color": "default", "is_toggleable": False},  # type: ignore[typeddict-item]
-                )
-            return Heading3Block(
-                type="heading_3",
-                heading_3={"rich_text": rich_text_array, "color": "default", "is_toggleable": False},  # type: ignore[typeddict-item]
+        rich_text_array = self._convert_rich_text_elements(text)
+        if level == 2:  # noqa: PLR2004
+            return Heading2Block(
+                type="heading_2",
+                heading_2={"rich_text": rich_text_array, "color": "default", "is_toggleable": False},  # type: ignore[typeddict-item]
             )
+        return Heading3Block(
+            type="heading_3",
+            heading_3={"rich_text": rich_text_array, "color": "default", "is_toggleable": False},  # type: ignore[typeddict-item]
+        )
 
     def create_bulleted_list_block(self, text: str | list[RichTextElement]) -> BulletedListItemBlock:
         """Create a bulleted list item block.
@@ -253,12 +265,11 @@ class NotionService:
         """
         if isinstance(text, str):
             return BulletedListItemBlock.new(rich_text=text)
-        else:
-            rich_text_array = self._convert_rich_text_elements(text)
-            return BulletedListItemBlock(
-                type="bulleted_list_item",
-                bulleted_list_item={"rich_text": rich_text_array, "color": "default"},  # type: ignore[typeddict-item]
-            )
+        rich_text_array = self._convert_rich_text_elements(text)
+        return BulletedListItemBlock(
+            type="bulleted_list_item",
+            bulleted_list_item={"rich_text": rich_text_array, "color": "default"},  # type: ignore[typeddict-item]
+        )
 
     def create_code_block(self, code: str, language: str = "plain text") -> CodeBlock:
         """Create a code block.
@@ -272,7 +283,7 @@ class NotionService:
         """
         return CodeBlock.new(code=code, language=language)  # type: ignore[arg-type]
 
-    def create_image_block(self, url: str, file_upload_id: str | None = None) -> ImageBlock:
+    def create_image_block(self, url: str, file_upload_id: str | None = None) -> ImageBlock | dict:
         """Create an image block.
 
         Args:
@@ -280,16 +291,15 @@ class NotionService:
             file_upload_id: Optional file upload ID from Notion's file_uploads API
 
         Returns:
-            Image block object
+            Image block object or raw dict for file uploads
         """
         if file_upload_id:
-            # Use uploaded file from Notion
-            # Note: pydantic-api-models-notion doesn't have .new() for file_upload type yet,
-            # so we'll construct manually
-            return ImageBlock(
-                type="image",
-                image={"type": "file_upload", "file_upload": {"id": file_upload_id}},  # type: ignore[typeddict-item]
-            )
+            # Use uploaded file from Notion - return raw dict
+            # pydantic-api-models-notion doesn't support file_upload type yet
+            return {
+                "type": "image",
+                "image": {"type": "file_upload", "file_upload": {"id": file_upload_id}},
+            }
         # Use external URL
         return ImageBlock.new(url=url)
 
@@ -336,7 +346,7 @@ class NotionService:
         Returns:
             Bookmark block object
         """
-        return BookmarkBlock.new(url=url)
+        return BookmarkBlock.new(url=url, caption=caption)
 
     def create_quote_block(self, text: str | list[RichTextElement]) -> QuoteBlock:
         """Create a quote block.
@@ -349,12 +359,11 @@ class NotionService:
         """
         if isinstance(text, str):
             return QuoteBlock.new(rich_text=text)
-        else:
-            rich_text_array = self._convert_rich_text_elements(text)
-            return QuoteBlock(
-                type="quote",
-                quote={"rich_text": rich_text_array, "color": "default"},  # type: ignore[typeddict-item]
-            )
+        rich_text_array = self._convert_rich_text_elements(text)
+        return QuoteBlock(
+            type="quote",
+            quote={"rich_text": rich_text_array, "color": "default"},  # type: ignore[typeddict-item]
+        )
 
     def _convert_rich_text_elements(self, elements: list[RichTextElement]) -> list[dict]:
         """Convert RichTextElement list to Notion rich_text format.
@@ -373,21 +382,26 @@ class NotionService:
                 "strikethrough": elem.strikethrough,
                 "underline": elem.underline,
                 "code": elem.code,
+                "color": "default",
             }
-            
+
             if elem.link_url:
                 # Link with annotations
-                result.append({
-                    "type": "text",
-                    "text": {"content": elem.text, "link": {"url": elem.link_url}},
-                    "annotations": annotations,
-                })
+                result.append(
+                    {
+                        "type": "text",
+                        "text": {"content": elem.text, "link": {"url": elem.link_url}},
+                        "annotations": annotations,
+                    }
+                )
             else:
                 # Plain text with annotations
-                result.append({
-                    "type": "text",
-                    "text": {"content": elem.text},
-                    "annotations": annotations,
-                })
-        
+                result.append(
+                    {
+                        "type": "text",
+                        "text": {"content": elem.text},
+                        "annotations": annotations,
+                    }
+                )
+
         return result

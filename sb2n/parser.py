@@ -129,7 +129,7 @@ class ScrapboxParser:
         return ScrapboxParser.URL_PATTERN.findall(text)
 
     @staticmethod
-    def parse_line(line: str) -> ParsedLine:  # noqa: PLR0911, PLR0912, PLR0915
+    def parse_line(line: str) -> ParsedLine:  # noqa: C901, PLR0911
         """Parse a single line of Scrapbox text.
 
         Args:
@@ -311,7 +311,7 @@ class ScrapboxParser:
         return parsed_lines
 
     @staticmethod
-    def _parse_rich_text(text: str) -> list[RichTextElement]:
+    def _parse_rich_text(text: str) -> list[RichTextElement]:  # noqa: C901
         """Parse text with decorations into rich text elements.
 
         Args:
@@ -322,36 +322,41 @@ class ScrapboxParser:
         """
         # Track positions and stylings
         elements: list[RichTextElement] = []
-        
+
         # For simplicity, we'll process decorations in order and create segments
         # This is a basic implementation that handles non-nested decorations
-        
+
         # First, let's find all decoration matches with their positions
-        decorations = []
-        
-        # Bold: [[text]]
-        for match in ScrapboxParser.BOLD_PATTERN.finditer(text):
-            decorations.append((match.start(), match.end(), "bold", match.group(1)))
-        
-        # Strikethrough: [- text]
-        for match in ScrapboxParser.STRIKETHROUGH_PATTERN.finditer(text):
-            decorations.append((match.start(), match.end(), "strikethrough", match.group(1)))
-        
-        # Underline: [_ text]
-        for match in ScrapboxParser.UNDERLINE_PATTERN.finditer(text):
-            decorations.append((match.start(), match.end(), "underline", match.group(1)))
-        
-        # Inline code: `code`
-        for match in ScrapboxParser.INLINE_CODE_PATTERN.finditer(text):
-            decorations.append((match.start(), match.end(), "code", match.group(1)))
-        
+        decorations: list[tuple[int, int, str, str]] = [
+            # Bold: `[[text]]`
+            *[
+                (match.start(), match.end(), "bold", match.group(1))
+                for match in ScrapboxParser.BOLD_PATTERN.finditer(text)
+            ],
+            # Strikethrough: `[- text]`
+            *[
+                (match.start(), match.end(), "strikethrough", match.group(1))
+                for match in ScrapboxParser.STRIKETHROUGH_PATTERN.finditer(text)
+            ],
+            # Underline: `[_ text]`
+            *[
+                (match.start(), match.end(), "underline", match.group(1))
+                for match in ScrapboxParser.UNDERLINE_PATTERN.finditer(text)
+            ],
+            # Inline code: `code`
+            *[
+                (match.start(), match.end(), "code", match.group(1))
+                for match in ScrapboxParser.INLINE_CODE_PATTERN.finditer(text)
+            ],
+        ]
+
         # If no decorations found, return plain text
         if not decorations:
             return [RichTextElement(text=text)]
-        
+
         # Sort by position
         decorations.sort(key=lambda x: x[0])
-        
+
         # Build elements
         last_pos = 0
         for start, end, style, content in decorations:
@@ -360,7 +365,7 @@ class ScrapboxParser:
                 plain_text = text[last_pos:start]
                 if plain_text:
                     elements.append(RichTextElement(text=plain_text))
-            
+
             # Add styled text
             element = RichTextElement(text=content)
             if style == "bold":
@@ -372,15 +377,15 @@ class ScrapboxParser:
             elif style == "code":
                 element.code = True
             elements.append(element)
-            
+
             last_pos = end
-        
+
         # Add remaining plain text
         if last_pos < len(text):
             remaining = text[last_pos:]
             if remaining:
                 elements.append(RichTextElement(text=remaining))
-        
+
         return elements if elements else [RichTextElement(text=text)]
 
     @staticmethod

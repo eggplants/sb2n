@@ -54,7 +54,7 @@ class NotionBlockConverter:
         )
         return blocks
 
-    def _convert_line_to_block(self, parsed_line: ParsedLine) -> BlockObject | None:  # noqa: PLR0911, PLR0912
+    def _convert_line_to_block(self, parsed_line: ParsedLine) -> BlockObject | None:  # noqa: C901, PLR0911
         """Convert a single parsed line to a Notion block.
 
         Args:
@@ -96,9 +96,8 @@ class NotionBlockConverter:
                     link_url=parsed_line.content,
                 )
                 return self.notion_service.create_paragraph_block([link_element])
-            else:
-                # Fallback to bookmark
-                return self.notion_service.create_bookmark_block(parsed_line.content)
+            # Fallback to bookmark
+            return self.notion_service.create_bookmark_block(parsed_line.content)
 
         # URL/Bookmark blocks
         if parsed_line.line_type == "url":
@@ -122,7 +121,7 @@ class NotionBlockConverter:
 
         return None
 
-    def _create_image_block(self, image_url: str) -> BlockObject | None:
+    def _create_image_block(self, image_url: str):  # noqa: ANN202
         """Create an image block, downloading from Scrapbox if necessary.
 
         Args:

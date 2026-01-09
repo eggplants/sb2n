@@ -10,6 +10,7 @@
     "euxo",
     "Gyazo",
     "Helpfeel",
+    "httpx",
     "junitxml",
     "pdoc",
     "pipefail",
@@ -24,6 +25,9 @@
     "scrapbox",
     "sdist",
     "shellsession",
+    "soundcloud",
+    "strikethrough",
+    "toggleable",
     "venv"
   ],
   "dictionaries": [],

@@ -220,16 +220,18 @@ class Migrator:
                 tags=tags,
             )
 
+            notion_page_id = notion_page["id"]  # type: ignore[not-subscriptable]
+
             # Convert and append blocks
             if self.converter:
                 blocks = self.converter.convert_to_blocks(page_text)
                 if blocks:
-                    self.notion_service.append_blocks(notion_page.id, blocks)
+                    self.notion_service.append_blocks(notion_page_id, blocks)
 
             return MigrationResult(
                 page_title=page_title,
                 success=True,
-                notion_page_id=notion_page.id,
+                notion_page_id=notion_page_id,
             )
 
         except Exception as e:
