@@ -1,10 +1,12 @@
 """Scrapbox API client wrapper."""
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Self
 
-from scrapbox import PageListItem
 from scrapbox.client import PageDetail, ScrapboxClient
+
+if TYPE_CHECKING:
+    from scrapbox import PageListItem
 
 logger = logging.getLogger(__name__)
 
@@ -27,12 +29,12 @@ class ScrapboxService:
         self.connect_sid = connect_sid
         self._client: ScrapboxClient | None = None
 
-    def __enter__(self) -> "ScrapboxService":
+    def __enter__(self) -> Self:
         """Enter context manager."""
         self._client = ScrapboxClient(connect_sid=self.connect_sid)
         return self
 
-    def __exit__(self, *args: Any) -> None:
+    def __exit__(self, *args: object) -> None:
         """Exit context manager."""
         if self._client:
             self._client.close()
@@ -55,21 +57,24 @@ class ScrapboxService:
         skip = 0
         limit = 100
 
-        logger.info(f"Fetching pages from project: {self.project_name}")
+        logger.info("Fetching pages from project: %(project_name)s", {"project_name": self.project_name})
 
         while True:
             response = self._client.get_pages(self.project_name, skip=skip, limit=limit)
             pages = response.pages
             all_pages.extend(pages)
 
-            logger.debug(f"Fetched {len(pages)} pages (total: {len(all_pages)}/{response.count})")
+            logger.debug(
+                "Fetched %(fetched)d pages (total: %(total)d/%(count)d)",
+                {"fetched": len(pages), "total": len(all_pages), "count": response.count},
+            )
 
             if len(all_pages) >= response.count:
                 break
 
             skip += limit
 
-        logger.info(f"Total pages fetched: {len(all_pages)}")
+        logger.info("Total pages fetched: %(total)d", {"total": len(all_pages)})
         return all_pages
 
     def get_page_detail(self, page_title: str) -> PageDetail:
@@ -88,7 +93,7 @@ class ScrapboxService:
             msg = "Client not initialized. Use ScrapboxService as a context manager."
             raise RuntimeError(msg)
 
-        logger.debug(f"Fetching page detail: {page_title}")
+        logger.debug("Fetching page detail: %(page_title)s", {"page_title": page_title})
         return self._client.get_page(self.project_name, page_title)
 
     def get_page_text(self, page_title: str) -> str:
@@ -107,7 +112,7 @@ class ScrapboxService:
             msg = "Client not initialized. Use ScrapboxService as a context manager."
             raise RuntimeError(msg)
 
-        logger.debug(f"Fetching page text: {page_title}")
+        logger.debug("Fetching page text: %(page_title)s", {"page_title": page_title})
         return self._client.get_page_text(self.project_name, page_title)
 
     def download_file(self, file_id: str) -> bytes:
@@ -126,7 +131,7 @@ class ScrapboxService:
             msg = "Client not initialized. Use ScrapboxService as a context manager."
             raise RuntimeError(msg)
 
-        logger.debug(f"Downloading file: {file_id}")
+        logger.debug("Downloading file: %(file_id)s", {"file_id": file_id})
         return self._client.get_file(file_id)
 
     def get_page_url(self, page_title: str) -> str:

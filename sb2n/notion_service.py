@@ -1,69 +1,49 @@
 """Notion API client wrapper."""
 
 import logging
-from datetime import datetime
 from io import BytesIO
-from typing import Any, TypedDict
+from typing import TYPE_CHECKING, Literal, TypedDict
+from uuid import UUID
 
 from notion_client import Client
+from pydantic_api.notion.models.endpoints import CreatePageRequest, QueryDatabaseRequest, QueryDatabaseResponse
+from pydantic_api.notion.models.objects import (
+    BlockObject,
+    BookmarkBlock,
+    BulletedListItemBlock,
+    CodeBlock,
+    Heading2Block,
+    Heading3Block,
+    ImageBlock,
+    Page,
+    ParagraphBlock,
+)
+
+if TYPE_CHECKING:
+    from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
 
-class RichText(TypedDict):
-    """Rich text object for Notion blocks."""
+class FileUploadResponse(TypedDict):
+    """Response from file_uploads.create() API.
 
-    type: str
-    text: dict[str, Any]
+    Reference: https://developers.notion.com/reference/create-a-file-upload
 
+    Note: this schema is not yet included in pydantic-api-models-notion.
+    """
 
-class ParagraphBlock(TypedDict):
-    """Paragraph block object."""
-
-    object: str
-    type: str
-    paragraph: dict[str, Any]
-
-
-class HeadingBlock(TypedDict, total=False):
-    """Heading block object."""
-
-    object: str
-    type: str
-    heading_2: dict[str, Any]
-    heading_3: dict[str, Any]
-
-
-class BulletedListBlock(TypedDict):
-    """Bulleted list item block object."""
-
-    object: str
-    type: str
-    bulleted_list_item: dict[str, Any]
-
-
-class CodeBlock(TypedDict):
-    """Code block object."""
-
-    object: str
-    type: str
-    code: dict[str, Any]
-
-
-class ImageBlock(TypedDict):
-    """Image block object."""
-
-    object: str
-    type: str
-    image: dict[str, Any]
-
-
-class BookmarkBlock(TypedDict):
-    """Bookmark block object."""
-
-    object: str
-    type: str
-    bookmark: dict[str, Any]
+    id: str
+    object: Literal["file_upload"]
+    created_time: str
+    last_edited_time: str
+    expiry_time: str
+    upload_url: str
+    archived: bool
+    status: Literal["pending", "completed", "failed"]
+    filename: str
+    content_type: str
+    content_length: int
 
 
 class NotionService:
@@ -99,34 +79,37 @@ class NotionService:
             start_cursor = None
 
             while has_more:
-                query_params: dict[str, Any] = {
-                    "database_id": self.database_id,
-                    "page_size": 100,
-                }
-                if start_cursor:
-                    query_params["start_cursor"] = start_cursor
+                # Create query request
+                query_request = QueryDatabaseRequest(
+                    database_id=UUID(self.database_id),
+                    page_size=100,
+                    start_cursor=start_cursor,
+                )
 
-                response: dict[str, Any] = self.client.databases.query(**query_params)  # type: ignore[assignment]
+                # Execute query
+                response_dict = self.client.databases.query(**query_request.model_dump(mode="json", exclude_none=True))  # type: ignore[union-attr]
+                response = QueryDatabaseResponse.model_validate(response_dict)
 
-                for page in response.get("results", []):
+                for page in response.results:
                     # Extract title from properties
-                    properties = page.get("properties", {})
-                    title_prop = properties.get("Title", {}) or properties.get("Name", {})
-                    title_content = title_prop.get("title", [])
-                    if title_content:
-                        title = title_content[0].get("text", {}).get("content", "")
-                        if title:
-                            existing_titles.add(title)
+                    properties = page.properties if hasattr(page, "properties") else {}
+                    title_prop = properties.get("Title") or properties.get("Name")  # type: ignore[union-attr]
+                    if title_prop and hasattr(title_prop, "title"):
+                        title_content = title_prop.title  # type: ignore[attr-defined]
+                        if title_content:
+                            title_text = title_content[0].plain_text if hasattr(title_content[0], "plain_text") else ""
+                            if title_text:
+                                existing_titles.add(title_text)
 
-                has_more = response.get("has_more", False)
-                start_cursor = response.get("next_cursor")
+                has_more = response.has_more or False
+                start_cursor = response.next_cursor
 
-            logger.info(f"Found {len(existing_titles)} existing pages in Notion")
-            return existing_titles
-
+            logger.info("Found %(count)d existing pages in Notion", {"count": len(existing_titles)})
         except Exception:
             logger.exception("Failed to fetch existing pages from Notion")
             raise
+        else:
+            return existing_titles
 
     def create_database_page(
         self,
@@ -134,7 +117,7 @@ class NotionService:
         scrapbox_url: str,
         created_date: datetime,
         tags: list[str],
-    ) -> dict[str, Any]:
+    ) -> Page:
         """Create a new page in the Notion database.
 
         Args:
@@ -149,7 +132,7 @@ class NotionService:
         Raises:
             Exception: If page creation fails
         """
-        logger.debug(f"Creating Notion page: {title}")
+        logger.debug("Creating Notion page: %(title)s", {"title": title})
 
         properties = {
             "Title": {"title": [{"text": {"content": title}}]},
@@ -161,17 +144,24 @@ class NotionService:
             properties["Tags"] = {"multi_select": [{"name": tag} for tag in tags]}
 
         try:
-            response: dict[str, Any] = self.client.pages.create(  # type: ignore[assignment]
-                parent={"database_id": self.database_id},
-                properties=properties,
+            # Create request object
+            create_request = CreatePageRequest(
+                parent={"database_id": self.database_id},  # type: ignore[typeddict-item]
+                properties=properties,  # type: ignore[arg-type]
             )
-            logger.info(f"Created page: {title} (ID: {response['id']})")
-            return response
-        except Exception:
-            logger.exception(f"Failed to create page: {title}")
-            raise
 
-    def append_blocks(self, page_id: str, blocks: list[dict[str, Any]]) -> None:
+            # Execute request
+            response_dict = self.client.pages.create(**create_request.model_dump(mode="json", exclude_none=True))  # type: ignore[union-attr]
+            response = Page.model_validate(response_dict)
+
+            logger.info("Created page: %(title)s (ID: %(id)s)", {"title": title, "id": response.id})
+        except Exception:
+            logger.exception("Failed to create page: %(title)s", {"title": title})
+            raise
+        else:
+            return response
+
+    def append_blocks(self, page_id: UUID, blocks: list[BlockObject]) -> None:
         """Append blocks to a Notion page.
 
         Args:
@@ -182,22 +172,27 @@ class NotionService:
             Exception: If block append fails
         """
         if not blocks:
-            logger.debug(f"No blocks to append for page: {page_id}")
+            logger.debug("No blocks to append for page: %(page_id)s", {"page_id": page_id})
             return
 
-        logger.debug(f"Appending {len(blocks)} blocks to page: {page_id}")
+        logger.debug("Appending %(count)d blocks to page: %(page_id)s", {"count": len(blocks), "page_id": page_id})
 
         try:
             # Notion API has a limit of 100 blocks per request
             batch_size = 100
             for i in range(0, len(blocks), batch_size):
                 batch = blocks[i : i + batch_size]
-                self.client.blocks.children.append(block_id=page_id, children=batch)
-                logger.debug(f"Appended batch {i // batch_size + 1} ({len(batch)} blocks)")
+                # Convert pydantic models to dicts
+                batch_dicts = [block.model_dump(mode="json", exclude_none=True) for block in batch]
+                self.client.blocks.children.append(block_id=str(page_id), children=batch_dicts)
+                logger.debug(
+                    "Appended batch %(batch_num)d (%(count)d blocks)",
+                    {"batch_num": i // batch_size + 1, "count": len(batch)},
+                )
 
-            logger.info(f"Successfully appended {len(blocks)} blocks")
+            logger.info("Successfully appended %(count)d blocks", {"count": len(blocks)})
         except Exception:
-            logger.exception(f"Failed to append blocks to page: {page_id}")
+            logger.exception("Failed to append blocks to page: %(page_id)s", {"page_id": page_id})
             raise
 
     def create_paragraph_block(self, text: str) -> ParagraphBlock:
@@ -209,13 +204,9 @@ class NotionService:
         Returns:
             Paragraph block object
         """
-        return ParagraphBlock(
-            object="block",
-            type="paragraph",
-            paragraph={"rich_text": [{"type": "text", "text": {"content": text}}]},
-        )
+        return ParagraphBlock.new(rich_text=text)
 
-    def create_heading_block(self, text: str, level: int = 2) -> HeadingBlock:
+    def create_heading_block(self, text: str, level: int = 2) -> Heading2Block | Heading3Block:
         """Create a heading block.
 
         Args:
@@ -225,15 +216,11 @@ class NotionService:
         Returns:
             Heading block object
         """
-        heading_type = f"heading_{level}"
-        block: HeadingBlock = {
-            "object": "block",
-            "type": heading_type,
-        }
-        block[heading_type] = {"rich_text": [{"type": "text", "text": {"content": text}}]}  # type: ignore[literal-required]
-        return block
+        if level == 2:  # noqa: PLR2004
+            return Heading2Block.new(rich_text=text)
+        return Heading3Block.new(rich_text=text)
 
-    def create_bulleted_list_block(self, text: str) -> BulletedListBlock:
+    def create_bulleted_list_block(self, text: str) -> BulletedListItemBlock:
         """Create a bulleted list item block.
 
         Args:
@@ -242,11 +229,7 @@ class NotionService:
         Returns:
             Bulleted list item block object
         """
-        return BulletedListBlock(
-            object="block",
-            type="bulleted_list_item",
-            bulleted_list_item={"rich_text": [{"type": "text", "text": {"content": text}}]},
-        )
+        return BulletedListItemBlock.new(rich_text=text)
 
     def create_code_block(self, code: str, language: str = "plain text") -> CodeBlock:
         """Create a code block.
@@ -258,14 +241,7 @@ class NotionService:
         Returns:
             Code block object
         """
-        return CodeBlock(
-            object="block",
-            type="code",
-            code={
-                "rich_text": [{"type": "text", "text": {"content": code}}],
-                "language": language,
-            },
-        )
+        return CodeBlock.new(code=code, language=language)  # type: ignore[arg-type]
 
     def create_image_block(self, url: str, file_upload_id: str | None = None) -> ImageBlock:
         """Create an image block.
@@ -279,17 +255,14 @@ class NotionService:
         """
         if file_upload_id:
             # Use uploaded file from Notion
+            # Note: pydantic-api-models-notion doesn't have .new() for file_upload type yet,
+            # so we'll construct manually
             return ImageBlock(
-                object="block",
                 type="image",
-                image={"type": "file_upload", "file_upload": {"id": file_upload_id}},
+                image={"type": "file_upload", "file_upload": {"id": file_upload_id}},  # type: ignore[typeddict-item]
             )
         # Use external URL
-        return ImageBlock(
-            object="block",
-            type="image",
-            image={"type": "external", "external": {"url": url}},
-        )
+        return ImageBlock.new(url=url)
 
     def upload_image(self, image_data: bytes, filename: str = "image.png") -> str:
         """Upload an image to Notion using file_uploads API.
@@ -306,9 +279,9 @@ class NotionService:
         """
         try:
             # Step 1: Create file upload
-            file_upload = self.client.file_uploads.create(mode="single_part")
+            file_upload: FileUploadResponse = self.client.file_uploads.create(mode="single_part")  # type: ignore[assignment]
             file_upload_id = file_upload["id"]
-            logger.debug(f"Created file upload with ID: {file_upload_id}")
+            logger.debug("Created file upload with ID: %(file_upload_id)s", {"file_upload_id": file_upload_id})
 
             # Step 2: Send file data
             file_obj = BytesIO(image_data)
@@ -317,13 +290,12 @@ class NotionService:
                 file_upload_id=file_upload_id,
                 file=file_obj,
             )
-            logger.debug(f"Uploaded image to Notion: {filename}")
-
-            return file_upload_id
-
+            logger.debug("Uploaded image to Notion: %(filename)s", {"filename": filename})
         except Exception:
-            logger.exception(f"Failed to upload image: {filename}")
+            logger.exception("Failed to upload image: %(filename)s", {"filename": filename})
             raise
+        else:
+            return file_upload_id
 
     def create_bookmark_block(self, url: str) -> BookmarkBlock:
         """Create a bookmark block.
@@ -334,4 +306,4 @@ class NotionService:
         Returns:
             Bookmark block object
         """
-        return BookmarkBlock(object="block", type="bookmark", bookmark={"url": url})
+        return BookmarkBlock.new(url=url)

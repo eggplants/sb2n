@@ -1,18 +1,15 @@
 """Converter from Scrapbox notation to Notion blocks."""
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING
 
-from sb2n.notion_service import (
-    BookmarkBlock,
-    BulletedListBlock,
-    CodeBlock,
-    HeadingBlock,
-    ImageBlock,
-    NotionService,
-    ParagraphBlock,
-)
 from sb2n.parser import ParsedLine, ScrapboxParser
+
+if TYPE_CHECKING:
+    from pydantic_api.notion.models.objects import BlockObject
+
+    from sb2n.notion_service import NotionService
+    from sb2n.scrapbox_service import ScrapboxService
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +21,7 @@ class NotionBlockConverter:
     Notion block objects that can be appended to a page.
     """
 
-    def __init__(self, notion_service: NotionService, scrapbox_service: Any = None) -> None:
+    def __init__(self, notion_service: NotionService, scrapbox_service: ScrapboxService | None = None) -> None:
         """Initialize the converter.
 
         Args:
@@ -34,7 +31,7 @@ class NotionBlockConverter:
         self.notion_service = notion_service
         self.scrapbox_service = scrapbox_service
 
-    def convert_to_blocks(self, text: str) -> list[dict[str, Any]]:
+    def convert_to_blocks(self, text: str) -> list[BlockObject]:
         """Convert Scrapbox text to Notion blocks.
 
         Args:
@@ -51,12 +48,13 @@ class NotionBlockConverter:
             if block:
                 blocks.append(block)
 
-        logger.debug(f"Converted {len(parsed_lines)} lines to {len(blocks)} blocks")
+        logger.debug(
+            "Converted %(parsed_lines)d lines to %(blocks)d blocks",
+            {"parsed_lines": len(parsed_lines), "blocks": len(blocks)},
+        )
         return blocks
 
-    def _convert_line_to_block(
-        self, parsed_line: ParsedLine
-    ) -> ParagraphBlock | HeadingBlock | CodeBlock | ImageBlock | BookmarkBlock | BulletedListBlock | None:
+    def _convert_line_to_block(self, parsed_line: ParsedLine) -> BlockObject | None:  # noqa: PLR0911
         """Convert a single parsed line to a Notion block.
 
         Args:
@@ -90,13 +88,13 @@ class NotionBlockConverter:
         if parsed_line.line_type == "list":
             return self.notion_service.create_bulleted_list_block(parsed_line.content)
 
-        # Paragraph (default)
+        # Paragraphs
         if parsed_line.content:
             return self.notion_service.create_paragraph_block(parsed_line.content)
 
         return None
 
-    def _create_image_block(self, image_url: str) -> ImageBlock | None:
+    def _create_image_block(self, image_url: str) -> BlockObject | None:
         """Create an image block, downloading from Scrapbox if necessary.
 
         Args:
@@ -110,7 +108,7 @@ class NotionBlockConverter:
             try:
                 # Download image from Scrapbox using get_file
                 # get_file supports various image URLs including Gyazo, Scrapbox internal, etc.
-                logger.debug(f"Downloading image from Scrapbox: {image_url}")
+                logger.debug("Downloading image from Scrapbox: %(image_url)s", {"image_url": image_url})
                 image_data = self.scrapbox_service.download_file(image_url)
 
                 # Extract filename from URL
@@ -124,7 +122,7 @@ class NotionBlockConverter:
                 return self.notion_service.create_image_block(image_url, file_upload_id)
 
             except Exception:
-                logger.exception(f"Failed to download/upload image: {image_url}")
+                logger.exception("Failed to download/upload image: %(image_url)s", {"image_url": image_url})
                 # Fall back to external URL
                 return self.notion_service.create_image_block(image_url)
         else:

@@ -76,8 +76,7 @@ class ScrapboxParser:
         image_urls = ScrapboxParser.IMAGE_PATTERN.findall(text)
 
         # Combine and deduplicate
-        all_urls = gyazo_urls + [url for url in image_urls if url not in gyazo_urls]
-        return all_urls
+        return gyazo_urls + [url for url in image_urls if url not in gyazo_urls]
 
     @staticmethod
     def extract_urls(text: str) -> list[str]:
@@ -92,7 +91,7 @@ class ScrapboxParser:
         return ScrapboxParser.URL_PATTERN.findall(text)
 
     @staticmethod
-    def parse_line(line: str) -> ParsedLine:
+    def parse_line(line: str) -> ParsedLine:  # noqa: PLR0911
         """Parse a single line of Scrapbox text.
 
         Args:
@@ -234,7 +233,7 @@ class ScrapboxParser:
         def replace_link(match: re.Match[str]) -> str:
             content = match.group(1)
             # If it's a URL, keep the brackets
-            if content.startswith("http://") or content.startswith("https://"):
+            if content.startswith(("http://", "https://")):
                 return match.group(0)
             # Otherwise, just return the content
             return content

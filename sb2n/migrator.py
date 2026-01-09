@@ -3,12 +3,17 @@
 import logging
 from dataclasses import dataclass
 from datetime import UTC, datetime
+from typing import TYPE_CHECKING, Literal
 
-from sb2n.config import Config
 from sb2n.converter import NotionBlockConverter
 from sb2n.notion_service import NotionService
 from sb2n.parser import ScrapboxParser
 from sb2n.scrapbox_service import ScrapboxService
+
+if TYPE_CHECKING:
+    from uuid import UUID
+
+    from sb2n.config import Config
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +32,7 @@ class MigrationResult:
     page_title: str
     success: bool
     error: str | None = None
-    notion_page_id: str | None = None
+    notion_page_id: Literal["skipped", "dry-run-id"] | UUID | None = None
 
 
 @dataclass
@@ -57,7 +62,7 @@ class Migrator:
     """
 
     def __init__(
-        self, config: Config, dry_run: bool = False, limit: int | None = None, skip_existing: bool = False
+        self, config: Config, *, dry_run: bool = False, limit: int | None = None, skip_existing: bool = False
     ) -> None:
         """Initialize the migrator.
 
@@ -90,8 +95,8 @@ class Migrator:
         if self.skip_existing:
             try:
                 existing_titles = self.notion_service.get_existing_page_titles()
-            except Exception as e:
-                logger.error(f"Failed to get existing pages: {e}")
+            except Exception:
+                logger.exception("Failed to get existing pages")
                 logger.info("Continuing without skip-existing functionality")
 
         results: list[MigrationResult] = []
@@ -106,20 +111,26 @@ class Migrator:
             # Apply limit if specified
             if self.limit is not None:
                 pages = all_pages[: self.limit]
-                logger.info(f"Found {len(all_pages)} pages, migrating {len(pages)} pages (limited by -n option)")
+                logger.info(
+                    "Found %(total)d pages, migrating %(migrating)d pages (limited by -n option)",
+                    {"total": len(all_pages), "migrating": len(pages)},
+                )
             else:
                 pages = all_pages
-                logger.info(f"Found {len(pages)} pages to migrate")
+                logger.info("Found %(count)d pages to migrate", {"count": len(pages)})
 
             total = len(pages)
 
             # Migrate each page
             for i, page in enumerate(pages, 1):
-                logger.info(f"[{i}/{total}] Processing: {page.title}")
+                logger.info(
+                    "Processing page %(current)d/%(total)d: %(title)s",
+                    {"current": i, "total": total, "title": page.title},
+                )
 
                 # Check if page already exists and should be skipped
                 if self.skip_existing and page.title in existing_titles:
-                    logger.info(f"⊘ Skipping existing page: {page.title}")
+                    logger.info("⊘ Skipping existing page: %(title)s", {"title": page.title})
                     results.append(
                         MigrationResult(
                             page_title=page.title,
@@ -134,12 +145,14 @@ class Migrator:
                     results.append(result)
 
                     if result.success:
-                        logger.info(f"✓ Successfully migrated: {page.title}")
+                        logger.info("✓ Successfully migrated: %(title)s", {"title": page.title})
                     else:
-                        logger.error(f"✗ Failed to migrate: {page.title} - {result.error}")
+                        logger.error(
+                            "✗ Failed to migrate: %(title)s - %(error)s", {"title": page.title, "error": result.error}
+                        )
 
                 except Exception as e:
-                    logger.exception(f"Unexpected error migrating {page.title}")
+                    logger.exception("Unexpected error migrating %(title)s", {"title": page.title})
                     results.append(
                         MigrationResult(
                             page_title=page.title,
@@ -189,10 +202,10 @@ class Migrator:
             scrapbox_url = scrapbox.get_page_url(page_title)
 
             if self.dry_run:
-                logger.debug(f"[DRY RUN] Would create page: {page_title}")
-                logger.debug(f"  Tags: {tags}")
-                logger.debug(f"  Created: {created_date}")
-                logger.debug(f"  URL: {scrapbox_url}")
+                logger.debug("[DRY RUN] Would create page: %(title)s", {"title": page_title})
+                logger.debug("  Tags: %(tags)s", {"tags": tags})
+                logger.debug("  Created: %(created)s", {"created": created_date})
+                logger.debug("  URL: %(url)s", {"url": scrapbox_url})
                 return MigrationResult(
                     page_title=page_title,
                     success=True,
@@ -211,16 +224,16 @@ class Migrator:
             if self.converter:
                 blocks = self.converter.convert_to_blocks(page_text)
                 if blocks:
-                    self.notion_service.append_blocks(notion_page["id"], blocks)
+                    self.notion_service.append_blocks(notion_page.id, blocks)
 
             return MigrationResult(
                 page_title=page_title,
                 success=True,
-                notion_page_id=notion_page["id"],
+                notion_page_id=notion_page.id,
             )
 
         except Exception as e:
-            logger.exception(f"Error migrating page: {page_title}")
+            logger.exception("Error migrating page: %(title)s", {"title": page_title})
             return MigrationResult(
                 page_title=page_title,
                 success=False,
@@ -233,20 +246,20 @@ class Migrator:
         Args:
             summary: Migration summary to print
         """
-        logger.info("\n" + "=" * 60)
+        logger.info("=" * 60)
         logger.info("MIGRATION SUMMARY")
         logger.info("=" * 60)
-        logger.info(f"Total pages:      {summary.total_pages}")
-        logger.info(f"Successful:       {summary.successful}")
-        logger.info(f"Failed:           {summary.failed}")
-        logger.info(f"Skipped:          {summary.skipped}")
+        logger.info("Total pages:      %(total)d", {"total": summary.total_pages})
+        logger.info("Successful:       %(successful)d", {"successful": summary.successful})
+        logger.info("Failed:           %(failed)d", {"failed": summary.failed})
+        logger.info("Skipped:          %(skipped)d", {"skipped": summary.skipped})
         logger.info("=" * 60)
 
         if summary.failed > 0:
-            logger.info("\nFailed pages:")
+            logger.info("Failed pages:")
             for result in summary.results:
                 if not result.success:
-                    logger.info(f"  - {result.page_title}: {result.error}")
+                    logger.info("  - %(title)s: %(error)s", {"title": result.page_title, "error": result.error})
 
         if self.dry_run:
             logger.info("\n[DRY RUN] No actual changes were made to Notion")

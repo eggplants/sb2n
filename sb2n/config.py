@@ -2,9 +2,12 @@
 
 import os
 from dataclasses import dataclass
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 from dotenv import load_dotenv
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 @dataclass
@@ -24,7 +27,7 @@ class Config:
     notion_database_id: str
 
     @classmethod
-    def from_env(cls, env_file: Path | str | None = None) -> "Config":
+    def from_env(cls, env_file: Path | str | None = None) -> Config:
         """Load configuration from environment variables.
 
         Args:
@@ -61,10 +64,10 @@ class Config:
             raise ValueError(msg)
 
         # At this point, all values are guaranteed to be non-None
-        assert scrapbox_project is not None
-        assert scrapbox_connect_sid is not None
-        assert notion_api_key is not None
-        assert notion_database_id is not None
+        assert scrapbox_project is not None  # noqa: S101
+        assert scrapbox_connect_sid is not None  # noqa: S101
+        assert notion_api_key is not None  # noqa: S101
+        assert notion_database_id is not None  # noqa: S101
 
         return cls(
             scrapbox_project=scrapbox_project,

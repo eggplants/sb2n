@@ -8,8 +8,10 @@ from pathlib import Path
 from sb2n.config import Config
 from sb2n.migrator import Migrator
 
+logger = logging.getLogger(__name__)
 
-def setup_logging(verbose: bool = False) -> None:
+
+def setup_logging(*, verbose: bool = False) -> None:
     """Set up logging configuration.
 
     Args:
@@ -42,17 +44,15 @@ def migrate_command(args: argparse.Namespace) -> int:
         migrator = Migrator(config, dry_run=args.dry_run, limit=args.limit, skip_existing=args.skip_existing)
         summary = migrator.migrate_all()
 
+    except ValueError:
+        logger.exception("Configuration error")
+        return 1
+    except Exception:
+        logger.exception("Migration failed")
+        return 1
+    else:
         # Return success only if all pages migrated successfully
-        if summary.failed == 0:
-            return 0
-        return 1
-
-    except ValueError as e:
-        logging.error(f"Configuration error: {e}")
-        return 1
-    except Exception as e:
-        logging.exception(f"Migration failed: {e}")
-        return 1
+        return summary.failed
 
 
 def main() -> None:
@@ -111,7 +111,7 @@ def main() -> None:
     args = parser.parse_args()
 
     # Set up logging
-    setup_logging(args.verbose)
+    setup_logging(verbose=args.verbose)
 
     # Handle commands
     if args.command == "migrate":
