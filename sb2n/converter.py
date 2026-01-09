@@ -24,13 +24,15 @@ class NotionBlockConverter:
     Notion block objects that can be appended to a page.
     """
 
-    def __init__(self, notion_service: NotionService) -> None:
+    def __init__(self, notion_service: NotionService, scrapbox_service: Any = None) -> None:
         """Initialize the converter.
 
         Args:
             notion_service: Notion service for creating block objects
+            scrapbox_service: Optional Scrapbox service for downloading images
         """
         self.notion_service = notion_service
+        self.scrapbox_service = scrapbox_service
 
     def convert_to_blocks(self, text: str) -> list[dict[str, Any]]:
         """Convert Scrapbox text to Notion blocks.
@@ -78,7 +80,7 @@ class NotionBlockConverter:
 
         # Image blocks
         if parsed_line.line_type == "image":
-            return self.notion_service.create_image_block(parsed_line.content)
+            return self._create_image_block(parsed_line.content)
 
         # URL/Bookmark blocks
         if parsed_line.line_type == "url":
@@ -93,3 +95,38 @@ class NotionBlockConverter:
             return self.notion_service.create_paragraph_block(parsed_line.content)
 
         return None
+
+    def _create_image_block(self, image_url: str) -> ImageBlock | None:
+        """Create an image block, downloading from Scrapbox if necessary.
+
+        Args:
+            image_url: Image URL from Scrapbox
+
+        Returns:
+            Image block object or None if creation failed
+        """
+        # Download and upload all images using Scrapbox's get_file
+        if self.scrapbox_service:
+            try:
+                # Download image from Scrapbox using get_file
+                # get_file supports various image URLs including Gyazo, Scrapbox internal, etc.
+                logger.debug(f"Downloading image from Scrapbox: {image_url}")
+                image_data = self.scrapbox_service.download_file(image_url)
+
+                # Extract filename from URL
+                filename = image_url.split("/")[-1] if "/" in image_url else "image.png"
+                # Ensure filename has an extension
+                if "." not in filename:
+                    filename += ".png"
+
+                # Upload to Notion
+                file_upload_id = self.notion_service.upload_image(image_data, filename)
+                return self.notion_service.create_image_block(image_url, file_upload_id)
+
+            except Exception:
+                logger.exception(f"Failed to download/upload image: {image_url}")
+                # Fall back to external URL
+                return self.notion_service.create_image_block(image_url)
+        else:
+            # No Scrapbox service available, use external URL directly
+            return self.notion_service.create_image_block(image_url)

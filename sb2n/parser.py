@@ -35,6 +35,7 @@ class ScrapboxParser:
     IMAGE_PATTERN = re.compile(r"\[(https?://[^\]]+\.(?:jpg|jpeg|png|gif|webp|svg))\]", re.IGNORECASE)
     URL_PATTERN = re.compile(r"\[(https?://[^\]]+)\]")
     GYAZO_PATTERN = re.compile(r"\[(https?://(?:gyazo\.com|i\.gyazo\.com)/[^\]]+)\]", re.IGNORECASE)
+    SCRAPBOX_FILE_PATTERN = re.compile(r"\[(https://scrapbox\.io/api/pages/[^/]+/[^/]+/[^\]]+)\]", re.IGNORECASE)
     HEADING_PATTERN = re.compile(r"^\[(\*+)\s+(.+)\]$")
     CODE_BLOCK_PATTERN = re.compile(r"^code:(.+)$")
     LINK_PATTERN = re.compile(r"\[([^\]]+)\]")
@@ -198,7 +199,7 @@ class ScrapboxParser:
                         parsed_lines.append(parsed)
                 else:
                     # Add to code buffer (remove one level of indent)
-                    code_buffer.append(line[1:] if line.startswith(" ") else line)
+                    code_buffer.append(line.removeprefix(" "))
                 continue
 
             parsed_lines.append(parsed)

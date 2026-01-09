@@ -2,6 +2,7 @@
 
 import logging
 from datetime import datetime
+from io import BytesIO
 from typing import Any, TypedDict
 
 from notion_client import Client
@@ -266,20 +267,63 @@ class NotionService:
             },
         )
 
-    def create_image_block(self, url: str) -> ImageBlock:
-        """Create an external image block.
+    def create_image_block(self, url: str, file_upload_id: str | None = None) -> ImageBlock:
+        """Create an image block.
 
         Args:
-            url: External image URL
+            url: External image URL (used if file_upload_id is not provided)
+            file_upload_id: Optional file upload ID from Notion's file_uploads API
 
         Returns:
             Image block object
         """
+        if file_upload_id:
+            # Use uploaded file from Notion
+            return ImageBlock(
+                object="block",
+                type="image",
+                image={"type": "file_upload", "file_upload": {"id": file_upload_id}},
+            )
+        # Use external URL
         return ImageBlock(
             object="block",
             type="image",
             image={"type": "external", "external": {"url": url}},
         )
+
+    def upload_image(self, image_data: bytes, filename: str = "image.png") -> str:
+        """Upload an image to Notion using file_uploads API.
+
+        Args:
+            image_data: Binary image data
+            filename: Filename for the image (optional)
+
+        Returns:
+            File upload ID to use in blocks
+
+        Raises:
+            Exception: If upload fails
+        """
+        try:
+            # Step 1: Create file upload
+            file_upload = self.client.file_uploads.create(mode="single_part")
+            file_upload_id = file_upload["id"]
+            logger.debug(f"Created file upload with ID: {file_upload_id}")
+
+            # Step 2: Send file data
+            file_obj = BytesIO(image_data)
+            file_obj.name = filename
+            self.client.file_uploads.send(
+                file_upload_id=file_upload_id,
+                file=file_obj,
+            )
+            logger.debug(f"Uploaded image to Notion: {filename}")
+
+            return file_upload_id
+
+        except Exception:
+            logger.exception(f"Failed to upload image: {filename}")
+            raise
 
     def create_bookmark_block(self, url: str) -> BookmarkBlock:
         """Create a bookmark block.

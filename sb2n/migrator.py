@@ -2,7 +2,7 @@
 
 import logging
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from sb2n.config import Config
 from sb2n.converter import NotionBlockConverter
@@ -72,7 +72,8 @@ class Migrator:
         self.limit = limit
         self.skip_existing = skip_existing
         self.notion_service = NotionService(config.notion_api_key, config.notion_database_id)
-        self.converter = NotionBlockConverter(self.notion_service)
+        # Converter will be initialized with scrapbox_service in migrate_all
+        self.converter: NotionBlockConverter | None = None
 
     def migrate_all(self) -> MigrationSummary:
         """Migrate all pages from Scrapbox to Notion.
@@ -96,6 +97,9 @@ class Migrator:
         results: list[MigrationResult] = []
 
         with ScrapboxService(self.config.scrapbox_project, self.config.scrapbox_connect_sid) as scrapbox:
+            # Initialize converter with scrapbox service for image downloads
+            self.converter = NotionBlockConverter(self.notion_service, scrapbox)
+
             # Get all pages
             all_pages = scrapbox.get_all_pages()
 
@@ -179,7 +183,7 @@ class Migrator:
             tags = ScrapboxParser.extract_tags(page_text)
 
             # Convert creation date
-            created_date = datetime.fromtimestamp(created_timestamp, tz=timezone.utc)
+            created_date = datetime.fromtimestamp(created_timestamp, tz=UTC)
 
             # Generate Scrapbox URL
             scrapbox_url = scrapbox.get_page_url(page_title)
@@ -204,9 +208,10 @@ class Migrator:
             )
 
             # Convert and append blocks
-            blocks = self.converter.convert_to_blocks(page_text)
-            if blocks:
-                self.notion_service.append_blocks(notion_page["id"], blocks)
+            if self.converter:
+                blocks = self.converter.convert_to_blocks(page_text)
+                if blocks:
+                    self.notion_service.append_blocks(notion_page["id"], blocks)
 
             return MigrationResult(
                 page_title=page_title,
