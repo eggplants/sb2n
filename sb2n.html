@@ -18,6 +18,8 @@
         <input id="togglestate" type="checkbox" aria-hidden="true" tabindex="-1">
         <div>
 
+            <input type="search" placeholder="Search..." role="searchbox" aria-label="search"
+                   pattern=".+" required>
 
             <h2>Contents</h2>
             <ul>
@@ -25,11 +27,22 @@
   <ul>
     <li><a href="#installation">Installation</a></li>
     <li><a href="#usage">Usage</a></li>
+    <li><a href="#development">Development</a></li>
     <li><a href="#license">License</a></li>
   </ul></li>
 </ul>
 
 
+            <h2>Submodules</h2>
+            <ul>
+                    <li><a href="sb2n/config.html">config</a></li>
+                    <li><a href="sb2n/converter.html">converter</a></li>
+                    <li><a href="sb2n/main.html">main</a></li>
+                    <li><a href="sb2n/migrator.html">migrator</a></li>
+                    <li><a href="sb2n/notion_service.html">notion_service</a></li>
+                    <li><a href="sb2n/parser.html">parser</a></li>
+                    <li><a href="sb2n/scrapbox_service.html">scrapbox_service</a></li>
+            </ul>
 
 
 
@@ -68,12 +81,50 @@ pipx<span class="w"> </span>install<span class="w"> </span>sb2n
 
 <h2 id="usage">Usage</h2>
 
-<p>TBD</p>
+<h3 id="1-set-up-environment-variables">1. Set up environment variables</h3>
 
-<h3 id="cli">CLI</h3>
+<p>Create a <code>.env</code> file in your project directory. (See: <a href=".env.example"><code>.env.example</code></a>)</p>
 
-<pre><code>
+<h3 id="2-prepare-notion-database">2. Prepare Notion Database</h3>
+
+<p>Create a database in Notion with the following properties:</p>
+
+<ul>
+<li><strong>Title</strong> (Title) - Page title</li>
+<li><strong>Scrapbox URL</strong> (URL) - Link to original Scrapbox page</li>
+<li><strong>Created Date</strong> (Date) - Original creation date</li>
+<li><strong>Tags</strong> (Multi-select) - Tags from Scrapbox</li>
+</ul>
+
+<h3 id="3-run-migration">3. Run migration</h3>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="c1"># Basic migration</span>
+sb2n<span class="w"> </span>migrate
+
+<span class="c1"># Specify custom .env file</span>
+sb2n<span class="w"> </span>migrate<span class="w"> </span>--env-file<span class="w"> </span>/path/to/.env
+
+<span class="c1"># Dry run (no actual changes)</span>
+sb2n<span class="w"> </span>migrate<span class="w"> </span>--dry-run
+
+<span class="c1"># Migrate only first 10 pages</span>
+sb2n<span class="w"> </span>migrate<span class="w"> </span>-n<span class="w"> </span><span class="m">10</span>
+
+<span class="c1"># Skip pages that already exist in Notion</span>
+sb2n<span class="w"> </span>migrate<span class="w"> </span>--skip-existing
+
+<span class="c1"># Combine options: dry run with limit and skip existing</span>
+sb2n<span class="w"> </span>migrate<span class="w"> </span>--dry-run<span class="w"> </span>-n<span class="w"> </span><span class="m">5</span><span class="w"> </span>--skip-existing
+
+<span class="c1"># Enable verbose logging</span>
+sb2n<span class="w"> </span>-v<span class="w"> </span>migrate
 </code></pre>
+</div>
+
+<h2 id="development">Development</h2>
+
+<p>See <a href="docs/specification.md">docs/specification.md</a> for detailed specifications.</p>
 
 <h2 id="license">License</h2>
 
@@ -97,5 +148,186 @@ pipx<span class="w"> </span>install<span class="w"> </span>sb2n
 
             </section>
     </main>
-</body>
+<script>
+    function escapeHTML(html) {
+        return document.createElement('div').appendChild(document.createTextNode(html)).parentNode.innerHTML;
+    }
+
+    const originalContent = document.querySelector("main.pdoc");
+    let currentContent = originalContent;
+
+    function setContent(innerHTML) {
+        let elem;
+        if (innerHTML) {
+            elem = document.createElement("main");
+            elem.classList.add("pdoc");
+            elem.innerHTML = innerHTML;
+        } else {
+            elem = originalContent;
+        }
+        if (currentContent !== elem) {
+            currentContent.replaceWith(elem);
+            currentContent = elem;
+        }
+    }
+
+    function getSearchTerm() {
+        return (new URL(window.location)).searchParams.get("search");
+    }
+
+    const searchBox = document.querySelector(".pdoc input[type=search]");
+    searchBox.addEventListener("input", function () {
+        let url = new URL(window.location);
+        if (searchBox.value.trim()) {
+            url.hash = "";
+            url.searchParams.set("search", searchBox.value);
+        } else {
+            url.searchParams.delete("search");
+        }
+        history.replaceState("", "", url.toString());
+        onInput();
+    });
+    window.addEventListener("popstate", onInput);
+
+
+    let search, searchErr;
+
+    async function initialize() {
+        try {
+            search = await new Promise((resolve, reject) => {
+                const script = document.createElement("script");
+                script.type = "text/javascript";
+                script.async = true;
+                script.onload = () => resolve(window.pdocSearch);
+                script.onerror = (e) => reject(e);
+                script.src = "search.js";
+                document.getElementsByTagName("head")[0].appendChild(script);
+            });
+        } catch (e) {
+            console.error("Cannot fetch pdoc search index");
+            searchErr = "Cannot fetch search index.";
+        }
+        onInput();
+
+        document.querySelector("nav.pdoc").addEventListener("click", e => {
+            if (e.target.hash) {
+                searchBox.value = "";
+                searchBox.dispatchEvent(new Event("input"));
+            }
+        });
+    }
+
+    function onInput() {
+        setContent((() => {
+            const term = getSearchTerm();
+            if (!term) {
+                return null
+            }
+            if (searchErr) {
+                return `<h3>Error: ${searchErr}</h3>`
+            }
+            if (!search) {
+                return "<h3>Searching...</h3>"
+            }
+
+            window.scrollTo({top: 0, left: 0, behavior: 'auto'});
+
+            const results = search(term);
+
+            let html;
+            if (results.length === 0) {
+                html = `No search results for '${escapeHTML(term)}'.`
+            } else {
+                html = `<h4>${results.length} search result${results.length > 1 ? "s" : ""} for '${escapeHTML(term)}'.</h4>`;
+            }
+            for (let result of results.slice(0, 10)) {
+                let doc = result.doc;
+                let url = `${doc.modulename.replaceAll(".", "/")}.html`;
+                if (doc.qualname) {
+                    url += `#${doc.qualname}`;
+                }
+
+                let heading;
+                switch (result.doc.kind) {
+                    case "function":
+                        if (doc.fullname.endsWith(".__init__")) {
+                            heading = `<span class="name">${doc.fullname.replace(/\.__init__$/, "")}</span>${doc.signature}`;
+                        } else {
+                            heading = `<span class="def">${doc.funcdef}</span> <span class="name">${doc.fullname}</span>${doc.signature}`;
+                        }
+                        break;
+                    case "class":
+                        heading = `<span class="def">class</span> <span class="name">${doc.fullname}</span>`;
+                        if (doc.bases)
+                            heading += `<wbr>(<span class="base">${doc.bases}</span>)`;
+                        heading += `:`;
+                        break;
+                    case "variable":
+                        heading = `<span class="name">${doc.fullname}</span>`;
+                        if (doc.annotation)
+                            heading += `<span class="annotation">${doc.annotation}</span>`;
+                        if (doc.default_value)
+                            heading += `<span class="default_value"> = ${doc.default_value}</span>`;
+                        break;
+                    default:
+                        heading = `<span class="name">${doc.fullname}</span>`;
+                        break;
+                }
+                html += `
+                        <section class="search-result">
+                        <a href="${url}" class="attr ${doc.kind}">${heading}</a>
+                        <div class="docstring">${doc.doc}</div>
+                        </section>
+                    `;
+
+            }
+            return html;
+        })());
+    }
+
+    if (getSearchTerm()) {
+        initialize();
+        searchBox.value = getSearchTerm();
+        onInput();
+    } else {
+        searchBox.addEventListener("focus", initialize, {once: true});
+    }
+
+    searchBox.addEventListener("keydown", e => {
+        if (["ArrowDown", "ArrowUp", "Enter"].includes(e.key)) {
+            let focused = currentContent.querySelector(".search-result.focused");
+            if (!focused) {
+                currentContent.querySelector(".search-result").classList.add("focused");
+            } else if (
+                e.key === "ArrowDown"
+                && focused.nextElementSibling
+                && focused.nextElementSibling.classList.contains("search-result")
+            ) {
+                focused.classList.remove("focused");
+                focused.nextElementSibling.classList.add("focused");
+                focused.nextElementSibling.scrollIntoView({
+                    behavior: "smooth",
+                    block: "nearest",
+                    inline: "nearest"
+                });
+            } else if (
+                e.key === "ArrowUp"
+                && focused.previousElementSibling
+                && focused.previousElementSibling.classList.contains("search-result")
+            ) {
+                focused.classList.remove("focused");
+                focused.previousElementSibling.classList.add("focused");
+                focused.previousElementSibling.scrollIntoView({
+                    behavior: "smooth",
+                    block: "nearest",
+                    inline: "nearest"
+                });
+            } else if (
+                e.key === "Enter"
+            ) {
+                focused.querySelector("a").click();
+            }
+        }
+    });
+</script></body>
 </html>
