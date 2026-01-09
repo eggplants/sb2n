@@ -39,8 +39,7 @@ Create a database in Notion with the following properties:
 - **Created Date** (Date) - Original creation date
 - **Tags** (Multi-select) - Tags from Scrapbox
 
-<img width="978" height="95" alt="image" src="https://github.com/user-attachments/assets/b26cbfb5-fa66-4f08-a5b9-faa30d6303e1" />
-
+![Screenshot](https://github.com/user-attachments/assets/b26cbfb5-fa66-4f08-a5b9-faa30d6303e1)
 
 ### 3. Run migration
 
