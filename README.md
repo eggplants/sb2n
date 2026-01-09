@@ -14,7 +14,7 @@
   <https://github.com/eggplants/sb2n/actions/workflows/ci.yml>
 )
 
-Helpfeel Cosence (Scrapbox) to Notion Migration Tool
+[Helpfeel Cosense (Scrapbox)](https://cosen.se/) to [Notion](https://www.notion.com/) Migration Tool
 
 ## Installation
 
@@ -38,6 +38,9 @@ Create a database in Notion with the following properties:
 - **Scrapbox URL** (URL) - Link to original Scrapbox page
 - **Created Date** (Date) - Original creation date
 - **Tags** (Multi-select) - Tags from Scrapbox
+
+<img width="978" height="95" alt="image" src="https://github.com/user-attachments/assets/b26cbfb5-fa66-4f08-a5b9-faa30d6303e1" />
+
 
 ### 3. Run migration
 
