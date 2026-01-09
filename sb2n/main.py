@@ -39,7 +39,7 @@ def migrate_command(args: argparse.Namespace) -> int:
         config.validate()
 
         # Create and run migrator
-        migrator = Migrator(config, dry_run=args.dry_run, limit=args.limit)
+        migrator = Migrator(config, dry_run=args.dry_run, limit=args.limit, skip_existing=args.skip_existing)
         summary = migrator.migrate_all()
 
         # Return success only if all pages migrated successfully
@@ -100,6 +100,12 @@ def main() -> None:
         "--limit",
         type=int,
         help="Limit the number of pages to migrate (default: all pages)",
+    )
+
+    migrate_parser.add_argument(
+        "--skip-existing",
+        action="store_true",
+        help="Skip pages that already exist in Notion database",
     )
 
     args = parser.parse_args()

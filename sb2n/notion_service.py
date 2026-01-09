@@ -83,6 +83,50 @@ class NotionService:
         self.database_id = database_id
         self.client = Client(auth=api_key)
 
+    def get_existing_page_titles(self) -> set[str]:
+        """Get all existing page titles from the database.
+
+        Returns:
+            Set of page titles currently in the database
+        """
+        logger.info("Fetching existing pages from Notion database")
+        existing_titles: set[str] = set()
+
+        try:
+            # Query the database with pagination
+            has_more = True
+            start_cursor = None
+
+            while has_more:
+                query_params: dict[str, Any] = {
+                    "database_id": self.database_id,
+                    "page_size": 100,
+                }
+                if start_cursor:
+                    query_params["start_cursor"] = start_cursor
+
+                response: dict[str, Any] = self.client.databases.query(**query_params)  # type: ignore[assignment]
+
+                for page in response.get("results", []):
+                    # Extract title from properties
+                    properties = page.get("properties", {})
+                    title_prop = properties.get("Title", {}) or properties.get("Name", {})
+                    title_content = title_prop.get("title", [])
+                    if title_content:
+                        title = title_content[0].get("text", {}).get("content", "")
+                        if title:
+                            existing_titles.add(title)
+
+                has_more = response.get("has_more", False)
+                start_cursor = response.get("next_cursor")
+
+            logger.info(f"Found {len(existing_titles)} existing pages in Notion")
+            return existing_titles
+
+        except Exception:
+            logger.exception("Failed to fetch existing pages from Notion")
+            raise
+
     def create_database_page(
         self,
         title: str,

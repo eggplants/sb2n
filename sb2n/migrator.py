@@ -56,17 +56,21 @@ class Migrator:
     including progress tracking, error handling, and summary reporting.
     """
 
-    def __init__(self, config: Config, dry_run: bool = False, limit: int | None = None) -> None:
+    def __init__(
+        self, config: Config, dry_run: bool = False, limit: int | None = None, skip_existing: bool = False
+    ) -> None:
         """Initialize the migrator.
 
         Args:
             config: Configuration for migration
             dry_run: If True, do not actually create pages in Notion
             limit: Maximum number of pages to migrate (None for all pages)
+            skip_existing: If True, skip pages that already exist in Notion
         """
         self.config = config
         self.dry_run = dry_run
         self.limit = limit
+        self.skip_existing = skip_existing
         self.notion_service = NotionService(config.notion_api_key, config.notion_database_id)
         self.converter = NotionBlockConverter(self.notion_service)
 
@@ -79,6 +83,15 @@ class Migrator:
         logger.info("Starting migration from Scrapbox to Notion")
         if self.dry_run:
             logger.info("DRY RUN MODE: No actual changes will be made")
+
+        # Get existing pages if skip_existing is enabled
+        existing_titles: set[str] = set()
+        if self.skip_existing:
+            try:
+                existing_titles = self.notion_service.get_existing_page_titles()
+            except Exception as e:
+                logger.error(f"Failed to get existing pages: {e}")
+                logger.info("Continuing without skip-existing functionality")
 
         results: list[MigrationResult] = []
 
@@ -100,6 +113,18 @@ class Migrator:
             for i, page in enumerate(pages, 1):
                 logger.info(f"[{i}/{total}] Processing: {page.title}")
 
+                # Check if page already exists and should be skipped
+                if self.skip_existing and page.title in existing_titles:
+                    logger.info(f"⊘ Skipping existing page: {page.title}")
+                    results.append(
+                        MigrationResult(
+                            page_title=page.title,
+                            success=True,
+                            notion_page_id="skipped",
+                        )
+                    )
+                    continue
+
                 try:
                     result = self._migrate_page(scrapbox, page.title)
                     results.append(result)
@@ -120,11 +145,13 @@ class Migrator:
                     )
 
         # Calculate summary
+        skipped_count = sum(1 for r in results if r.success and r.notion_page_id == "skipped")
+        successful_count = sum(1 for r in results if r.success and r.notion_page_id != "skipped")
         summary = MigrationSummary(
             total_pages=total,
-            successful=sum(1 for r in results if r.success),
+            successful=successful_count,
             failed=sum(1 for r in results if not r.success),
-            skipped=0,
+            skipped=skipped_count,
             results=results,
         )
 
