@@ -132,7 +132,7 @@ def main() -> None:
     setup_logging(verbose=args.verbose)
 
     # Handle commands
-    if args.command == Command.MIGRATE:
+    if args.command == Command.MIGRATE.value:
         exit_code = migrate_command(args)
         sys.exit(exit_code)
     else:

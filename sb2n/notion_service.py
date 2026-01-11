@@ -49,9 +49,9 @@ class FileUploadResponse(BaseModel):
     upload_url: str
     archived: bool
     status: Literal["pending", "completed", "failed"]
-    filename: str
-    content_type: str
-    content_length: int
+    filename: str | None = None
+    content_type: str | None = None
+    content_length: int | None = None
 
 
 class NotionService:
@@ -318,7 +318,9 @@ class NotionService:
         """
         try:
             # Step 1: Create file upload
-            file_upload = FileUploadResponse.model_validate(self.client.file_uploads.create(mode="single_part"))
+            raw_response = self.client.file_uploads.create(mode="single_part")
+            logger.debug("Raw file upload response: %s", raw_response)
+            file_upload = FileUploadResponse.model_validate(raw_response)
             logger.debug("Created file upload with ID: %(file_upload_id)s", {"file_upload_id": file_upload.id})
 
             # Step 2: Send file data
