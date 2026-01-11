@@ -41,7 +41,7 @@ class ScrapboxService:
             self._client.close()
             self._client = None
 
-    def get_all_pages(self) -> list[PageListItem]:
+    def get_all_pages(self, limit: int = 1000) -> list[PageListItem]:
         """Get all pages from the Scrapbox project.
 
         Returns:
@@ -56,7 +56,6 @@ class ScrapboxService:
 
         all_pages: list[PageListItem] = []
         skip = 0
-        limit = 100
 
         logger.info("Fetching pages from project: %(project_name)s", {"project_name": self.project_name})
 

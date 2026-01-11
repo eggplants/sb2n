@@ -26,6 +26,7 @@
     "pyproject",
     "pytest",
     "PYTHONUNBUFFERED",
+    "realtag",
     "scrapbox",
     "sdist",
     "shellsession",

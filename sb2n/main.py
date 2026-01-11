@@ -7,9 +7,11 @@ from enum import Enum
 from pathlib import Path
 
 from sb2n.config import Config
+from sb2n.exporter import MarkdownExporter
 from sb2n.link_restorer import LinkRestorer
 from sb2n.migrator import Migrator
 from sb2n.notion_service import NotionService
+from sb2n.scrapbox_service import ScrapboxService
 
 logger = logging.getLogger(__name__)
 
@@ -19,6 +21,7 @@ class Command(Enum):
 
     MIGRATE = "migrate"
     RESTORE_LINK = "restore-link"
+    EXPORT = "export"
 
 
 class Args(argparse.Namespace):
@@ -32,6 +35,7 @@ class Args(argparse.Namespace):
     verbose: bool
     pages: str | None
     enable_icon: bool
+    output_dir: str
 
 
 def setup_logging(*, verbose: bool = False) -> None:
@@ -99,17 +103,31 @@ def restore_link_command(args: Args) -> int:
         config = Config.from_env(env_file)
         config.validate()
 
-        # Create services
-        notion_service = NotionService(api_key=config.notion_api_key, database_id=config.notion_database_id)
+        # Create restorer
+        notion_service = NotionService(
+            api_key=config.notion_api_key,
+            database_id=config.notion_database_id,
+        )
+        restorer = LinkRestorer(notion_service, dry_run=args.dry_run)
 
-        # Parse page titles if provided
+        # Parse page filter
         page_titles = None
         if args.pages:
             page_titles = [title.strip() for title in args.pages.split(",")]
 
-        # Create and run link restorer
-        restorer = LinkRestorer(notion_service, dry_run=args.dry_run)
-        stats = restorer.restore_all_links(page_titles=page_titles)
+        # Run restore
+        summary = restorer.restore_all_links(page_titles=page_titles)
+
+        # Print summary
+        logger.info("=" * 60)
+        logger.info("LINK RESTORATION SUMMARY")
+        logger.info("=" * 60)
+        logger.info("Total pages processed: %d", summary["total_pages"])
+        logger.info("Successful: %d", summary["successful"])
+        logger.info("Failed: %d", summary["failed"])
+        logger.info("=" * 60)
+
+        return summary["failed"]
 
     except ValueError:
         logger.exception("Configuration error")
@@ -117,9 +135,88 @@ def restore_link_command(args: Args) -> int:
     except Exception:
         logger.exception("Link restoration failed")
         return 1
-    else:
-        # Return success if no errors occurred
-        return 1 if stats["errors"] > 0 else 0
+
+
+def export_command(args: Args) -> int:
+    """Execute the export command.
+
+    Args:
+        args: Parsed command-line arguments
+
+    Returns:
+        Exit code (0 for success, 1 for failure)
+    """
+    try:
+        # Load configuration
+        env_file = Path(args.env_file) if args.env_file else None
+        config = Config.from_env(env_file)
+
+        # Set up output directory
+        output_dir = Path(args.output_dir)
+        output_dir.mkdir(parents=True, exist_ok=True)
+        logger.info("Exporting to: %s", output_dir.absolute())
+
+        # Create services
+        scrapbox_service = ScrapboxService(
+            project_name=config.scrapbox_project,
+            connect_sid=config.scrapbox_connect_sid,
+        )
+
+        # Get pages and export
+        with scrapbox_service:
+            exporter = MarkdownExporter(scrapbox_service, output_dir)
+
+            # Get pages
+            logger.info("Fetching pages from Scrapbox project: %s", config.scrapbox_project)
+            pages = scrapbox_service.get_all_pages(limit=args.limit or 1000)
+            logger.info("Found %d pages to export", len(pages))
+
+            # Export each page
+            successful = 0
+            failed = 0
+            failed_pages = []
+
+            for i, page in enumerate(pages, 1):
+                page_title = page.title
+                logger.info("Processing page %d/%d: %s", i, len(pages), page_title)
+
+                try:
+                    # Get page content
+                    page_text = scrapbox_service.get_page_text(page_title)
+                    if not page_text:
+                        logger.warning("Empty page content for: %s", page_title)
+                        continue
+
+                    # Export to Markdown
+                    exporter.export_page(page_title, page_text)
+                    successful += 1
+                    logger.info("✓ Exported: %s", page_title)
+
+                except Exception as e:
+                    logger.exception("Error exporting page: %s", page_title)
+                    failed += 1
+                    failed_pages.append((page_title, str(e)))
+
+        # Print summary
+        logger.info("=" * 60)
+        logger.info("EXPORT SUMMARY")
+        logger.info("=" * 60)
+        logger.info("Total pages:      %d", len(pages))
+        logger.info("Successful:       %d", successful)
+        logger.info("Failed:           %d", failed)
+        logger.info("=" * 60)
+
+        if failed_pages:
+            logger.info("Failed pages:")
+            for title, error in failed_pages:
+                logger.info("  - %s: %s", title, error)
+    except ValueError:
+        logger.exception("Configuration error")
+        return 1
+    except Exception:
+        logger.exception("Export failed")
+        return 1
+    return 0 if failed == 0 else 1
 
 
 def main() -> None:
@@ -206,6 +303,32 @@ def main() -> None:
         help="Comma-separated list of specific page titles to process",
     )
 
+    # export command
+    export_parser = subparsers.add_parser(
+        "export",
+        help="Export Scrapbox pages to Markdown format",
+    )
+
+    export_parser.add_argument(
+        "--env-file",
+        type=str,
+        help="Path to .env file (default: .env in current directory)",
+    )
+
+    export_parser.add_argument(
+        "-d",
+        "--output-dir",
+        type=str,
+        default="./out",
+        help="Output directory for exported Markdown files (default: ./out)",
+    )
+
+    export_parser.add_argument(
+        "--limit",
+        type=int,
+        help="Limit the number of pages to export",
+    )
+
     args = parser.parse_args(namespace=Args())
 
     # Set up logging
@@ -217,6 +340,9 @@ def main() -> None:
         sys.exit(exit_code)
     elif args.command == Command.RESTORE_LINK.value:
         exit_code = restore_link_command(args)
+        sys.exit(exit_code)
+    elif args.command == Command.EXPORT.value:
+        exit_code = export_command(args)
         sys.exit(exit_code)
     else:
         parser.print_help()
