@@ -308,7 +308,7 @@ class ScrapboxParser:
         Returns:
             List of parsed lines
         """
-        lines = text.split("\n")
+        lines = text.split("\n")[1:]  # Skip title line
         parsed_lines = []
         in_code_block = False
         code_buffer = []

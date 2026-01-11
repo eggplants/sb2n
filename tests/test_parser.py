@@ -62,12 +62,7 @@ def test_parse_list_item() -> None:
 
 def test_parse_text_with_multiple_lines() -> None:
     """Test parsing multiple lines."""
-    text = """[* Title]
-This is a paragraph.
- List item 1
- List item 2
-#tag1 #tag2"""
-
+    text = "Title\n[* Title]\nThis is a paragraph.\n List item 1\n List item 2\n#tag1 #tag2"
     parsed_lines = ScrapboxParser.parse_text(text)
     assert len(parsed_lines) > 0
     assert parsed_lines[0].line_type == LineType.HEADING_2
