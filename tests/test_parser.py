@@ -327,3 +327,24 @@ def test_parse_inline_bold_asterisk() -> None:
 
     bold_elems = [elem for elem in parsed.rich_text or [] if elem.bold]
     assert len(bold_elems) == 2
+
+def test_parse_cross_project_link() -> None:
+    """Test cross-project link parsing."""
+    # Basic cross-project link
+    line = "[/icons/hr]"
+    parsed = ScrapboxParser.parse_line(line)
+    assert parsed.line_type == LineType.URL
+    assert parsed.content == "https://scrapbox.io/icons/hr"
+
+    # Cross-project link with Japanese page name
+    line = "[/help-jp/記法]"
+    parsed = ScrapboxParser.parse_line(line)
+    assert parsed.line_type == LineType.URL
+    assert parsed.content == "https://scrapbox.io/help-jp/記法"
+
+    # Icon notation should NOT be treated as cross-project link
+    line = "[/icons/hr.icon]"
+    parsed = ScrapboxParser.parse_line(line)
+    assert parsed.line_type == LineType.ICON
+    assert parsed.content == "hr"
+    assert parsed.icon_project == "icons"

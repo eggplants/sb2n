@@ -146,6 +146,8 @@ class ScrapboxParser:
     INLINE_CODE_PATTERN = re.compile(r"`([^`]+)`")
     # Icon notation: [page_name.icon] or [/icons/page_name.icon]
     ICON_PATTERN = re.compile(r"^\[(/icons/)?([^\]]+)\.icon\]$")
+    # Cross-project link: [/project/page] (not ending in .icon)
+    CROSS_PROJECT_LINK_PATTERN = re.compile(r"^\[/([^/\]]+)/([^\]]+)\]$")
     # Background colors: [! text], [# text], [% text]
     RED_BACKGROUND_PATTERN = re.compile(r"\[!\s*([^\]]+)\]")
     GREEN_BACKGROUND_PATTERN = re.compile(r"\[#\s*([^\]]+)\]")
@@ -202,7 +204,7 @@ class ScrapboxParser:
         return ScrapboxParser.URL_PATTERN.findall(text)
 
     @staticmethod
-    def parse_line(line: str) -> ParsedLine:
+    def parse_line(line: str) -> ParsedLine:  # noqa: PLR0915
         """Parse a single line of Scrapbox text.
 
         Args:
@@ -312,6 +314,21 @@ class ScrapboxParser:
                 icon_project=project,
                 indent_level=indent_level,
             )
+
+        # Cross-project link: [/project/page]
+        cross_project_match = ScrapboxParser.CROSS_PROJECT_LINK_PATTERN.match(stripped)
+        if cross_project_match:
+            project = cross_project_match.group(1)
+            page = cross_project_match.group(2)
+            # Don't match if it ends with .icon (that should be handled by ICON_PATTERN)
+            if not page.endswith(".icon"):
+                url = f"https://scrapbox.io/{project}/{page}"
+                return ParsedLine(
+                    original=line,
+                    line_type=LineType.URL,
+                    content=url,
+                    indent_level=indent_level,
+                )
 
         # External link with display text: [text url] or [url text]
         # Only treat as external_link if the entire line is the link
