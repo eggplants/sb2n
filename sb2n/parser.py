@@ -393,6 +393,7 @@ class ScrapboxParser:
         parsed_lines, code_buffer, table_buffer = [], [], []
         in_code_block, in_table_block = False, False
         code_language = "plain text"
+        code_indent_level = 0  # Track indent level of code block start
         table_name = ""
         table_indent_level = 0
 
@@ -404,11 +405,18 @@ class ScrapboxParser:
                 in_code_block = True
                 code_language = parsed.language
                 code_buffer = []
+                # Store the indent level of the code block start line
+                code_indent_level = parsed.indent_level
                 continue
 
             if in_code_block:
-                # Empty line or unindented line ends code block
-                if not line.strip() or (line and not line.startswith(" ") and not line.startswith("\t")):
+                # Calculate current line's indent level
+                current_indent = len(line) - len(line.lstrip())
+
+                # Code block ends if:
+                # 1. Empty line
+                # 2. Line with indent <= code block start indent
+                if not line.strip() or current_indent <= code_indent_level:
                     # Save code block
                     if code_buffer:
                         code_content = "\n".join(code_buffer)
@@ -422,13 +430,21 @@ class ScrapboxParser:
                         )
                     in_code_block = False
                     code_buffer = []
+                    code_indent_level = 0
                     # Process current line normally
                     if line.strip():
                         parsed = ScrapboxParser.parse_line(line)
                         parsed_lines.append(parsed)
                 else:
-                    # Add to code buffer (remove one level of indent)
-                    code_buffer.append(line.removeprefix(" "))
+                    # Add to code buffer, removing the base indent level + 1
+                    # Code content should be indented one level more than the code: line
+                    indent_to_remove = code_indent_level + 1
+                    line_indent = len(line) - len(line.lstrip())
+                    if line_indent >= indent_to_remove:
+                        code_buffer.append(line[indent_to_remove:])
+                    else:
+                        # Line has less indent than expected, keep as-is
+                        code_buffer.append(line.lstrip())
                 continue
 
             # Handle table blocks

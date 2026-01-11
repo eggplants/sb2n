@@ -60,7 +60,6 @@ class NotionBlockConverter:
             # Handle list items with nesting
             if parsed_line.line_type == LineType.LIST:
                 # Notion API only supports 2 levels of nesting (3 total levels including top)
-                # Clamp indent_level to maximum of 2
                 effective_indent = min(parsed_line.indent_level, 2)
 
                 # Pop stack until we find the correct parent level

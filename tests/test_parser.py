@@ -372,3 +372,98 @@ def test_parse_cross_project_link() -> None:
     assert parsed.line_type == LineType.ICON
     assert parsed.content == "hr"
     assert parsed.icon_project == "icons"
+
+
+def test_parse_deeply_nested_code_block() -> None:
+    """Test that code blocks inside deeply nested lists have indent removed."""
+    text = """test0
+	test1
+		test2
+		 test3
+		 	test4
+		 		test5
+		 			test6
+		 				test7
+		 					test8
+		 						code:python
+		 						 print(10)
+		 						 print(20)"""  # noqa: E101
+
+    parsed_lines = ScrapboxParser.parse_text(text)
+
+    # Find the code block
+    code_blocks = [line for line in parsed_lines if line.line_type == LineType.CODE]
+    assert len(code_blocks) == 1
+
+    code_block = code_blocks[0]
+    # Code content should have no leading spaces/tabs
+    expected_code = "print(10)\nprint(20)"
+    assert code_block.content == expected_code
+
+
+def test_parse_code_block_with_following_list_items() -> None:
+    """Test that list items after code block are not included in code."""
+    text = """test0
+	test1
+		test2
+		 test3
+		 	test4
+		 		test5
+		 			test6
+		 				test7
+		 					test8
+		 						code:python
+		 						 print(10)
+		 						 print(20)
+				test4
+					test5"""  # noqa: E101
+
+    parsed_lines = ScrapboxParser.parse_text(text)
+
+    # Find the code block
+    code_blocks = [line for line in parsed_lines if line.line_type == LineType.CODE]
+    assert len(code_blocks) == 1
+
+    code_block = code_blocks[0]
+    # Code should only contain print statements, NOT test4/test5
+    assert "print(10)" in code_block.content
+    assert "print(20)" in code_block.content
+    assert "test4" not in code_block.content
+    assert "test5" not in code_block.content
+
+    # test4 and test5 should be separate list items
+    list_items = [line for line in parsed_lines if line.line_type == LineType.LIST]
+    test4_items = [item for item in list_items if "test4" in item.content]
+    test5_items = [item for item in list_items if "test5" in item.content]
+
+    # Should have test4 appearing twice (before and after code block)
+    assert len(test4_items) == 2
+    # Should have test5 appearing twice (before and after code block)
+    assert len(test5_items) == 2
+
+
+def test_parse_deeply_nested_list() -> None:
+    """Test parsing of deeply nested list items."""
+    text = """test0
+	test1
+		test2
+		 test3
+		 	test4
+		 		test5
+		 			test6
+		 				test7
+		 					test8"""  # noqa: E101
+
+    parsed_lines = ScrapboxParser.parse_text(text)
+
+    # All lines should be parsed as list items with appropriate indent levels
+    list_items = [line for line in parsed_lines if line.line_type == LineType.LIST]
+    assert len(list_items) == 8
+
+    # Check indent levels are preserved
+    assert list_items[0].content == "test1"
+    assert list_items[0].indent_level == 1
+    assert list_items[1].content == "test2"
+    assert list_items[1].indent_level == 2
+    assert list_items[7].content == "test8"
+    assert list_items[7].indent_level >= 8
