@@ -7,7 +7,9 @@ from enum import Enum
 from pathlib import Path
 
 from sb2n.config import Config
+from sb2n.link_restorer import LinkRestorer
 from sb2n.migrator import Migrator
+from sb2n.notion_service import NotionService
 
 logger = logging.getLogger(__name__)
 
@@ -16,6 +18,7 @@ class Command(Enum):
     """Available CLI commands."""
 
     MIGRATE = "migrate"
+    RESTORE_LINK = "restore-link"
 
 
 class Args(argparse.Namespace):
@@ -27,6 +30,7 @@ class Args(argparse.Namespace):
     limit: int | None
     skip_existing: bool
     verbose: bool
+    pages: str | None
 
 
 def setup_logging(*, verbose: bool = False) -> None:
@@ -71,6 +75,44 @@ def migrate_command(args: Args) -> int:
     else:
         # Return success only if all pages migrated successfully
         return summary.failed
+
+
+def restore_link_command(args: Args) -> int:
+    """Execute the restore-link command.
+
+    Args:
+        args: Parsed command-line arguments
+
+    Returns:
+        Exit code (0 for success, 1 for failure)
+    """
+    try:
+        # Load configuration
+        env_file = Path(args.env_file) if args.env_file else None
+        config = Config.from_env(env_file)
+        config.validate()
+
+        # Create services
+        notion_service = NotionService(api_key=config.notion_api_key, database_id=config.notion_database_id)
+
+        # Parse page titles if provided
+        page_titles = None
+        if args.pages:
+            page_titles = [title.strip() for title in args.pages.split(",")]
+
+        # Create and run link restorer
+        restorer = LinkRestorer(notion_service, dry_run=args.dry_run)
+        stats = restorer.restore_all_links(page_titles=page_titles)
+
+    except ValueError:
+        logger.exception("Configuration error")
+        return 1
+    except Exception:
+        logger.exception("Link restoration failed")
+        return 1
+    else:
+        # Return success if no errors occurred
+        return 1 if stats["errors"] > 0 else 0
 
 
 def main() -> None:
@@ -126,6 +168,30 @@ def main() -> None:
         help="Skip pages that already exist in Notion database",
     )
 
+    # restore-link command
+    restore_link_parser = subparsers.add_parser(
+        "restore-link",
+        help="Restore Scrapbox internal links in migrated Notion pages",
+    )
+
+    restore_link_parser.add_argument(
+        "--env-file",
+        type=str,
+        help="Path to .env file (default: .env in current directory)",
+    )
+
+    restore_link_parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Run without making actual changes to Notion",
+    )
+
+    restore_link_parser.add_argument(
+        "--pages",
+        type=str,
+        help="Comma-separated list of specific page titles to process",
+    )
+
     args = parser.parse_args(namespace=Args())
 
     # Set up logging
@@ -134,6 +200,9 @@ def main() -> None:
     # Handle commands
     if args.command == Command.MIGRATE.value:
         exit_code = migrate_command(args)
+        sys.exit(exit_code)
+    elif args.command == Command.RESTORE_LINK.value:
+        exit_code = restore_link_command(args)
         sys.exit(exit_code)
     else:
         parser.print_help()

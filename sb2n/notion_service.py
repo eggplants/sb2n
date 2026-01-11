@@ -422,3 +422,122 @@ class NotionService:
                 )
 
         return result
+
+    def get_page_title_to_id_map(self) -> dict[str, str]:
+        """Get mapping of page titles to page IDs from the database.
+
+        Returns:
+            Dictionary mapping page titles to page IDs
+        """
+        logger.info("Building page title to ID mapping")
+        title_to_id: dict[str, str] = {}
+
+        try:
+            # Step 1: Retrieve database to get data sources
+            database = self.client.databases.retrieve(database_id=self.database_id)
+            data_sources = database.get("data_sources", [])  # ty:ignore[possibly-missing-attribute]
+
+            if not data_sources:
+                logger.warning("No data sources found in database")
+                return title_to_id
+
+            # Step 2: Query each data source for pages
+            for data_source in data_sources:
+                data_source_id = data_source.get("id")
+                if not data_source_id:
+                    continue
+
+                # Query data source with pagination
+                has_more = True
+                start_cursor = None
+
+                while has_more:
+                    body: dict[str, Any] = {"page_size": 100}
+                    if start_cursor:
+                        body["start_cursor"] = start_cursor
+
+                    response_dict = self.client.request(
+                        method="POST",
+                        path=f"data_sources/{data_source_id}/query",
+                        body=body,
+                    )
+                    response = QueryDatabaseResponse.model_validate(response_dict)
+
+                    for page in response.results:
+                        page_id = page.get("id")
+                        properties = page.get("properties", {})
+                        title_prop = properties.get("Title") or properties.get("Name")
+                        if title_prop and title_prop.get("type") == "title":  # noqa: PLR2004
+                            title_content = title_prop.get("title", [])
+                            if title_content and page_id:
+                                title_text = title_content[0].get("plain_text", "")
+                                if title_text:
+                                    title_to_id[title_text] = page_id
+
+                    has_more = response.has_more
+                    start_cursor = response.next_cursor
+
+            logger.info("Found %(count)d pages in database", {"count": len(title_to_id)})
+        except Exception:
+            logger.exception("Failed to build page title to ID mapping")
+            raise
+        else:
+            return title_to_id
+
+    def get_page_blocks(self, page_id: str, *, recursive: bool = True) -> list[dict[str, Any]]:
+        """Get all blocks from a page, optionally including child blocks.
+
+        Args:
+            page_id: Notion page ID
+            recursive: Whether to recursively fetch child blocks
+
+        Returns:
+            List of block objects
+        """
+        all_blocks: list[dict[str, Any]] = []
+
+        try:
+            # Fetch top-level blocks with pagination
+            has_more = True
+            start_cursor = None
+
+            while has_more:
+                params: dict[str, Any] = {"block_id": page_id}
+                if start_cursor:
+                    params["start_cursor"] = start_cursor
+
+                response = self.client.blocks.children.list(**params)
+                blocks = response.get("results", [])  # ty:ignore[possibly-missing-attribute]
+                all_blocks.extend(blocks)
+
+                has_more = response.get("has_more", False)  # ty:ignore[possibly-missing-attribute]
+                start_cursor = response.get("next_cursor")  # ty:ignore[possibly-missing-attribute]
+
+            # Recursively fetch child blocks if requested
+            if recursive:
+                for block in all_blocks[:]:  # Copy list to avoid modification during iteration
+                    if block.get("has_children"):
+                        child_blocks = self.get_page_blocks(block["id"], recursive=True)
+                        all_blocks.extend(child_blocks)
+
+        except Exception:
+            logger.exception("Failed to fetch blocks for page: %(page_id)s", {"page_id": page_id})
+            raise
+        else:
+            return all_blocks
+
+    def update_block(self, block_id: str, block_data: dict[str, Any]) -> None:
+        """Update a block.
+
+        Args:
+            block_id: Block ID to update
+            block_data: Block data to update (should contain block type and content)
+
+        Raises:
+            Exception: If block update fails
+        """
+        try:
+            self.client.blocks.update(block_id=block_id, **block_data)
+        except Exception:
+            logger.exception("Failed to update block: %(block_id)s", {"block_id": block_id})
+            raise
