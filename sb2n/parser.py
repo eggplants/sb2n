@@ -318,7 +318,7 @@ class ScrapboxParser:
         return parsed_lines
 
     @staticmethod
-    def _parse_rich_text(text: str) -> list[RichTextElement]:  # noqa: C901
+    def _parse_rich_text(text: str) -> list[RichTextElement]:  # noqa: C901, PLR0912
         """Parse text with decorations into rich text elements.
 
         Args:

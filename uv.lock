@@ -105,37 +105,6 @@ wheels = [
 ]
 
 [[package]]
-name = "dnspython"
-version = "2.8.0"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/8c/8b/57666417c0f90f08bcafa776861060426765fdb422eb10212086fb811d26/dnspython-2.8.0.tar.gz", hash = "sha256:181d3c6996452cb1189c4046c61599b84a5a86e099562ffde77d26984ff26d0f", size = 368251, upload-time = "2025-09-07T18:58:00.022Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/ba/5a/18ad964b0086c6e62e2e7500f7edc89e3faa45033c71c1893d34eed2b2de/dnspython-2.8.0-py3-none-any.whl", hash = "sha256:01d9bbc4a2d76bf0db7c1f729812ded6d912bd318d3b1cf81d30c0f845dbf3af", size = 331094, upload-time = "2025-09-07T18:57:58.071Z" },
-]
-
-[[package]]
-name = "email-validator"
-version = "2.3.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "dnspython" },
-    { name = "idna" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/f5/22/900cb125c76b7aaa450ce02fd727f452243f2e91a61af068b40adba60ea9/email_validator-2.3.0.tar.gz", hash = "sha256:9fc05c37f2f6cf439ff414f8fc46d917929974a82244c20eb10231ba60c54426", size = 51238, upload-time = "2025-08-26T13:09:06.831Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/de/15/545e2b6cf2e3be84bc1ed85613edd75b8aea69807a71c26f4ca6a9258e82/email_validator-2.3.0-py3-none-any.whl", hash = "sha256:80f13f623413e6b197ae73bb10bf4eb0908faf509ad8362c5edeb0be7fd450b4", size = 35604, upload-time = "2025-08-26T13:09:05.858Z" },
-]
-
-[[package]]
-name = "emoji"
-version = "2.15.0"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/a2/78/0d2db9382c92a163d7095fc08efff7800880f830a152cfced40161e7638d/emoji-2.15.0.tar.gz", hash = "sha256:eae4ab7d86456a70a00a985125a03263a5eac54cd55e51d7e184b1ed3b6757e4", size = 615483, upload-time = "2025-09-21T12:13:02.755Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/e1/5e/4b5aaaabddfacfe36ba7768817bd1f71a7a810a43705e531f3ae4c690767/emoji-2.15.0-py3-none-any.whl", hash = "sha256:205296793d66a89d88af4688fa57fd6496732eb48917a87175a023c8138995eb", size = 608433, upload-time = "2025-09-21T12:13:01.197Z" },
-]
-
-[[package]]
 name = "h11"
 version = "0.16.0"
 source = { registry = "https://pypi.org/simple" }
@@ -299,36 +268,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/69/44/36f1a6e523abc58ae5f928898e4aca2e0ea509b5aa6f6f392a5d882be928/pydantic-2.12.5.tar.gz", hash = "sha256:4d351024c75c0f085a9febbb665ce8c0c6ec5d30e903bdb6394b7ede26aebb49", size = 821591, upload-time = "2025-11-26T15:11:46.471Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/5a/87/b70ad306ebb6f9b585f114d0ac2137d792b48be34d732d60e597c2f8465a/pydantic-2.12.5-py3-none-any.whl", hash = "sha256:e561593fccf61e8a20fc46dfc2dfe075b8be7d0188df33f221ad1f0139180f9d", size = 463580, upload-time = "2025-11-26T15:11:44.605Z" },
-]
-
-[package.optional-dependencies]
-email = [
-    { name = "email-validator" },
-]
-
-[[package]]
-name = "pydantic-api-models"
-version = "0.0.2"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "pydantic", extra = ["email"] },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/b3/7b/11f67dc5956f0d10cd34625bdd1d9f79aa72400a7a6764001ad6251d66f6/pydantic_api_models-0.0.2.tar.gz", hash = "sha256:917c13220c06bd9239f28579fdb636364b5ec80c12aaa8009e17cbd5581a2332", size = 2034, upload-time = "2024-11-19T16:18:35.948Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/9b/9d/89a9d31a9c7003d2b7273fe961094f35e6649a416ec380266986a728a9fc/pydantic_api_models-0.0.2-py3-none-any.whl", hash = "sha256:cb5bbb7177e51a2022e4ffb503f5818a5549238e3441ad5054199f5d55d7bd56", size = 2674, upload-time = "2024-11-19T16:18:33.84Z" },
-]
-
-[[package]]
-name = "pydantic-api-models-notion"
-version = "0.0.23"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "emoji" },
-    { name = "pydantic-api-models" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/64/de/092b6ebe6c33bd66ea49ece1d445eaa29b0dc884d27dc495897736ce05dd/pydantic_api_models_notion-0.0.23.tar.gz", hash = "sha256:b634b867a14eba047836cd0785810835604c16bb9e0b12fdbca4fd1827ebe8ae", size = 25642, upload-time = "2025-09-22T14:41:45.537Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/41/77/cc6a82d78eafca86126449ba1bdcc324d7523fe338183c481d37b762a715/pydantic_api_models_notion-0.0.23-py3-none-any.whl", hash = "sha256:d18877cf317e0e82ef7bdd293b11a3c3126b6d339aa84ad95d4b1be34819bf52", size = 40184, upload-time = "2025-09-22T14:41:44.184Z" },
 ]
 
 [[package]]
@@ -552,7 +491,7 @@ name = "sb2n"
 source = { editable = "." }
 dependencies = [
     { name = "notion-client" },
-    { name = "pydantic-api-models-notion" },
+    { name = "pydantic" },
     { name = "python-dotenv" },
     { name = "scrapbox-client" },
 ]
@@ -572,7 +511,7 @@ docs = [
 [package.metadata]
 requires-dist = [
     { name = "notion-client", specifier = ">=2.7" },
-    { name = "pydantic-api-models-notion", specifier = ">=0.0.23" },
+    { name = "pydantic", specifier = ">=2.12.5" },
     { name = "python-dotenv", specifier = ">=1" },
     { name = "scrapbox-client", specifier = ">=0.1" },
 ]

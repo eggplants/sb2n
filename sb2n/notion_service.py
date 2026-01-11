@@ -6,16 +6,19 @@ from typing import TYPE_CHECKING, Literal, TypedDict
 from uuid import UUID
 
 from notion_client import Client
-from pydantic_api.notion.models.endpoints import CreatePageRequest, QueryDatabaseRequest, QueryDatabaseResponse
-from pydantic_api.notion.models.objects import (
+
+from sb2n.models import (
     BlockObject,
     BookmarkBlock,
     BulletedListItemBlock,
     CodeBlock,
+    CreatePageRequest,
     Heading2Block,
     Heading3Block,
     ImageBlock,
     ParagraphBlock,
+    QueryDatabaseRequest,
+    QueryDatabaseResponse,
     QuoteBlock,
 )
 
@@ -336,17 +339,16 @@ class NotionService:
         else:
             return file_upload_id
 
-    def create_bookmark_block(self, url: str, caption: str | None = None) -> BookmarkBlock:
+    def create_bookmark_block(self, url: str) -> BookmarkBlock:
         """Create a bookmark block.
 
         Args:
             url: URL to bookmark
-            caption: Optional caption for the bookmark
 
         Returns:
             Bookmark block object
         """
-        return BookmarkBlock.new(url=url, caption=caption)
+        return BookmarkBlock.new(url=url)
 
     def create_quote_block(self, text: str | list[RichTextElement]) -> QuoteBlock:
         """Create a quote block.

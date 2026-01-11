@@ -6,8 +6,7 @@ from typing import TYPE_CHECKING
 from sb2n.parser import ParsedLine, RichTextElement, ScrapboxParser
 
 if TYPE_CHECKING:
-    from pydantic_api.notion.models.objects import BlockObject
-
+    from sb2n.models import BlockObject
     from sb2n.notion_service import NotionService
     from sb2n.scrapbox_service import ScrapboxService
 

@@ -20,7 +20,7 @@ classifiers = [
 dynamic = [ "version" ]
 dependencies = [
   "notion-client>=2.7",
-  "pydantic-api-models-notion>=0.0.23",
+  "pydantic>=2.12.5",
   "python-dotenv>=1",
   "scrapbox-client>=0.1",
 ]
