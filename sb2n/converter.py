@@ -82,6 +82,9 @@ class NotionBlockConverter:
         if parsed_line.line_type == LineType.CODE_START:
             return self.notion_service.create_code_block(parsed_line.content, parsed_line.language)
 
+        if parsed_line.line_type == LineType.CODE:
+            return self.notion_service.create_code_block(parsed_line.content, parsed_line.language)
+
         # Image blocks
         if parsed_line.line_type == LineType.IMAGE:
             return self._create_image_block(parsed_line.content)

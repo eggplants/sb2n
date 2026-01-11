@@ -206,6 +206,12 @@ class LinkRestorer:
                 new_rich_text.append(rt_elem)
                 continue
 
+            # Skip inline code elements
+            annotations = rt_elem.get("annotations", {})
+            if annotations.get("code"):
+                new_rich_text.append(rt_elem)
+                continue
+
             text_content = rt_elem.get("text", {}).get("content", "")
             text_link = rt_elem.get("text", {}).get("link")
 

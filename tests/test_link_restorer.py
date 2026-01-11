@@ -196,6 +196,25 @@ class TestProcessRichText:
         assert found == 0
         assert replaced == 0
 
+    def test_skips_inline_code(self, link_restorer: LinkRestorer) -> None:
+        """Test that inline code with brackets is skipped."""
+        rich_text = [
+            {
+                "type": "text",
+                "text": {"content": "[HomePage]"},
+                "annotations": {"code": True},
+            }
+        ]
+        title_to_id = {"HomePage": "page-123"}
+
+        result, found, replaced = link_restorer._process_rich_text(rich_text, title_to_id)  # noqa: SLF001
+
+        assert len(result) == 1
+        assert result[0]["text"]["content"] == "[HomePage]"
+        assert result[0]["annotations"]["code"] is True
+        assert found == 0
+        assert replaced == 0
+
 
 class TestProcessBlock:
     """Tests for _process_block method."""
