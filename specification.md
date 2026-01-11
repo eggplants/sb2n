@@ -428,13 +428,13 @@ sb2n restore-link --verbose
 
 **Before (Scrapbox風のテキスト):**
 
-```
+```text
 This is a reference to [HomePage] and [Another Page].
 ```
 
 **After (Notionリンク):**
 
-```
+```text
 This is a reference to @HomePage and @Another Page.
 ```
 
@@ -454,7 +454,7 @@ This is a reference to @HomePage and @Another Page.
 3. **ページメンション形式**: `{"type": "mention", "mention": {"type": "page", "page": {"id": "page_id"}}}`
 4. **バッチ処理**: 大量のページを処理する際のAPI制限対策
 
-## 制約事項
+## 懸念
 
 1. Scrapboxの全ての記法がNotionで完全に再現できるわけではない
 2. Scrapboxの内部リンク構造はNotionでは単純なテキストとして扱う
