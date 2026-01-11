@@ -174,13 +174,14 @@ class NotionBlockConverter:
                 icon_url = self.scrapbox_service.get_page_icon_url(parsed_line.icon_page_name, parsed_line.icon_project)
                 if icon_url:
                     return self._create_image_block(icon_url)
-                # If no icon found, create a paragraph with the page name
+                # If no icon found, create a paragraph with the original text
                 logger.warning(
                     "Icon not found for page: %(page_name)s, creating paragraph instead",
                     {"page_name": parsed_line.icon_page_name},
                 )
-            # If icon migration is disabled or service unavailable, create a paragraph
-            return self.notion_service.create_paragraph_block(f"[{parsed_line.content}.icon]")
+            # If icon migration is disabled or service unavailable, preserve original format
+            # Use original text to preserve [/icons/hr.icon] format
+            return self.notion_service.create_paragraph_block(parsed_line.original.strip())
 
         # External link with display text
         if parsed_line.line_type == LineType.EXTERNAL_LINK:

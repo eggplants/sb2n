@@ -35,7 +35,7 @@ def test_parse_heading() -> None:
     """Test heading parsing."""
     line = "[* Main Heading]"
     parsed = ScrapboxParser.parse_line(line)
-    assert parsed.line_type == LineType.HEADING_1
+    assert parsed.line_type == LineType.HEADING_3
     assert parsed.content == "Main Heading"
 
     line = "[** Sub Heading]"
@@ -65,7 +65,7 @@ def test_parse_text_with_multiple_lines() -> None:
     text = "Title\n[* Title]\nThis is a paragraph.\n List item 1\n List item 2\n#tag1 #tag2"
     parsed_lines = ScrapboxParser.parse_text(text)
     assert len(parsed_lines) > 0
-    assert parsed_lines[0].line_type == LineType.HEADING_1
+    assert parsed_lines[0].line_type == LineType.HEADING_3  # [*] maps to H3
     assert any(line.line_type == LineType.LIST for line in parsed_lines)
 
 
@@ -233,18 +233,18 @@ def test_parse_inline_link_with_decorations() -> None:
 
 def test_parse_multiple_heading_levels() -> None:
     """Test various heading levels (asterisk counts)."""
-    # [*******] (7 asterisks) - should be heading_3 (max level)
+    # [*******] (7 asterisks) - should be heading_1 (most asterisks = largest)
     line = "[******* 大見出し/h1]"
     parsed = ScrapboxParser.parse_line(line)
-    assert parsed.line_type == LineType.HEADING_3
+    assert parsed.line_type == LineType.HEADING_1
     assert parsed.content == "大見出し/h1"
     assert parsed.rich_text is not None
     assert parsed.rich_text[0].text == "大見出し/h1"
 
-    # [***] (3 asterisks) - should be heading_3
+    # [***] (3 asterisks) - should be heading_1
     line = "[*** 大見出し/h1]"
     parsed = ScrapboxParser.parse_line(line)
-    assert parsed.line_type == LineType.HEADING_3
+    assert parsed.line_type == LineType.HEADING_1
     assert parsed.content == "大見出し/h1"
 
     # [**] (2 asterisks) - should be heading_2
@@ -253,8 +253,77 @@ def test_parse_multiple_heading_levels() -> None:
     assert parsed.line_type == LineType.HEADING_2
     assert parsed.content == "小見出し/h2"
 
-    # [*] (1 asterisk) - should be heading_1
+    # [*] (1 asterisk) - should be heading_3
     line = "[* 見出し/h3]"
     parsed = ScrapboxParser.parse_line(line)
-    assert parsed.line_type == LineType.HEADING_1
+    assert parsed.line_type == LineType.HEADING_3
     assert parsed.content == "見出し/h3"
+
+
+def test_parse_quote_with_heading() -> None:
+    """Test quote prefix with heading - should ignore quote and apply same rules."""
+    # > [* test] - quote + heading, should be H3 (same as [* test])
+    line = "> [* test]"
+    parsed = ScrapboxParser.parse_line(line)
+    assert parsed.line_type == LineType.HEADING_3
+    assert parsed.content == "test"
+
+    # >[* test] - quote + heading without space, should be H3
+    line = ">[* test]"
+    parsed = ScrapboxParser.parse_line(line)
+    assert parsed.line_type == LineType.HEADING_3
+    assert parsed.content == "test"
+
+    # > [* こんにちは] - Japanese heading with quote, should be H3
+    line = "> [* こんにちは]"
+    parsed = ScrapboxParser.parse_line(line)
+    assert parsed.line_type == LineType.HEADING_3
+    assert parsed.content == "こんにちは"
+    # > [** level 2] - H2 with quote
+    line = "> [** level 2]"
+    parsed = ScrapboxParser.parse_line(line)
+    assert parsed.line_type == LineType.HEADING_2
+    assert parsed.content == "level 2"
+
+    # > [*** level 1] - H1 with quote
+    line = "> [*** level 1]"
+    parsed = ScrapboxParser.parse_line(line)
+    assert parsed.line_type == LineType.HEADING_1
+    assert parsed.content == "level 1"
+
+    # Regular heading without quote should work normally
+    line = "[** level 2]"
+    parsed = ScrapboxParser.parse_line(line)
+    assert parsed.line_type == LineType.HEADING_2
+    assert parsed.content == "level 2"
+
+
+def test_parse_inline_bold_asterisk() -> None:
+    """Test inline [* text] as bold, not heading."""
+    # Text with inline [* bold]
+    line = "あああ [* あああ] あああ"
+    parsed = ScrapboxParser.parse_line(line)
+    assert parsed.line_type == LineType.PARAGRAPH
+    assert parsed.rich_text is not None
+
+    # Check for bold element
+    bold_elems = [elem for elem in parsed.rich_text if elem.bold]
+    assert len(bold_elems) > 0
+    assert bold_elems[0].text == "あああ"
+
+    # Text with inline [** bold]
+    line = "あああ [** あああ] あああ"
+    parsed = ScrapboxParser.parse_line(line)
+    assert parsed.line_type == LineType.PARAGRAPH
+
+    bold_elems = [elem for elem in parsed.rich_text or [] if elem.bold]
+    assert len(bold_elems) > 0
+    assert bold_elems[0].text == "あああ"
+
+    # Quote with inline bold
+    line = "> いいい [* いいい] いいい [** いいい]"
+    parsed = ScrapboxParser.parse_line(line)
+    assert parsed.line_type == LineType.QUOTE
+
+    bold_elems = [elem for elem in parsed.rich_text or [] if elem.bold]
+    assert len(bold_elems) == 2

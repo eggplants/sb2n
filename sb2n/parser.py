@@ -139,7 +139,7 @@ class ScrapboxParser:
     )
     # Text decorations
     BOLD_PATTERN = re.compile(r"\[\[([^\]]+)\]\]")
-    BOLD_ASTERISK_PATTERN = re.compile(r"\[\*\s+([^\]]+)\]")  # [* text] inline bold
+    BOLD_ASTERISK_PATTERN = re.compile(r"\[\*+\s+([^\]]+)\]")  # [* text], [** text], [*** text] inline bold
     ITALIC_PATTERN = re.compile(r"\[/\s+([^\]]+)\]")
     STRIKETHROUGH_PATTERN = re.compile(r"\[-\s+([^\]]+)\]")
     UNDERLINE_PATTERN = re.compile(r"\[_\s+([^\]]+)\]")
@@ -220,19 +220,32 @@ class ScrapboxParser:
         # Calculate indentation level
         indent_level = (len(line) - len(line.lstrip())) // 1  # Scrapbox uses spaces for indent
 
+        # Check for quote + heading combination: > [* Title]
+        # If line starts with '>' and contains only a heading, ignore quote and treat as heading
+        if stripped.startswith(">"):
+            quote_prefix_removed = stripped[1:].lstrip()
+            # Check if the remaining content is a heading
+            heading_check = ScrapboxParser.HEADING_PATTERN.match(quote_prefix_removed)
+            if heading_check:
+                # This is a heading with quote prefix - ignore the quote
+                stripped = quote_prefix_removed
+
         # Heading: [* Title], [** Title], [*** Title]
         heading_match = ScrapboxParser.HEADING_PATTERN.match(stripped)
         if heading_match:
             asterisks = heading_match.group(1)
             title = heading_match.group(2)
             asterisk_count = len(asterisks)
-            # Map: [*] -> H1, [**] -> H2, [***+] -> H3
+
+            # Map: [*] -> H3, [**] -> H2, [***+] -> H1
+            # (Reverse of Markdown: more asterisks = larger text in Scrapbox)
             if asterisk_count == 1:
-                line_type = LineType.HEADING_1
+                line_type = LineType.HEADING_3
             elif asterisk_count == 2:
                 line_type = LineType.HEADING_2
             else:
-                line_type = LineType.HEADING_3
+                line_type = LineType.HEADING_1
+
             # Parse rich text in heading
             rich_text = ScrapboxParser._parse_rich_text(title)
             return ParsedLine(
