@@ -37,6 +37,7 @@
             <ul>
                     <li><a href="sb2n/config.html">config</a></li>
                     <li><a href="sb2n/converter.html">converter</a></li>
+                    <li><a href="sb2n/link_restorer.html">link_restorer</a></li>
                     <li><a href="sb2n/main.html">main</a></li>
                     <li><a href="sb2n/migrator.html">migrator</a></li>
                     <li><a href="sb2n/models.html">models</a></li>
@@ -122,6 +123,25 @@ sb2n<span class="w"> </span>migrate<span class="w"> </span>--dry-run<span class=
 
 <span class="c1"># Enable verbose logging</span>
 sb2n<span class="w"> </span>-v<span class="w"> </span>migrate
+</code></pre>
+</div>
+
+<h3 id="4-restore-internal-links">4. Restore internal links</h3>
+
+<p>After migration, restore <a href="https://scrapbox.io/help-jp/ページをリンクする">Scrapbox internal links</a> (<code>[PageName]</code> format) to actual <a href="https://www.notion.com/help/create-links-and-backlinks#inline-in-a-paragraph">Notion page mentions</a>:</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="c1"># Restore links in all pages</span>
+sb2n<span class="w"> </span>restore-link
+
+<span class="c1"># Dry run (preview changes without applying)</span>
+sb2n<span class="w"> </span>restore-link<span class="w"> </span>--dry-run
+
+<span class="c1"># Restore links in specific pages only</span>
+sb2n<span class="w"> </span>restore-link<span class="w"> </span>--pages<span class="w"> </span><span class="s2">&quot;HomePage,Getting Started&quot;</span>
+
+<span class="c1"># Enable verbose logging</span>
+sb2n<span class="w"> </span>-v<span class="w"> </span>restore-link
 </code></pre>
 </div>
 
