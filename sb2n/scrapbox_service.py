@@ -1,6 +1,7 @@
 """Scrapbox API client wrapper."""
 
 import logging
+import urllib.parse
 from typing import TYPE_CHECKING, Self
 
 from scrapbox.client import PageDetail, ScrapboxClient
@@ -143,4 +144,4 @@ class ScrapboxService:
         Returns:
             Full URL to the Scrapbox page
         """
-        return f"https://scrapbox.io/{self.project_name}/{page_title}"
+        return f"https://scrapbox.io/{self.project_name}/{urllib.parse.quote(page_title, safe='')}"

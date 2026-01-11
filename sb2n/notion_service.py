@@ -2,8 +2,7 @@
 
 import logging
 from io import BytesIO
-from typing import TYPE_CHECKING, Literal
-from uuid import UUID
+from typing import TYPE_CHECKING, Any, Literal
 
 from notion_client import Client
 from pydantic import BaseModel
@@ -18,13 +17,13 @@ from sb2n.models import (
     Heading3Block,
     ImageBlock,
     ParagraphBlock,
-    QueryDatabaseRequest,
     QueryDatabaseResponse,
     QuoteBlock,
 )
 
 if TYPE_CHECKING:
     from datetime import datetime
+    from uuid import UUID
 
     from notion_client.typing import SyncAsync
 
@@ -82,35 +81,53 @@ class NotionService:
         existing_titles: set[str] = set()
 
         try:
-            # Query the database with pagination
-            has_more = True
-            start_cursor = None
+            # Step 1: Retrieve database to get data sources
+            database = self.client.databases.retrieve(database_id=self.database_id)
+            data_sources = database.get("data_sources", [])  # ty:ignore[possibly-missing-attribute]
 
-            while has_more:
-                # Create query request
-                query_request = QueryDatabaseRequest(
-                    database_id=UUID(self.database_id),
-                    page_size=100,
-                    start_cursor=start_cursor,
-                )
+            if not data_sources:
+                logger.warning("No data sources found in database")
+                return existing_titles
 
-                # Execute query
-                response_dict = self.client.databases.query(**query_request.model_dump(mode="json", exclude_none=True))  # ty:ignore[possibly-missing-attribute]
-                response = QueryDatabaseResponse.model_validate(response_dict)
+            # Step 2: Query each data source for pages
+            for data_source in data_sources:
+                data_source_id = data_source.get("id")
+                if not data_source_id:
+                    continue
 
-                for page in response.results:
-                    # Extract title from properties
-                    properties = page.properties if hasattr(page, "properties") else {}
-                    title_prop = properties.get("Title") or properties.get("Name")  # ty:ignore[unresolved-attribute]
-                    if title_prop and hasattr(title_prop, "title"):
-                        title_content = title_prop.title
-                        if title_content:
-                            title_text = title_content[0].plain_text if hasattr(title_content[0], "plain_text") else ""
-                            if title_text:
-                                existing_titles.add(title_text)
+                logger.debug("Querying data source: %(id)s", {"id": data_source_id})
 
-                has_more = response.has_more or False
-                start_cursor = response.next_cursor
+                # Query data source with pagination
+                has_more = True
+                start_cursor = None
+
+                while has_more:
+                    # Build request body for data_sources query
+                    body: dict[str, Any] = {"page_size": 100}
+                    if start_cursor:
+                        body["start_cursor"] = start_cursor
+
+                    # Execute query using data_sources API
+                    response_dict = self.client.request(
+                        method="POST",
+                        path=f"data_sources/{data_source_id}/query",
+                        body=body,
+                    )
+                    response = QueryDatabaseResponse.model_validate(response_dict)
+
+                    for page in response.results:
+                        # Extract title from properties
+                        properties = page.get("properties", {})
+                        title_prop = properties.get("Title") or properties.get("Name")
+                        if title_prop and title_prop.get("type") == "title":  # noqa: PLR2004
+                            title_content = title_prop.get("title", [])
+                            if title_content:
+                                title_text = title_content[0].get("plain_text", "")
+                                if title_text:
+                                    existing_titles.add(title_text)
+
+                    has_more = response.has_more
+                    start_cursor = response.next_cursor
 
             logger.info("Found %(count)d existing pages in Notion", {"count": len(existing_titles)})
         except Exception:

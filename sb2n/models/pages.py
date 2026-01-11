@@ -4,12 +4,10 @@ These models are simplified versions that contain only the fields
 we actually use in this application.
 """
 
-from typing import TYPE_CHECKING, Any
+from typing import Any
+from uuid import UUID  # noqa: TC003
 
 from pydantic import BaseModel, Field
-
-if TYPE_CHECKING:
-    from uuid import UUID
 
 
 class CreatePageRequest(BaseModel):

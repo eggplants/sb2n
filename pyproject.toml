@@ -68,7 +68,7 @@ lint.ignore = [
   "COM812",
   "D203",
   "D213",
-  "S101",   # Use of assert detected
+  "S101",
 ]
 lint.per-file-ignores."tests/test_*.py" = [
   "D",
