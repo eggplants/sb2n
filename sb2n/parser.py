@@ -26,6 +26,7 @@ class LineType(Enum):
     CODE = "code"
     LIST = "list"
     IMAGE = "image"
+    ICON = "icon"
     URL = "url"
     QUOTE = "quote"
     TABLE = "table"
@@ -100,6 +101,8 @@ class ParsedLine:
     link_text: str | None = None
     table_name: str | None = None
     table_rows: list[list[str]] | None = None
+    icon_page_name: str | None = None
+    icon_project: str | None = None
 
 
 class ScrapboxParser:
@@ -135,6 +138,8 @@ class ScrapboxParser:
     STRIKETHROUGH_PATTERN = re.compile(r"\[-\s+([^\]]+)\]")
     UNDERLINE_PATTERN = re.compile(r"\[_\s+([^\]]+)\]")
     INLINE_CODE_PATTERN = re.compile(r"`([^`]+)`")
+    # Icon notation: [page_name.icon] or [/icons/page_name.icon]
+    ICON_PATTERN = re.compile(r"^\[(/icons/)?([^\]]+)\.icon\]$")
 
     @staticmethod
     def extract_tags(text: str) -> list[str]:
@@ -200,7 +205,7 @@ class ScrapboxParser:
 
         # Empty line
         if not stripped:
-            return ParsedLine(original=line, line_type=LineType.PARAGRAPH, content="")
+            return ParsedLine(original=line, line_type=LineType.PARAGRAPH, content="", indent_level=0)
 
         # Calculate indentation level
         indent_level = (len(line) - len(line.lstrip())) // 1  # Scrapbox uses spaces for indent
@@ -239,7 +244,13 @@ class ScrapboxParser:
             filename = code_match.group(1)
             # Try to detect language from filename extension
             language = ScrapboxParser._detect_language(filename)
-            return ParsedLine(original=line, line_type=LineType.CODE_START, content=filename, language=language)
+            return ParsedLine(
+                original=line,
+                line_type=LineType.CODE_START,
+                content=filename,
+                language=language,
+                indent_level=indent_level,
+            )
 
         # Table start: table:name
         table_match = ScrapboxParser.TABLE_PATTERN.match(stripped)
@@ -250,12 +261,28 @@ class ScrapboxParser:
                 line_type=LineType.TABLE_START,
                 content=table_name,
                 table_name=table_name,
+                indent_level=indent_level,
             )
 
         # Image URL
         image_urls = ScrapboxParser.extract_image_urls(stripped)
         if image_urls:
-            return ParsedLine(original=line, line_type=LineType.IMAGE, content=image_urls[0])
+            return ParsedLine(original=line, line_type=LineType.IMAGE, content=image_urls[0], indent_level=indent_level)
+
+        # Icon notation: [page_name.icon] or [/icons/page_name.icon]
+        icon_match = ScrapboxParser.ICON_PATTERN.match(stripped)
+        if icon_match:
+            is_icons_project = icon_match.group(1) is not None  # /icons/ prefix
+            page_name = icon_match.group(2)
+            project = "icons" if is_icons_project else None
+            return ParsedLine(
+                original=line,
+                line_type=LineType.ICON,
+                content=page_name,
+                icon_page_name=page_name,
+                icon_project=project,
+                indent_level=indent_level,
+            )
 
         # External link with display text: [text url] or [url text]
         # Only treat as external_link if the entire line is the link
@@ -278,7 +305,9 @@ class ScrapboxParser:
         # Regular URL (bookmark)
         urls = ScrapboxParser.extract_urls(stripped)
         if urls and stripped.startswith("[") and stripped.endswith("]"):
-            return ParsedLine(original=line, line_type=LineType.URL, content=urls[0])  # List item (indented)
+            return ParsedLine(
+                original=line, line_type=LineType.URL, content=urls[0], indent_level=indent_level
+            )  # List item (indented)
         if indent_level > 0:
             # Parse rich text for list items
             rich_text = ScrapboxParser._parse_rich_text(stripped)
@@ -302,7 +331,7 @@ class ScrapboxParser:
         )
 
     @staticmethod
-    def parse_text(text: str) -> list[ParsedLine]:
+    def parse_text(text: str) -> list[ParsedLine]:  # noqa: PLR0915
         """Parse entire Scrapbox text into structured lines.
 
         Args:
@@ -316,6 +345,7 @@ class ScrapboxParser:
         in_code_block, in_table_block = False, False
         code_language = "plain text"
         table_name = ""
+        table_indent_level = 0
 
         for line in lines:
             parsed = ScrapboxParser.parse_line(line)
@@ -357,6 +387,7 @@ class ScrapboxParser:
                 in_table_block = True
                 table_name = parsed.content
                 table_buffer = []
+                table_indent_level = parsed.indent_level
                 continue
 
             if in_table_block:
@@ -371,6 +402,7 @@ class ScrapboxParser:
                                 content=table_name,
                                 table_name=table_name,
                                 table_rows=table_buffer,
+                                indent_level=table_indent_level,
                             )
                         )
                     in_table_block = False
@@ -408,6 +440,7 @@ class ScrapboxParser:
                     line_type=LineType.TABLE,
                     content=table_name,
                     table_name=table_name,
+                    indent_level=table_indent_level,
                     table_rows=table_buffer,
                 )
             )

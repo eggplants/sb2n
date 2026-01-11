@@ -31,6 +31,7 @@ class Args(argparse.Namespace):
     skip_existing: bool
     verbose: bool
     pages: str | None
+    enable_icon: bool
 
 
 def setup_logging(*, verbose: bool = False) -> None:
@@ -63,7 +64,13 @@ def migrate_command(args: Args) -> int:
         config.validate()
 
         # Create and run migrator
-        migrator = Migrator(config, dry_run=args.dry_run, limit=args.limit, skip_existing=args.skip_existing)
+        migrator = Migrator(
+            config,
+            dry_run=args.dry_run,
+            limit=args.limit,
+            skip_existing=args.skip_existing,
+            enable_icon=args.enable_icon,
+        )
         summary = migrator.migrate_all()
 
     except ValueError:
@@ -166,6 +173,13 @@ def main() -> None:
         "--skip-existing",
         action="store_true",
         help="Skip pages that already exist in Notion database",
+    )
+
+    migrate_parser.add_argument(
+        "--icon",
+        action="store_true",
+        dest="enable_icon",
+        help="Enable icon notation migration (fetch icons from Scrapbox pages)",
     )
 
     # restore-link command

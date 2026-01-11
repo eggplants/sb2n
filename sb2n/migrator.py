@@ -70,7 +70,13 @@ class Migrator:
     """
 
     def __init__(
-        self, config: Config, *, dry_run: bool = False, limit: int | None = None, skip_existing: bool = False
+        self,
+        config: Config,
+        *,
+        dry_run: bool = False,
+        limit: int | None = None,
+        skip_existing: bool = False,
+        enable_icon: bool = False,
     ) -> None:
         """Initialize the migrator.
 
@@ -79,11 +85,13 @@ class Migrator:
             dry_run: If True, do not actually create pages in Notion
             limit: Maximum number of pages to migrate (None for all pages)
             skip_existing: If True, skip pages that already exist in Notion
+            enable_icon: If True, fetch and migrate Scrapbox icon notation
         """
         self.config = config
         self.dry_run = dry_run
         self.limit = limit
         self.skip_existing = skip_existing
+        self.enable_icon = enable_icon
         self.notion_service = NotionService(config.notion_api_key, config.notion_database_id)
         # Converter will be initialized with scrapbox_service in migrate_all
         self.converter: NotionBlockConverter | None = None
@@ -111,7 +119,7 @@ class Migrator:
 
         with ScrapboxService(self.config.scrapbox_project, self.config.scrapbox_connect_sid) as scrapbox:
             # Initialize converter with scrapbox service for image downloads
-            self.converter = NotionBlockConverter(self.notion_service, scrapbox)
+            self.converter = NotionBlockConverter(self.notion_service, scrapbox, enable_icon=self.enable_icon)
 
             # Get all pages
             all_pages = scrapbox.get_all_pages()

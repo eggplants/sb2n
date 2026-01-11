@@ -20,17 +20,26 @@ class NotionBlockConverter:
     Notion block objects that can be appended to a page.
     """
 
-    def __init__(self, notion_service: NotionService, scrapbox_service: ScrapboxService | None = None) -> None:
+    def __init__(
+        self,
+        notion_service: NotionService,
+        scrapbox_service: ScrapboxService | None = None,
+        *,
+        enable_icon: bool = False,
+    ) -> None:
         """Initialize the converter.
 
         Args:
             notion_service: Notion service for creating block objects
-            scrapbox_service: Optional Scrapbox service for downloading images
+            scrapbox_service: Optional Scrapbox service for downloading images and fetching icons
+            enable_icon: If True, fetch and convert Scrapbox icon notation
         """
         self.notion_service = notion_service
         self.scrapbox_service = scrapbox_service
+        self.enable_icon = enable_icon
+        self.scrapbox_service = scrapbox_service
 
-    def convert_to_blocks(self, text: str) -> list[BlockObject]:
+    def convert_to_blocks(self, text: str) -> list[BlockObject]:  # noqa: PLR0912
         """Convert Scrapbox text to Notion blocks.
 
         Args:
@@ -85,12 +94,36 @@ class NotionBlockConverter:
                         block_dict = block.bulleted_list_item  # ty:ignore[possibly-missing-attribute]
                         list_stack.append((effective_indent, block, block_dict))
             else:
-                # Clear list stack for non-list items
-                list_stack = []
-
+                # For non-list items, check if they should be nested in a list item
                 block = self._convert_line_to_block(parsed_line)
                 if block:
-                    blocks.append(block)
+                    # Tables cannot be nested inside list items in Notion API
+                    # So treat them as top-level blocks and clear the list stack
+                    if parsed_line.line_type == LineType.TABLE:
+                        blocks.append(block)
+                        list_stack = []  # Clear stack as tables break nesting
+                    # If the block has an indent level and there's an active list context
+                    elif parsed_line.indent_level > 0 and list_stack:
+                        # Pop stack until we find a parent with lower indent level
+                        while list_stack and list_stack[-1][0] >= parsed_line.indent_level:
+                            list_stack.pop()
+
+                        if list_stack:
+                            # Add this block as child to the most recent list item
+                            block_dict = block.model_dump(mode="json", exclude_none=True)
+                            _, _, parent_dict = list_stack[-1]
+                            item_dict = parent_dict.get("bulleted_list_item", parent_dict)
+                            if "children" not in item_dict:  # noqa: PLR2004
+                                item_dict["children"] = []
+                            item_dict["children"].append(block_dict)
+                        else:
+                            # No suitable parent, add to top level
+                            blocks.append(block)
+                            list_stack = []  # Clear stack
+                    else:
+                        # Top-level block (no indent or no list context)
+                        blocks.append(block)
+                        list_stack = []  # Clear stack for top-level non-list items
 
         logger.debug(
             "Converted %(parsed_lines)d lines to %(blocks)d blocks",
@@ -98,7 +131,7 @@ class NotionBlockConverter:
         )
         return blocks
 
-    def _convert_line_to_block(self, parsed_line: ParsedLine) -> BlockObject | None:
+    def _convert_line_to_block(self, parsed_line: ParsedLine) -> BlockObject | None:  # noqa: C901, PLR0911, PLR0912
         """Convert a single parsed line to a Notion block.
 
         Args:
@@ -133,6 +166,21 @@ class NotionBlockConverter:
         # Image blocks
         if parsed_line.line_type == LineType.IMAGE:
             return self._create_image_block(parsed_line.content)
+
+        # Icon blocks - fetch icon URL from Scrapbox and create image block
+        if parsed_line.line_type == LineType.ICON:
+            # Only process icons if enable_icon is True
+            if self.enable_icon and self.scrapbox_service and parsed_line.icon_page_name:
+                icon_url = self.scrapbox_service.get_page_icon_url(parsed_line.icon_page_name, parsed_line.icon_project)
+                if icon_url:
+                    return self._create_image_block(icon_url)
+                # If no icon found, create a paragraph with the page name
+                logger.warning(
+                    "Icon not found for page: %(page_name)s, creating paragraph instead",
+                    {"page_name": parsed_line.icon_page_name},
+                )
+            # If icon migration is disabled or service unavailable, create a paragraph
+            return self.notion_service.create_paragraph_block(f"[{parsed_line.content}.icon]")
 
         # External link with display text
         if parsed_line.line_type == LineType.EXTERNAL_LINK:

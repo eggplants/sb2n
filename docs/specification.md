@@ -224,11 +224,15 @@ notion.blocks.children.append(
 | `[*** 見出し3]` | heading_3 | ✅ |
 | `[https://example.com]` | bookmark or link | ✅ |
 | `[image_url]` | image | ✅ |
+| `[icon_name.icon]` | image | 🚧 |
+| `[/icons/icon_name.icon]` | image | 🚧 |
 | `` `code` `` | code (inline) | 部分的 |
 | `code:filename` ブロック | code block | ✅ |
+| `table:テーブル名` | table block | ✅ |
 | 箇条書き（インデント） | bulleted_list_item | ✅ |
 | `[link text]` | 内部リンク（通常テキストとして扱う） | ✅ |
 | `#tag` | タグとして抽出（Multi-selectへ） | ✅ |
+| `> 引用文` | quote | ✅ |
 
 ##### Scrapbox記法の完全なリスト（公式Syntax参照）
 
@@ -282,8 +286,29 @@ notion.blocks.children.append(
 
 | Scrapbox記法 | 説明 | 実装状態 | 優先度 |
 | ------------- | ----- | --------- | ------- |
-| `[icon_name.icon]` | Scrapboxアイコン | ❌ | 低 |
-| `[/icons/icon_name.icon]` | Notion風アイコン | ❌ | 低 |
+| `[icon_name.icon]` | プロジェクト内ページのアイコン画像 | 🚧 実装中 | 中 |
+| `[/icons/icon_name.icon]` | `/icons`プロジェクトのアイコン画像 | 🚧 実装中 | 中 |
+
+**アイコン記法の詳細:**
+
+Scrapboxのアイコン記法は、指定したページに設定されているアイコン画像を表示する機能です。
+
+- `[icon_name.icon]`: 同じプロジェクト内の`icon_name`ページのアイコン画像を表示
+  - 実際のURL: `https://scrapbox.io/api/pages/{project}/icon_name` の `image` フィールドから取得
+  - 例: `[hr.icon]` → プロジェクト内の`hr`ページのアイコン画像
+  
+- `[/icons/icon_name.icon]`: `/icons`プロジェクトの`icon_name`ページのアイコン画像を表示
+  - 実際のURL: `https://scrapbox.io/api/pages/icons/icon_name` の `image` フィールドから取得
+  - 例: `[/icons/hr.icon]` → `/icons`プロジェクトの`hr`ページのアイコン画像
+
+**実装方針:**
+
+1. パーサーでアイコン記法を検出（`.icon]`で終わるパターン）
+2. `/icons/`で始まる場合は`icons`プロジェクト、それ以外は現在のプロジェクトから取得
+3. Scrapbox APIの`get_page`を使ってページ情報を取得し、`image`フィールドからアイコン画像URLを取得
+4. 取得した画像URLをNotion APIで画像ブロックとして追加
+
+参考: <https://scrapbox.io/help-jp/アイコン記法>
 
 ###### 引用・吹き出し
 

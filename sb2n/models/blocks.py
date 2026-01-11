@@ -319,6 +319,11 @@ class TableBlockWithChildren(BaseModel):
     block: TableBlock
     children: list[TableRowBlock]
 
+    @property
+    def type(self) -> Literal["table"]:
+        """Return the block type."""
+        return "table"
+
 
 # Union type for all block types
 BlockObject = (

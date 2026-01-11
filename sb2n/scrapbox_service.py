@@ -145,3 +145,41 @@ class ScrapboxService:
             Full URL to the Scrapbox page
         """
         return f"https://scrapbox.io/{self.project_name}/{urllib.parse.quote(page_title, safe='')}"
+
+    def get_page_icon_url(self, page_name: str, project: str | None = None) -> str | None:
+        """Get icon image URL from a Scrapbox page.
+
+        Args:
+            page_name: Name of the page with icon
+            project: Project name (defaults to current project if None)
+
+        Returns:
+            Icon image URL if found, None otherwise
+
+        Raises:
+            RuntimeError: If client is not initialized (use as context manager)
+        """
+        if not self._client:
+            msg = "Client not initialized. Use ScrapboxService as a context manager."
+            raise RuntimeError(msg)
+
+        target_project = project or self.project_name
+        logger.debug(
+            "Fetching icon from page: %(page_name)s in project: %(project)s",
+            {"page_name": page_name, "project": target_project},
+        )
+
+        try:
+            page_detail = self._client.get_page(target_project, page_name)
+            # The 'image' field contains the icon URL
+            if page_detail and hasattr(page_detail, "image") and page_detail.image:
+                return page_detail.image
+            logger.warning(
+                "No icon found for page: %(page_name)s in project: %(project)s",
+                {"page_name": page_name, "project": target_project},
+            )
+        except Exception:
+            logger.exception(
+                "Failed to fetch icon for page: %(page_name)s in project: %(project)s",
+                {"page_name": page_name, "project": target_project},
+            )
