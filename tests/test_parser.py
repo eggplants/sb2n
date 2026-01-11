@@ -23,6 +23,29 @@ def test_extract_tags_ignores_inline_code() -> None:
     assert tags == ["tag"]
 
 
+def test_extract_tags_ignores_url_fragments() -> None:
+    """Test that URL fragments are not detected as tags."""
+    # URL fragment should not be detected as tag
+    text = "https://example.com/hoge#aaa"
+    tags = ScrapboxParser.extract_tags(text)
+    assert tags == []
+
+    # Text with # in the middle should not be detected as tag
+    text = "あああ#aaa"
+    tags = ScrapboxParser.extract_tags(text)
+    assert tags == []
+
+    # But tag with space before should be detected
+    text = "あああ #aaa"
+    tags = ScrapboxParser.extract_tags(text)
+    assert tags == ["aaa"]
+
+    # URL with fragment and real tag
+    text = "Check https://example.com/page#section and #realtag"
+    tags = ScrapboxParser.extract_tags(text)
+    assert tags == ["realtag"]
+
+
 def test_extract_image_urls() -> None:
     """Test image URL extraction."""
     text = "[https://example.com/image.jpg] and [https://gyazo.com/abc123]"

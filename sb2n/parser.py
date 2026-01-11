@@ -119,7 +119,8 @@ class ScrapboxParser:
     """
 
     # Regex patterns
-    TAG_PATTERN = re.compile(r"#([^\s\[\]]+)")
+    # Tag pattern: # must be preceded by whitespace or start of string
+    TAG_PATTERN = re.compile(r"(?:^|\s)#([^\s\[\]]+)")
     IMAGE_PATTERN = re.compile(r"\[(https?://[^\]]+\.(?:jpg|jpeg|png|gif|webp|svg))\]", re.IGNORECASE)
     URL_PATTERN = re.compile(r"\[(https?://[^\]]+)\]")
     GYAZO_PATTERN = re.compile(r"\[(https?://(?:gyazo\.com|i\.gyazo\.com)/[^\]]+)\]", re.IGNORECASE)
