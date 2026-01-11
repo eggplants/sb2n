@@ -267,7 +267,7 @@
                     <div class="attr variable">
             <span class="name">BlockObject</span>        =
 <input id="BlockObject-view-value" class="view-value-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
-            <label class="view-value-button pdoc-button" for="BlockObject-view-value"></label><span class="default_value"><a href="#ParagraphBlock">ParagraphBlock</a> | <a href="#Heading2Block">Heading2Block</a> | <a href="#Heading3Block">Heading3Block</a> | <a href="#BulletedListItemBlock">BulletedListItemBlock</a> | <a href="#CodeBlock">CodeBlock</a> | <a href="#ImageBlock">ImageBlock</a> | <a href="#BookmarkBlock">BookmarkBlock</a> | <a href="#QuoteBlock">QuoteBlock</a> | sb2n.models.blocks.TableBlock | sb2n.models.blocks.TableRowBlock | sb2n.models.blocks.TableBlockWithChildren</span>
+            <label class="view-value-button pdoc-button" for="BlockObject-view-value"></label><span class="default_value"><a href="#ParagraphBlock">ParagraphBlock</a> | sb2n.models.blocks.Heading1Block | <a href="#Heading2Block">Heading2Block</a> | <a href="#Heading3Block">Heading3Block</a> | <a href="#BulletedListItemBlock">BulletedListItemBlock</a> | <a href="#CodeBlock">CodeBlock</a> | <a href="#ImageBlock">ImageBlock</a> | <a href="#BookmarkBlock">BookmarkBlock</a> | <a href="#QuoteBlock">QuoteBlock</a> | sb2n.models.blocks.TableBlock | sb2n.models.blocks.TableRowBlock | sb2n.models.blocks.TableBlockWithChildren</span>
 
         
     </div>
@@ -287,27 +287,27 @@
 
     </div>
     <a class="headerlink" href="#BookmarkBlock"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="BookmarkBlock-202"><a href="#BookmarkBlock-202"><span class="linenos">202</span></a><span class="k">class</span><span class="w"> </span><span class="nc">BookmarkBlock</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
-</span><span id="BookmarkBlock-203"><a href="#BookmarkBlock-203"><span class="linenos">203</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Bookmark block.&quot;&quot;&quot;</span>
-</span><span id="BookmarkBlock-204"><a href="#BookmarkBlock-204"><span class="linenos">204</span></a>
-</span><span id="BookmarkBlock-205"><a href="#BookmarkBlock-205"><span class="linenos">205</span></a>    <span class="nb">type</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;bookmark&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;bookmark&quot;</span>
-</span><span id="BookmarkBlock-206"><a href="#BookmarkBlock-206"><span class="linenos">206</span></a>    <span class="n">bookmark</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
-</span><span id="BookmarkBlock-207"><a href="#BookmarkBlock-207"><span class="linenos">207</span></a>
-</span><span id="BookmarkBlock-208"><a href="#BookmarkBlock-208"><span class="linenos">208</span></a>    <span class="nd">@classmethod</span>
-</span><span id="BookmarkBlock-209"><a href="#BookmarkBlock-209"><span class="linenos">209</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">new</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BookmarkBlock</span><span class="p">:</span>
-</span><span id="BookmarkBlock-210"><a href="#BookmarkBlock-210"><span class="linenos">210</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a new bookmark block.</span>
-</span><span id="BookmarkBlock-211"><a href="#BookmarkBlock-211"><span class="linenos">211</span></a>
-</span><span id="BookmarkBlock-212"><a href="#BookmarkBlock-212"><span class="linenos">212</span></a><span class="sd">        Args:</span>
-</span><span id="BookmarkBlock-213"><a href="#BookmarkBlock-213"><span class="linenos">213</span></a><span class="sd">            url: URL to bookmark</span>
-</span><span id="BookmarkBlock-214"><a href="#BookmarkBlock-214"><span class="linenos">214</span></a>
-</span><span id="BookmarkBlock-215"><a href="#BookmarkBlock-215"><span class="linenos">215</span></a><span class="sd">        Returns:</span>
-</span><span id="BookmarkBlock-216"><a href="#BookmarkBlock-216"><span class="linenos">216</span></a><span class="sd">            BookmarkBlock instance</span>
-</span><span id="BookmarkBlock-217"><a href="#BookmarkBlock-217"><span class="linenos">217</span></a><span class="sd">        &quot;&quot;&quot;</span>
-</span><span id="BookmarkBlock-218"><a href="#BookmarkBlock-218"><span class="linenos">218</span></a>        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
-</span><span id="BookmarkBlock-219"><a href="#BookmarkBlock-219"><span class="linenos">219</span></a>            <span class="n">bookmark</span><span class="o">=</span><span class="p">{</span>
-</span><span id="BookmarkBlock-220"><a href="#BookmarkBlock-220"><span class="linenos">220</span></a>                <span class="s2">&quot;url&quot;</span><span class="p">:</span> <span class="n">url</span><span class="p">,</span>
-</span><span id="BookmarkBlock-221"><a href="#BookmarkBlock-221"><span class="linenos">221</span></a>            <span class="p">}</span>
-</span><span id="BookmarkBlock-222"><a href="#BookmarkBlock-222"><span class="linenos">222</span></a>        <span class="p">)</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="BookmarkBlock-234"><a href="#BookmarkBlock-234"><span class="linenos">234</span></a><span class="k">class</span><span class="w"> </span><span class="nc">BookmarkBlock</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+</span><span id="BookmarkBlock-235"><a href="#BookmarkBlock-235"><span class="linenos">235</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Bookmark block.&quot;&quot;&quot;</span>
+</span><span id="BookmarkBlock-236"><a href="#BookmarkBlock-236"><span class="linenos">236</span></a>
+</span><span id="BookmarkBlock-237"><a href="#BookmarkBlock-237"><span class="linenos">237</span></a>    <span class="nb">type</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;bookmark&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;bookmark&quot;</span>
+</span><span id="BookmarkBlock-238"><a href="#BookmarkBlock-238"><span class="linenos">238</span></a>    <span class="n">bookmark</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
+</span><span id="BookmarkBlock-239"><a href="#BookmarkBlock-239"><span class="linenos">239</span></a>
+</span><span id="BookmarkBlock-240"><a href="#BookmarkBlock-240"><span class="linenos">240</span></a>    <span class="nd">@classmethod</span>
+</span><span id="BookmarkBlock-241"><a href="#BookmarkBlock-241"><span class="linenos">241</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">new</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BookmarkBlock</span><span class="p">:</span>
+</span><span id="BookmarkBlock-242"><a href="#BookmarkBlock-242"><span class="linenos">242</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a new bookmark block.</span>
+</span><span id="BookmarkBlock-243"><a href="#BookmarkBlock-243"><span class="linenos">243</span></a>
+</span><span id="BookmarkBlock-244"><a href="#BookmarkBlock-244"><span class="linenos">244</span></a><span class="sd">        Args:</span>
+</span><span id="BookmarkBlock-245"><a href="#BookmarkBlock-245"><span class="linenos">245</span></a><span class="sd">            url: URL to bookmark</span>
+</span><span id="BookmarkBlock-246"><a href="#BookmarkBlock-246"><span class="linenos">246</span></a>
+</span><span id="BookmarkBlock-247"><a href="#BookmarkBlock-247"><span class="linenos">247</span></a><span class="sd">        Returns:</span>
+</span><span id="BookmarkBlock-248"><a href="#BookmarkBlock-248"><span class="linenos">248</span></a><span class="sd">            BookmarkBlock instance</span>
+</span><span id="BookmarkBlock-249"><a href="#BookmarkBlock-249"><span class="linenos">249</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="BookmarkBlock-250"><a href="#BookmarkBlock-250"><span class="linenos">250</span></a>        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+</span><span id="BookmarkBlock-251"><a href="#BookmarkBlock-251"><span class="linenos">251</span></a>            <span class="n">bookmark</span><span class="o">=</span><span class="p">{</span>
+</span><span id="BookmarkBlock-252"><a href="#BookmarkBlock-252"><span class="linenos">252</span></a>                <span class="s2">&quot;url&quot;</span><span class="p">:</span> <span class="n">url</span><span class="p">,</span>
+</span><span id="BookmarkBlock-253"><a href="#BookmarkBlock-253"><span class="linenos">253</span></a>            <span class="p">}</span>
+</span><span id="BookmarkBlock-254"><a href="#BookmarkBlock-254"><span class="linenos">254</span></a>        <span class="p">)</span>
 </span></pre></div>
 
 
@@ -351,21 +351,21 @@
 
     </div>
     <a class="headerlink" href="#BookmarkBlock.new"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="BookmarkBlock.new-208"><a href="#BookmarkBlock.new-208"><span class="linenos">208</span></a>    <span class="nd">@classmethod</span>
-</span><span id="BookmarkBlock.new-209"><a href="#BookmarkBlock.new-209"><span class="linenos">209</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">new</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BookmarkBlock</span><span class="p">:</span>
-</span><span id="BookmarkBlock.new-210"><a href="#BookmarkBlock.new-210"><span class="linenos">210</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a new bookmark block.</span>
-</span><span id="BookmarkBlock.new-211"><a href="#BookmarkBlock.new-211"><span class="linenos">211</span></a>
-</span><span id="BookmarkBlock.new-212"><a href="#BookmarkBlock.new-212"><span class="linenos">212</span></a><span class="sd">        Args:</span>
-</span><span id="BookmarkBlock.new-213"><a href="#BookmarkBlock.new-213"><span class="linenos">213</span></a><span class="sd">            url: URL to bookmark</span>
-</span><span id="BookmarkBlock.new-214"><a href="#BookmarkBlock.new-214"><span class="linenos">214</span></a>
-</span><span id="BookmarkBlock.new-215"><a href="#BookmarkBlock.new-215"><span class="linenos">215</span></a><span class="sd">        Returns:</span>
-</span><span id="BookmarkBlock.new-216"><a href="#BookmarkBlock.new-216"><span class="linenos">216</span></a><span class="sd">            BookmarkBlock instance</span>
-</span><span id="BookmarkBlock.new-217"><a href="#BookmarkBlock.new-217"><span class="linenos">217</span></a><span class="sd">        &quot;&quot;&quot;</span>
-</span><span id="BookmarkBlock.new-218"><a href="#BookmarkBlock.new-218"><span class="linenos">218</span></a>        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
-</span><span id="BookmarkBlock.new-219"><a href="#BookmarkBlock.new-219"><span class="linenos">219</span></a>            <span class="n">bookmark</span><span class="o">=</span><span class="p">{</span>
-</span><span id="BookmarkBlock.new-220"><a href="#BookmarkBlock.new-220"><span class="linenos">220</span></a>                <span class="s2">&quot;url&quot;</span><span class="p">:</span> <span class="n">url</span><span class="p">,</span>
-</span><span id="BookmarkBlock.new-221"><a href="#BookmarkBlock.new-221"><span class="linenos">221</span></a>            <span class="p">}</span>
-</span><span id="BookmarkBlock.new-222"><a href="#BookmarkBlock.new-222"><span class="linenos">222</span></a>        <span class="p">)</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="BookmarkBlock.new-240"><a href="#BookmarkBlock.new-240"><span class="linenos">240</span></a>    <span class="nd">@classmethod</span>
+</span><span id="BookmarkBlock.new-241"><a href="#BookmarkBlock.new-241"><span class="linenos">241</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">new</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BookmarkBlock</span><span class="p">:</span>
+</span><span id="BookmarkBlock.new-242"><a href="#BookmarkBlock.new-242"><span class="linenos">242</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a new bookmark block.</span>
+</span><span id="BookmarkBlock.new-243"><a href="#BookmarkBlock.new-243"><span class="linenos">243</span></a>
+</span><span id="BookmarkBlock.new-244"><a href="#BookmarkBlock.new-244"><span class="linenos">244</span></a><span class="sd">        Args:</span>
+</span><span id="BookmarkBlock.new-245"><a href="#BookmarkBlock.new-245"><span class="linenos">245</span></a><span class="sd">            url: URL to bookmark</span>
+</span><span id="BookmarkBlock.new-246"><a href="#BookmarkBlock.new-246"><span class="linenos">246</span></a>
+</span><span id="BookmarkBlock.new-247"><a href="#BookmarkBlock.new-247"><span class="linenos">247</span></a><span class="sd">        Returns:</span>
+</span><span id="BookmarkBlock.new-248"><a href="#BookmarkBlock.new-248"><span class="linenos">248</span></a><span class="sd">            BookmarkBlock instance</span>
+</span><span id="BookmarkBlock.new-249"><a href="#BookmarkBlock.new-249"><span class="linenos">249</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="BookmarkBlock.new-250"><a href="#BookmarkBlock.new-250"><span class="linenos">250</span></a>        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+</span><span id="BookmarkBlock.new-251"><a href="#BookmarkBlock.new-251"><span class="linenos">251</span></a>            <span class="n">bookmark</span><span class="o">=</span><span class="p">{</span>
+</span><span id="BookmarkBlock.new-252"><a href="#BookmarkBlock.new-252"><span class="linenos">252</span></a>                <span class="s2">&quot;url&quot;</span><span class="p">:</span> <span class="n">url</span><span class="p">,</span>
+</span><span id="BookmarkBlock.new-253"><a href="#BookmarkBlock.new-253"><span class="linenos">253</span></a>            <span class="p">}</span>
+</span><span id="BookmarkBlock.new-254"><a href="#BookmarkBlock.new-254"><span class="linenos">254</span></a>        <span class="p">)</span>
 </span></pre></div>
 
 
@@ -398,33 +398,35 @@
 
     </div>
     <a class="headerlink" href="#BulletedListItemBlock"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="BulletedListItemBlock-102"><a href="#BulletedListItemBlock-102"><span class="linenos">102</span></a><span class="k">class</span><span class="w"> </span><span class="nc">BulletedListItemBlock</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
-</span><span id="BulletedListItemBlock-103"><a href="#BulletedListItemBlock-103"><span class="linenos">103</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Bulleted list item block.&quot;&quot;&quot;</span>
-</span><span id="BulletedListItemBlock-104"><a href="#BulletedListItemBlock-104"><span class="linenos">104</span></a>
-</span><span id="BulletedListItemBlock-105"><a href="#BulletedListItemBlock-105"><span class="linenos">105</span></a>    <span class="nb">type</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;bulleted_list_item&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;bulleted_list_item&quot;</span>
-</span><span id="BulletedListItemBlock-106"><a href="#BulletedListItemBlock-106"><span class="linenos">106</span></a>    <span class="n">bulleted_list_item</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
-</span><span id="BulletedListItemBlock-107"><a href="#BulletedListItemBlock-107"><span class="linenos">107</span></a>
-</span><span id="BulletedListItemBlock-108"><a href="#BulletedListItemBlock-108"><span class="linenos">108</span></a>    <span class="nd">@classmethod</span>
-</span><span id="BulletedListItemBlock-109"><a href="#BulletedListItemBlock-109"><span class="linenos">109</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">new</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">rich_text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BulletedListItemBlock</span><span class="p">:</span>
-</span><span id="BulletedListItemBlock-110"><a href="#BulletedListItemBlock-110"><span class="linenos">110</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a new bulleted list item block with plain text.</span>
-</span><span id="BulletedListItemBlock-111"><a href="#BulletedListItemBlock-111"><span class="linenos">111</span></a>
-</span><span id="BulletedListItemBlock-112"><a href="#BulletedListItemBlock-112"><span class="linenos">112</span></a><span class="sd">        Args:</span>
-</span><span id="BulletedListItemBlock-113"><a href="#BulletedListItemBlock-113"><span class="linenos">113</span></a><span class="sd">            rich_text: Plain text content</span>
-</span><span id="BulletedListItemBlock-114"><a href="#BulletedListItemBlock-114"><span class="linenos">114</span></a>
-</span><span id="BulletedListItemBlock-115"><a href="#BulletedListItemBlock-115"><span class="linenos">115</span></a><span class="sd">        Returns:</span>
-</span><span id="BulletedListItemBlock-116"><a href="#BulletedListItemBlock-116"><span class="linenos">116</span></a><span class="sd">            BulletedListItemBlock instance</span>
-</span><span id="BulletedListItemBlock-117"><a href="#BulletedListItemBlock-117"><span class="linenos">117</span></a><span class="sd">        &quot;&quot;&quot;</span>
-</span><span id="BulletedListItemBlock-118"><a href="#BulletedListItemBlock-118"><span class="linenos">118</span></a>        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
-</span><span id="BulletedListItemBlock-119"><a href="#BulletedListItemBlock-119"><span class="linenos">119</span></a>            <span class="n">bulleted_list_item</span><span class="o">=</span><span class="p">{</span>
-</span><span id="BulletedListItemBlock-120"><a href="#BulletedListItemBlock-120"><span class="linenos">120</span></a>                <span class="s2">&quot;rich_text&quot;</span><span class="p">:</span> <span class="p">[</span>
-</span><span id="BulletedListItemBlock-121"><a href="#BulletedListItemBlock-121"><span class="linenos">121</span></a>                    <span class="p">{</span>
-</span><span id="BulletedListItemBlock-122"><a href="#BulletedListItemBlock-122"><span class="linenos">122</span></a>                        <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;text&quot;</span><span class="p">,</span>
-</span><span id="BulletedListItemBlock-123"><a href="#BulletedListItemBlock-123"><span class="linenos">123</span></a>                        <span class="s2">&quot;text&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="n">rich_text</span><span class="p">},</span>
-</span><span id="BulletedListItemBlock-124"><a href="#BulletedListItemBlock-124"><span class="linenos">124</span></a>                    <span class="p">}</span>
-</span><span id="BulletedListItemBlock-125"><a href="#BulletedListItemBlock-125"><span class="linenos">125</span></a>                <span class="p">],</span>
-</span><span id="BulletedListItemBlock-126"><a href="#BulletedListItemBlock-126"><span class="linenos">126</span></a>                <span class="s2">&quot;color&quot;</span><span class="p">:</span> <span class="s2">&quot;default&quot;</span><span class="p">,</span>
-</span><span id="BulletedListItemBlock-127"><a href="#BulletedListItemBlock-127"><span class="linenos">127</span></a>            <span class="p">}</span>
-</span><span id="BulletedListItemBlock-128"><a href="#BulletedListItemBlock-128"><span class="linenos">128</span></a>        <span class="p">)</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="BulletedListItemBlock-132"><a href="#BulletedListItemBlock-132"><span class="linenos">132</span></a><span class="k">class</span><span class="w"> </span><span class="nc">BulletedListItemBlock</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+</span><span id="BulletedListItemBlock-133"><a href="#BulletedListItemBlock-133"><span class="linenos">133</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Bulleted list item block.&quot;&quot;&quot;</span>
+</span><span id="BulletedListItemBlock-134"><a href="#BulletedListItemBlock-134"><span class="linenos">134</span></a>
+</span><span id="BulletedListItemBlock-135"><a href="#BulletedListItemBlock-135"><span class="linenos">135</span></a>    <span class="nb">type</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;bulleted_list_item&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;bulleted_list_item&quot;</span>
+</span><span id="BulletedListItemBlock-136"><a href="#BulletedListItemBlock-136"><span class="linenos">136</span></a>    <span class="n">bulleted_list_item</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
+</span><span id="BulletedListItemBlock-137"><a href="#BulletedListItemBlock-137"><span class="linenos">137</span></a>
+</span><span id="BulletedListItemBlock-138"><a href="#BulletedListItemBlock-138"><span class="linenos">138</span></a>    <span class="nd">@classmethod</span>
+</span><span id="BulletedListItemBlock-139"><a href="#BulletedListItemBlock-139"><span class="linenos">139</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">new</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">rich_text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">children</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BulletedListItemBlock</span><span class="p">:</span>
+</span><span id="BulletedListItemBlock-140"><a href="#BulletedListItemBlock-140"><span class="linenos">140</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a new bulleted list item block with plain text.</span>
+</span><span id="BulletedListItemBlock-141"><a href="#BulletedListItemBlock-141"><span class="linenos">141</span></a>
+</span><span id="BulletedListItemBlock-142"><a href="#BulletedListItemBlock-142"><span class="linenos">142</span></a><span class="sd">        Args:</span>
+</span><span id="BulletedListItemBlock-143"><a href="#BulletedListItemBlock-143"><span class="linenos">143</span></a><span class="sd">            rich_text: Plain text content</span>
+</span><span id="BulletedListItemBlock-144"><a href="#BulletedListItemBlock-144"><span class="linenos">144</span></a><span class="sd">            children: Optional nested child blocks</span>
+</span><span id="BulletedListItemBlock-145"><a href="#BulletedListItemBlock-145"><span class="linenos">145</span></a>
+</span><span id="BulletedListItemBlock-146"><a href="#BulletedListItemBlock-146"><span class="linenos">146</span></a><span class="sd">        Returns:</span>
+</span><span id="BulletedListItemBlock-147"><a href="#BulletedListItemBlock-147"><span class="linenos">147</span></a><span class="sd">            BulletedListItemBlock instance</span>
+</span><span id="BulletedListItemBlock-148"><a href="#BulletedListItemBlock-148"><span class="linenos">148</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="BulletedListItemBlock-149"><a href="#BulletedListItemBlock-149"><span class="linenos">149</span></a>        <span class="n">item_data</span> <span class="o">=</span> <span class="p">{</span>
+</span><span id="BulletedListItemBlock-150"><a href="#BulletedListItemBlock-150"><span class="linenos">150</span></a>            <span class="s2">&quot;rich_text&quot;</span><span class="p">:</span> <span class="p">[</span>
+</span><span id="BulletedListItemBlock-151"><a href="#BulletedListItemBlock-151"><span class="linenos">151</span></a>                <span class="p">{</span>
+</span><span id="BulletedListItemBlock-152"><a href="#BulletedListItemBlock-152"><span class="linenos">152</span></a>                    <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;text&quot;</span><span class="p">,</span>
+</span><span id="BulletedListItemBlock-153"><a href="#BulletedListItemBlock-153"><span class="linenos">153</span></a>                    <span class="s2">&quot;text&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="n">rich_text</span><span class="p">},</span>
+</span><span id="BulletedListItemBlock-154"><a href="#BulletedListItemBlock-154"><span class="linenos">154</span></a>                <span class="p">}</span>
+</span><span id="BulletedListItemBlock-155"><a href="#BulletedListItemBlock-155"><span class="linenos">155</span></a>            <span class="p">],</span>
+</span><span id="BulletedListItemBlock-156"><a href="#BulletedListItemBlock-156"><span class="linenos">156</span></a>            <span class="s2">&quot;color&quot;</span><span class="p">:</span> <span class="s2">&quot;default&quot;</span><span class="p">,</span>
+</span><span id="BulletedListItemBlock-157"><a href="#BulletedListItemBlock-157"><span class="linenos">157</span></a>        <span class="p">}</span>
+</span><span id="BulletedListItemBlock-158"><a href="#BulletedListItemBlock-158"><span class="linenos">158</span></a>        <span class="k">if</span> <span class="n">children</span><span class="p">:</span>
+</span><span id="BulletedListItemBlock-159"><a href="#BulletedListItemBlock-159"><span class="linenos">159</span></a>            <span class="n">item_data</span><span class="p">[</span><span class="s2">&quot;children&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">children</span>
+</span><span id="BulletedListItemBlock-160"><a href="#BulletedListItemBlock-160"><span class="linenos">160</span></a>        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">bulleted_list_item</span><span class="o">=</span><span class="n">item_data</span><span class="p">)</span>
 </span></pre></div>
 
 
@@ -462,33 +464,35 @@
                     <div class="decorator decorator-classmethod">@classmethod</div>
 
         <span class="def">def</span>
-        <span class="name">new</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">cls</span>, </span><span class="param"><span class="n">rich_text</span><span class="p">:</span> <span class="nb">str</span></span><span class="return-annotation">) -> <span class="n"><a href="#BulletedListItemBlock">BulletedListItemBlock</a></span>:</span></span>
+        <span class="name">new</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="bp">cls</span>,</span><span class="param">	<span class="n">rich_text</span><span class="p">:</span> <span class="nb">str</span>,</span><span class="param">	<span class="o">*</span>,</span><span class="param">	<span class="n">children</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span></span><span class="return-annotation">) -> <span class="n"><a href="#BulletedListItemBlock">BulletedListItemBlock</a></span>:</span></span>
 
                 <label class="view-source-button" for="BulletedListItemBlock.new-view-source"><span>View Source</span></label>
 
     </div>
     <a class="headerlink" href="#BulletedListItemBlock.new"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="BulletedListItemBlock.new-108"><a href="#BulletedListItemBlock.new-108"><span class="linenos">108</span></a>    <span class="nd">@classmethod</span>
-</span><span id="BulletedListItemBlock.new-109"><a href="#BulletedListItemBlock.new-109"><span class="linenos">109</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">new</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">rich_text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BulletedListItemBlock</span><span class="p">:</span>
-</span><span id="BulletedListItemBlock.new-110"><a href="#BulletedListItemBlock.new-110"><span class="linenos">110</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a new bulleted list item block with plain text.</span>
-</span><span id="BulletedListItemBlock.new-111"><a href="#BulletedListItemBlock.new-111"><span class="linenos">111</span></a>
-</span><span id="BulletedListItemBlock.new-112"><a href="#BulletedListItemBlock.new-112"><span class="linenos">112</span></a><span class="sd">        Args:</span>
-</span><span id="BulletedListItemBlock.new-113"><a href="#BulletedListItemBlock.new-113"><span class="linenos">113</span></a><span class="sd">            rich_text: Plain text content</span>
-</span><span id="BulletedListItemBlock.new-114"><a href="#BulletedListItemBlock.new-114"><span class="linenos">114</span></a>
-</span><span id="BulletedListItemBlock.new-115"><a href="#BulletedListItemBlock.new-115"><span class="linenos">115</span></a><span class="sd">        Returns:</span>
-</span><span id="BulletedListItemBlock.new-116"><a href="#BulletedListItemBlock.new-116"><span class="linenos">116</span></a><span class="sd">            BulletedListItemBlock instance</span>
-</span><span id="BulletedListItemBlock.new-117"><a href="#BulletedListItemBlock.new-117"><span class="linenos">117</span></a><span class="sd">        &quot;&quot;&quot;</span>
-</span><span id="BulletedListItemBlock.new-118"><a href="#BulletedListItemBlock.new-118"><span class="linenos">118</span></a>        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
-</span><span id="BulletedListItemBlock.new-119"><a href="#BulletedListItemBlock.new-119"><span class="linenos">119</span></a>            <span class="n">bulleted_list_item</span><span class="o">=</span><span class="p">{</span>
-</span><span id="BulletedListItemBlock.new-120"><a href="#BulletedListItemBlock.new-120"><span class="linenos">120</span></a>                <span class="s2">&quot;rich_text&quot;</span><span class="p">:</span> <span class="p">[</span>
-</span><span id="BulletedListItemBlock.new-121"><a href="#BulletedListItemBlock.new-121"><span class="linenos">121</span></a>                    <span class="p">{</span>
-</span><span id="BulletedListItemBlock.new-122"><a href="#BulletedListItemBlock.new-122"><span class="linenos">122</span></a>                        <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;text&quot;</span><span class="p">,</span>
-</span><span id="BulletedListItemBlock.new-123"><a href="#BulletedListItemBlock.new-123"><span class="linenos">123</span></a>                        <span class="s2">&quot;text&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="n">rich_text</span><span class="p">},</span>
-</span><span id="BulletedListItemBlock.new-124"><a href="#BulletedListItemBlock.new-124"><span class="linenos">124</span></a>                    <span class="p">}</span>
-</span><span id="BulletedListItemBlock.new-125"><a href="#BulletedListItemBlock.new-125"><span class="linenos">125</span></a>                <span class="p">],</span>
-</span><span id="BulletedListItemBlock.new-126"><a href="#BulletedListItemBlock.new-126"><span class="linenos">126</span></a>                <span class="s2">&quot;color&quot;</span><span class="p">:</span> <span class="s2">&quot;default&quot;</span><span class="p">,</span>
-</span><span id="BulletedListItemBlock.new-127"><a href="#BulletedListItemBlock.new-127"><span class="linenos">127</span></a>            <span class="p">}</span>
-</span><span id="BulletedListItemBlock.new-128"><a href="#BulletedListItemBlock.new-128"><span class="linenos">128</span></a>        <span class="p">)</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="BulletedListItemBlock.new-138"><a href="#BulletedListItemBlock.new-138"><span class="linenos">138</span></a>    <span class="nd">@classmethod</span>
+</span><span id="BulletedListItemBlock.new-139"><a href="#BulletedListItemBlock.new-139"><span class="linenos">139</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">new</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">rich_text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">children</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BulletedListItemBlock</span><span class="p">:</span>
+</span><span id="BulletedListItemBlock.new-140"><a href="#BulletedListItemBlock.new-140"><span class="linenos">140</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a new bulleted list item block with plain text.</span>
+</span><span id="BulletedListItemBlock.new-141"><a href="#BulletedListItemBlock.new-141"><span class="linenos">141</span></a>
+</span><span id="BulletedListItemBlock.new-142"><a href="#BulletedListItemBlock.new-142"><span class="linenos">142</span></a><span class="sd">        Args:</span>
+</span><span id="BulletedListItemBlock.new-143"><a href="#BulletedListItemBlock.new-143"><span class="linenos">143</span></a><span class="sd">            rich_text: Plain text content</span>
+</span><span id="BulletedListItemBlock.new-144"><a href="#BulletedListItemBlock.new-144"><span class="linenos">144</span></a><span class="sd">            children: Optional nested child blocks</span>
+</span><span id="BulletedListItemBlock.new-145"><a href="#BulletedListItemBlock.new-145"><span class="linenos">145</span></a>
+</span><span id="BulletedListItemBlock.new-146"><a href="#BulletedListItemBlock.new-146"><span class="linenos">146</span></a><span class="sd">        Returns:</span>
+</span><span id="BulletedListItemBlock.new-147"><a href="#BulletedListItemBlock.new-147"><span class="linenos">147</span></a><span class="sd">            BulletedListItemBlock instance</span>
+</span><span id="BulletedListItemBlock.new-148"><a href="#BulletedListItemBlock.new-148"><span class="linenos">148</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="BulletedListItemBlock.new-149"><a href="#BulletedListItemBlock.new-149"><span class="linenos">149</span></a>        <span class="n">item_data</span> <span class="o">=</span> <span class="p">{</span>
+</span><span id="BulletedListItemBlock.new-150"><a href="#BulletedListItemBlock.new-150"><span class="linenos">150</span></a>            <span class="s2">&quot;rich_text&quot;</span><span class="p">:</span> <span class="p">[</span>
+</span><span id="BulletedListItemBlock.new-151"><a href="#BulletedListItemBlock.new-151"><span class="linenos">151</span></a>                <span class="p">{</span>
+</span><span id="BulletedListItemBlock.new-152"><a href="#BulletedListItemBlock.new-152"><span class="linenos">152</span></a>                    <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;text&quot;</span><span class="p">,</span>
+</span><span id="BulletedListItemBlock.new-153"><a href="#BulletedListItemBlock.new-153"><span class="linenos">153</span></a>                    <span class="s2">&quot;text&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="n">rich_text</span><span class="p">},</span>
+</span><span id="BulletedListItemBlock.new-154"><a href="#BulletedListItemBlock.new-154"><span class="linenos">154</span></a>                <span class="p">}</span>
+</span><span id="BulletedListItemBlock.new-155"><a href="#BulletedListItemBlock.new-155"><span class="linenos">155</span></a>            <span class="p">],</span>
+</span><span id="BulletedListItemBlock.new-156"><a href="#BulletedListItemBlock.new-156"><span class="linenos">156</span></a>            <span class="s2">&quot;color&quot;</span><span class="p">:</span> <span class="s2">&quot;default&quot;</span><span class="p">,</span>
+</span><span id="BulletedListItemBlock.new-157"><a href="#BulletedListItemBlock.new-157"><span class="linenos">157</span></a>        <span class="p">}</span>
+</span><span id="BulletedListItemBlock.new-158"><a href="#BulletedListItemBlock.new-158"><span class="linenos">158</span></a>        <span class="k">if</span> <span class="n">children</span><span class="p">:</span>
+</span><span id="BulletedListItemBlock.new-159"><a href="#BulletedListItemBlock.new-159"><span class="linenos">159</span></a>            <span class="n">item_data</span><span class="p">[</span><span class="s2">&quot;children&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">children</span>
+</span><span id="BulletedListItemBlock.new-160"><a href="#BulletedListItemBlock.new-160"><span class="linenos">160</span></a>        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">bulleted_list_item</span><span class="o">=</span><span class="n">item_data</span><span class="p">)</span>
 </span></pre></div>
 
 
@@ -498,6 +502,7 @@
 
 <ul>
 <li><strong>rich_text:</strong>  Plain text content</li>
+<li><strong>children:</strong>  Optional nested child blocks</li>
 </ul>
 
 <h6 id="returns">Returns:</h6>
@@ -521,34 +526,34 @@
 
     </div>
     <a class="headerlink" href="#CodeBlock"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="CodeBlock-131"><a href="#CodeBlock-131"><span class="linenos">131</span></a><span class="k">class</span><span class="w"> </span><span class="nc">CodeBlock</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
-</span><span id="CodeBlock-132"><a href="#CodeBlock-132"><span class="linenos">132</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Code block.&quot;&quot;&quot;</span>
-</span><span id="CodeBlock-133"><a href="#CodeBlock-133"><span class="linenos">133</span></a>
-</span><span id="CodeBlock-134"><a href="#CodeBlock-134"><span class="linenos">134</span></a>    <span class="nb">type</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;code&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;code&quot;</span>
-</span><span id="CodeBlock-135"><a href="#CodeBlock-135"><span class="linenos">135</span></a>    <span class="n">code</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
-</span><span id="CodeBlock-136"><a href="#CodeBlock-136"><span class="linenos">136</span></a>
-</span><span id="CodeBlock-137"><a href="#CodeBlock-137"><span class="linenos">137</span></a>    <span class="nd">@classmethod</span>
-</span><span id="CodeBlock-138"><a href="#CodeBlock-138"><span class="linenos">138</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">new</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">code</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">language</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;plain text&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CodeBlock</span><span class="p">:</span>
-</span><span id="CodeBlock-139"><a href="#CodeBlock-139"><span class="linenos">139</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a new code block.</span>
-</span><span id="CodeBlock-140"><a href="#CodeBlock-140"><span class="linenos">140</span></a>
-</span><span id="CodeBlock-141"><a href="#CodeBlock-141"><span class="linenos">141</span></a><span class="sd">        Args:</span>
-</span><span id="CodeBlock-142"><a href="#CodeBlock-142"><span class="linenos">142</span></a><span class="sd">            code: Code content</span>
-</span><span id="CodeBlock-143"><a href="#CodeBlock-143"><span class="linenos">143</span></a><span class="sd">            language: Programming language</span>
-</span><span id="CodeBlock-144"><a href="#CodeBlock-144"><span class="linenos">144</span></a>
-</span><span id="CodeBlock-145"><a href="#CodeBlock-145"><span class="linenos">145</span></a><span class="sd">        Returns:</span>
-</span><span id="CodeBlock-146"><a href="#CodeBlock-146"><span class="linenos">146</span></a><span class="sd">            CodeBlock instance</span>
-</span><span id="CodeBlock-147"><a href="#CodeBlock-147"><span class="linenos">147</span></a><span class="sd">        &quot;&quot;&quot;</span>
-</span><span id="CodeBlock-148"><a href="#CodeBlock-148"><span class="linenos">148</span></a>        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
-</span><span id="CodeBlock-149"><a href="#CodeBlock-149"><span class="linenos">149</span></a>            <span class="n">code</span><span class="o">=</span><span class="p">{</span>
-</span><span id="CodeBlock-150"><a href="#CodeBlock-150"><span class="linenos">150</span></a>                <span class="s2">&quot;rich_text&quot;</span><span class="p">:</span> <span class="p">[</span>
-</span><span id="CodeBlock-151"><a href="#CodeBlock-151"><span class="linenos">151</span></a>                    <span class="p">{</span>
-</span><span id="CodeBlock-152"><a href="#CodeBlock-152"><span class="linenos">152</span></a>                        <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;text&quot;</span><span class="p">,</span>
-</span><span id="CodeBlock-153"><a href="#CodeBlock-153"><span class="linenos">153</span></a>                        <span class="s2">&quot;text&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="n">code</span><span class="p">},</span>
-</span><span id="CodeBlock-154"><a href="#CodeBlock-154"><span class="linenos">154</span></a>                    <span class="p">}</span>
-</span><span id="CodeBlock-155"><a href="#CodeBlock-155"><span class="linenos">155</span></a>                <span class="p">],</span>
-</span><span id="CodeBlock-156"><a href="#CodeBlock-156"><span class="linenos">156</span></a>                <span class="s2">&quot;language&quot;</span><span class="p">:</span> <span class="n">language</span><span class="p">,</span>
-</span><span id="CodeBlock-157"><a href="#CodeBlock-157"><span class="linenos">157</span></a>            <span class="p">}</span>
-</span><span id="CodeBlock-158"><a href="#CodeBlock-158"><span class="linenos">158</span></a>        <span class="p">)</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="CodeBlock-163"><a href="#CodeBlock-163"><span class="linenos">163</span></a><span class="k">class</span><span class="w"> </span><span class="nc">CodeBlock</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+</span><span id="CodeBlock-164"><a href="#CodeBlock-164"><span class="linenos">164</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Code block.&quot;&quot;&quot;</span>
+</span><span id="CodeBlock-165"><a href="#CodeBlock-165"><span class="linenos">165</span></a>
+</span><span id="CodeBlock-166"><a href="#CodeBlock-166"><span class="linenos">166</span></a>    <span class="nb">type</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;code&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;code&quot;</span>
+</span><span id="CodeBlock-167"><a href="#CodeBlock-167"><span class="linenos">167</span></a>    <span class="n">code</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
+</span><span id="CodeBlock-168"><a href="#CodeBlock-168"><span class="linenos">168</span></a>
+</span><span id="CodeBlock-169"><a href="#CodeBlock-169"><span class="linenos">169</span></a>    <span class="nd">@classmethod</span>
+</span><span id="CodeBlock-170"><a href="#CodeBlock-170"><span class="linenos">170</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">new</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">code</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">language</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;plain text&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CodeBlock</span><span class="p">:</span>
+</span><span id="CodeBlock-171"><a href="#CodeBlock-171"><span class="linenos">171</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a new code block.</span>
+</span><span id="CodeBlock-172"><a href="#CodeBlock-172"><span class="linenos">172</span></a>
+</span><span id="CodeBlock-173"><a href="#CodeBlock-173"><span class="linenos">173</span></a><span class="sd">        Args:</span>
+</span><span id="CodeBlock-174"><a href="#CodeBlock-174"><span class="linenos">174</span></a><span class="sd">            code: Code content</span>
+</span><span id="CodeBlock-175"><a href="#CodeBlock-175"><span class="linenos">175</span></a><span class="sd">            language: Programming language</span>
+</span><span id="CodeBlock-176"><a href="#CodeBlock-176"><span class="linenos">176</span></a>
+</span><span id="CodeBlock-177"><a href="#CodeBlock-177"><span class="linenos">177</span></a><span class="sd">        Returns:</span>
+</span><span id="CodeBlock-178"><a href="#CodeBlock-178"><span class="linenos">178</span></a><span class="sd">            CodeBlock instance</span>
+</span><span id="CodeBlock-179"><a href="#CodeBlock-179"><span class="linenos">179</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="CodeBlock-180"><a href="#CodeBlock-180"><span class="linenos">180</span></a>        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+</span><span id="CodeBlock-181"><a href="#CodeBlock-181"><span class="linenos">181</span></a>            <span class="n">code</span><span class="o">=</span><span class="p">{</span>
+</span><span id="CodeBlock-182"><a href="#CodeBlock-182"><span class="linenos">182</span></a>                <span class="s2">&quot;rich_text&quot;</span><span class="p">:</span> <span class="p">[</span>
+</span><span id="CodeBlock-183"><a href="#CodeBlock-183"><span class="linenos">183</span></a>                    <span class="p">{</span>
+</span><span id="CodeBlock-184"><a href="#CodeBlock-184"><span class="linenos">184</span></a>                        <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;text&quot;</span><span class="p">,</span>
+</span><span id="CodeBlock-185"><a href="#CodeBlock-185"><span class="linenos">185</span></a>                        <span class="s2">&quot;text&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="n">code</span><span class="p">},</span>
+</span><span id="CodeBlock-186"><a href="#CodeBlock-186"><span class="linenos">186</span></a>                    <span class="p">}</span>
+</span><span id="CodeBlock-187"><a href="#CodeBlock-187"><span class="linenos">187</span></a>                <span class="p">],</span>
+</span><span id="CodeBlock-188"><a href="#CodeBlock-188"><span class="linenos">188</span></a>                <span class="s2">&quot;language&quot;</span><span class="p">:</span> <span class="n">language</span><span class="p">,</span>
+</span><span id="CodeBlock-189"><a href="#CodeBlock-189"><span class="linenos">189</span></a>            <span class="p">}</span>
+</span><span id="CodeBlock-190"><a href="#CodeBlock-190"><span class="linenos">190</span></a>        <span class="p">)</span>
 </span></pre></div>
 
 
@@ -592,28 +597,28 @@
 
     </div>
     <a class="headerlink" href="#CodeBlock.new"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="CodeBlock.new-137"><a href="#CodeBlock.new-137"><span class="linenos">137</span></a>    <span class="nd">@classmethod</span>
-</span><span id="CodeBlock.new-138"><a href="#CodeBlock.new-138"><span class="linenos">138</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">new</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">code</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">language</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;plain text&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CodeBlock</span><span class="p">:</span>
-</span><span id="CodeBlock.new-139"><a href="#CodeBlock.new-139"><span class="linenos">139</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a new code block.</span>
-</span><span id="CodeBlock.new-140"><a href="#CodeBlock.new-140"><span class="linenos">140</span></a>
-</span><span id="CodeBlock.new-141"><a href="#CodeBlock.new-141"><span class="linenos">141</span></a><span class="sd">        Args:</span>
-</span><span id="CodeBlock.new-142"><a href="#CodeBlock.new-142"><span class="linenos">142</span></a><span class="sd">            code: Code content</span>
-</span><span id="CodeBlock.new-143"><a href="#CodeBlock.new-143"><span class="linenos">143</span></a><span class="sd">            language: Programming language</span>
-</span><span id="CodeBlock.new-144"><a href="#CodeBlock.new-144"><span class="linenos">144</span></a>
-</span><span id="CodeBlock.new-145"><a href="#CodeBlock.new-145"><span class="linenos">145</span></a><span class="sd">        Returns:</span>
-</span><span id="CodeBlock.new-146"><a href="#CodeBlock.new-146"><span class="linenos">146</span></a><span class="sd">            CodeBlock instance</span>
-</span><span id="CodeBlock.new-147"><a href="#CodeBlock.new-147"><span class="linenos">147</span></a><span class="sd">        &quot;&quot;&quot;</span>
-</span><span id="CodeBlock.new-148"><a href="#CodeBlock.new-148"><span class="linenos">148</span></a>        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
-</span><span id="CodeBlock.new-149"><a href="#CodeBlock.new-149"><span class="linenos">149</span></a>            <span class="n">code</span><span class="o">=</span><span class="p">{</span>
-</span><span id="CodeBlock.new-150"><a href="#CodeBlock.new-150"><span class="linenos">150</span></a>                <span class="s2">&quot;rich_text&quot;</span><span class="p">:</span> <span class="p">[</span>
-</span><span id="CodeBlock.new-151"><a href="#CodeBlock.new-151"><span class="linenos">151</span></a>                    <span class="p">{</span>
-</span><span id="CodeBlock.new-152"><a href="#CodeBlock.new-152"><span class="linenos">152</span></a>                        <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;text&quot;</span><span class="p">,</span>
-</span><span id="CodeBlock.new-153"><a href="#CodeBlock.new-153"><span class="linenos">153</span></a>                        <span class="s2">&quot;text&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="n">code</span><span class="p">},</span>
-</span><span id="CodeBlock.new-154"><a href="#CodeBlock.new-154"><span class="linenos">154</span></a>                    <span class="p">}</span>
-</span><span id="CodeBlock.new-155"><a href="#CodeBlock.new-155"><span class="linenos">155</span></a>                <span class="p">],</span>
-</span><span id="CodeBlock.new-156"><a href="#CodeBlock.new-156"><span class="linenos">156</span></a>                <span class="s2">&quot;language&quot;</span><span class="p">:</span> <span class="n">language</span><span class="p">,</span>
-</span><span id="CodeBlock.new-157"><a href="#CodeBlock.new-157"><span class="linenos">157</span></a>            <span class="p">}</span>
-</span><span id="CodeBlock.new-158"><a href="#CodeBlock.new-158"><span class="linenos">158</span></a>        <span class="p">)</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="CodeBlock.new-169"><a href="#CodeBlock.new-169"><span class="linenos">169</span></a>    <span class="nd">@classmethod</span>
+</span><span id="CodeBlock.new-170"><a href="#CodeBlock.new-170"><span class="linenos">170</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">new</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">code</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">language</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;plain text&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CodeBlock</span><span class="p">:</span>
+</span><span id="CodeBlock.new-171"><a href="#CodeBlock.new-171"><span class="linenos">171</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a new code block.</span>
+</span><span id="CodeBlock.new-172"><a href="#CodeBlock.new-172"><span class="linenos">172</span></a>
+</span><span id="CodeBlock.new-173"><a href="#CodeBlock.new-173"><span class="linenos">173</span></a><span class="sd">        Args:</span>
+</span><span id="CodeBlock.new-174"><a href="#CodeBlock.new-174"><span class="linenos">174</span></a><span class="sd">            code: Code content</span>
+</span><span id="CodeBlock.new-175"><a href="#CodeBlock.new-175"><span class="linenos">175</span></a><span class="sd">            language: Programming language</span>
+</span><span id="CodeBlock.new-176"><a href="#CodeBlock.new-176"><span class="linenos">176</span></a>
+</span><span id="CodeBlock.new-177"><a href="#CodeBlock.new-177"><span class="linenos">177</span></a><span class="sd">        Returns:</span>
+</span><span id="CodeBlock.new-178"><a href="#CodeBlock.new-178"><span class="linenos">178</span></a><span class="sd">            CodeBlock instance</span>
+</span><span id="CodeBlock.new-179"><a href="#CodeBlock.new-179"><span class="linenos">179</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="CodeBlock.new-180"><a href="#CodeBlock.new-180"><span class="linenos">180</span></a>        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+</span><span id="CodeBlock.new-181"><a href="#CodeBlock.new-181"><span class="linenos">181</span></a>            <span class="n">code</span><span class="o">=</span><span class="p">{</span>
+</span><span id="CodeBlock.new-182"><a href="#CodeBlock.new-182"><span class="linenos">182</span></a>                <span class="s2">&quot;rich_text&quot;</span><span class="p">:</span> <span class="p">[</span>
+</span><span id="CodeBlock.new-183"><a href="#CodeBlock.new-183"><span class="linenos">183</span></a>                    <span class="p">{</span>
+</span><span id="CodeBlock.new-184"><a href="#CodeBlock.new-184"><span class="linenos">184</span></a>                        <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;text&quot;</span><span class="p">,</span>
+</span><span id="CodeBlock.new-185"><a href="#CodeBlock.new-185"><span class="linenos">185</span></a>                        <span class="s2">&quot;text&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="n">code</span><span class="p">},</span>
+</span><span id="CodeBlock.new-186"><a href="#CodeBlock.new-186"><span class="linenos">186</span></a>                    <span class="p">}</span>
+</span><span id="CodeBlock.new-187"><a href="#CodeBlock.new-187"><span class="linenos">187</span></a>                <span class="p">],</span>
+</span><span id="CodeBlock.new-188"><a href="#CodeBlock.new-188"><span class="linenos">188</span></a>                <span class="s2">&quot;language&quot;</span><span class="p">:</span> <span class="n">language</span><span class="p">,</span>
+</span><span id="CodeBlock.new-189"><a href="#CodeBlock.new-189"><span class="linenos">189</span></a>            <span class="p">}</span>
+</span><span id="CodeBlock.new-190"><a href="#CodeBlock.new-190"><span class="linenos">190</span></a>        <span class="p">)</span>
 </span></pre></div>
 
 
@@ -710,34 +715,34 @@
 
     </div>
     <a class="headerlink" href="#Heading2Block"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="Heading2Block-42"><a href="#Heading2Block-42"><span class="linenos">42</span></a><span class="k">class</span><span class="w"> </span><span class="nc">Heading2Block</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
-</span><span id="Heading2Block-43"><a href="#Heading2Block-43"><span class="linenos">43</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Heading 2 block.&quot;&quot;&quot;</span>
-</span><span id="Heading2Block-44"><a href="#Heading2Block-44"><span class="linenos">44</span></a>
-</span><span id="Heading2Block-45"><a href="#Heading2Block-45"><span class="linenos">45</span></a>    <span class="nb">type</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;heading_2&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;heading_2&quot;</span>
-</span><span id="Heading2Block-46"><a href="#Heading2Block-46"><span class="linenos">46</span></a>    <span class="n">heading_2</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">alias</span><span class="o">=</span><span class="s2">&quot;heading_2&quot;</span><span class="p">)</span>
-</span><span id="Heading2Block-47"><a href="#Heading2Block-47"><span class="linenos">47</span></a>
-</span><span id="Heading2Block-48"><a href="#Heading2Block-48"><span class="linenos">48</span></a>    <span class="nd">@classmethod</span>
-</span><span id="Heading2Block-49"><a href="#Heading2Block-49"><span class="linenos">49</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">new</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">rich_text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Heading2Block</span><span class="p">:</span>
-</span><span id="Heading2Block-50"><a href="#Heading2Block-50"><span class="linenos">50</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a new heading 2 block with plain text.</span>
-</span><span id="Heading2Block-51"><a href="#Heading2Block-51"><span class="linenos">51</span></a>
-</span><span id="Heading2Block-52"><a href="#Heading2Block-52"><span class="linenos">52</span></a><span class="sd">        Args:</span>
-</span><span id="Heading2Block-53"><a href="#Heading2Block-53"><span class="linenos">53</span></a><span class="sd">            rich_text: Plain text content</span>
-</span><span id="Heading2Block-54"><a href="#Heading2Block-54"><span class="linenos">54</span></a>
-</span><span id="Heading2Block-55"><a href="#Heading2Block-55"><span class="linenos">55</span></a><span class="sd">        Returns:</span>
-</span><span id="Heading2Block-56"><a href="#Heading2Block-56"><span class="linenos">56</span></a><span class="sd">            Heading2Block instance</span>
-</span><span id="Heading2Block-57"><a href="#Heading2Block-57"><span class="linenos">57</span></a><span class="sd">        &quot;&quot;&quot;</span>
-</span><span id="Heading2Block-58"><a href="#Heading2Block-58"><span class="linenos">58</span></a>        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
-</span><span id="Heading2Block-59"><a href="#Heading2Block-59"><span class="linenos">59</span></a>            <span class="n">heading_2</span><span class="o">=</span><span class="p">{</span>
-</span><span id="Heading2Block-60"><a href="#Heading2Block-60"><span class="linenos">60</span></a>                <span class="s2">&quot;rich_text&quot;</span><span class="p">:</span> <span class="p">[</span>
-</span><span id="Heading2Block-61"><a href="#Heading2Block-61"><span class="linenos">61</span></a>                    <span class="p">{</span>
-</span><span id="Heading2Block-62"><a href="#Heading2Block-62"><span class="linenos">62</span></a>                        <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;text&quot;</span><span class="p">,</span>
-</span><span id="Heading2Block-63"><a href="#Heading2Block-63"><span class="linenos">63</span></a>                        <span class="s2">&quot;text&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="n">rich_text</span><span class="p">},</span>
-</span><span id="Heading2Block-64"><a href="#Heading2Block-64"><span class="linenos">64</span></a>                    <span class="p">}</span>
-</span><span id="Heading2Block-65"><a href="#Heading2Block-65"><span class="linenos">65</span></a>                <span class="p">],</span>
-</span><span id="Heading2Block-66"><a href="#Heading2Block-66"><span class="linenos">66</span></a>                <span class="s2">&quot;color&quot;</span><span class="p">:</span> <span class="s2">&quot;default&quot;</span><span class="p">,</span>
-</span><span id="Heading2Block-67"><a href="#Heading2Block-67"><span class="linenos">67</span></a>                <span class="s2">&quot;is_toggleable&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
-</span><span id="Heading2Block-68"><a href="#Heading2Block-68"><span class="linenos">68</span></a>            <span class="p">}</span>
-</span><span id="Heading2Block-69"><a href="#Heading2Block-69"><span class="linenos">69</span></a>        <span class="p">)</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="Heading2Block-72"><a href="#Heading2Block-72"><span class="linenos">72</span></a><span class="k">class</span><span class="w"> </span><span class="nc">Heading2Block</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+</span><span id="Heading2Block-73"><a href="#Heading2Block-73"><span class="linenos">73</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Heading 2 block.&quot;&quot;&quot;</span>
+</span><span id="Heading2Block-74"><a href="#Heading2Block-74"><span class="linenos">74</span></a>
+</span><span id="Heading2Block-75"><a href="#Heading2Block-75"><span class="linenos">75</span></a>    <span class="nb">type</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;heading_2&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;heading_2&quot;</span>
+</span><span id="Heading2Block-76"><a href="#Heading2Block-76"><span class="linenos">76</span></a>    <span class="n">heading_2</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">alias</span><span class="o">=</span><span class="s2">&quot;heading_2&quot;</span><span class="p">)</span>
+</span><span id="Heading2Block-77"><a href="#Heading2Block-77"><span class="linenos">77</span></a>
+</span><span id="Heading2Block-78"><a href="#Heading2Block-78"><span class="linenos">78</span></a>    <span class="nd">@classmethod</span>
+</span><span id="Heading2Block-79"><a href="#Heading2Block-79"><span class="linenos">79</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">new</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">rich_text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Heading2Block</span><span class="p">:</span>
+</span><span id="Heading2Block-80"><a href="#Heading2Block-80"><span class="linenos">80</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a new heading 2 block with plain text.</span>
+</span><span id="Heading2Block-81"><a href="#Heading2Block-81"><span class="linenos">81</span></a>
+</span><span id="Heading2Block-82"><a href="#Heading2Block-82"><span class="linenos">82</span></a><span class="sd">        Args:</span>
+</span><span id="Heading2Block-83"><a href="#Heading2Block-83"><span class="linenos">83</span></a><span class="sd">            rich_text: Plain text content</span>
+</span><span id="Heading2Block-84"><a href="#Heading2Block-84"><span class="linenos">84</span></a>
+</span><span id="Heading2Block-85"><a href="#Heading2Block-85"><span class="linenos">85</span></a><span class="sd">        Returns:</span>
+</span><span id="Heading2Block-86"><a href="#Heading2Block-86"><span class="linenos">86</span></a><span class="sd">            Heading2Block instance</span>
+</span><span id="Heading2Block-87"><a href="#Heading2Block-87"><span class="linenos">87</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="Heading2Block-88"><a href="#Heading2Block-88"><span class="linenos">88</span></a>        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+</span><span id="Heading2Block-89"><a href="#Heading2Block-89"><span class="linenos">89</span></a>            <span class="n">heading_2</span><span class="o">=</span><span class="p">{</span>
+</span><span id="Heading2Block-90"><a href="#Heading2Block-90"><span class="linenos">90</span></a>                <span class="s2">&quot;rich_text&quot;</span><span class="p">:</span> <span class="p">[</span>
+</span><span id="Heading2Block-91"><a href="#Heading2Block-91"><span class="linenos">91</span></a>                    <span class="p">{</span>
+</span><span id="Heading2Block-92"><a href="#Heading2Block-92"><span class="linenos">92</span></a>                        <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;text&quot;</span><span class="p">,</span>
+</span><span id="Heading2Block-93"><a href="#Heading2Block-93"><span class="linenos">93</span></a>                        <span class="s2">&quot;text&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="n">rich_text</span><span class="p">},</span>
+</span><span id="Heading2Block-94"><a href="#Heading2Block-94"><span class="linenos">94</span></a>                    <span class="p">}</span>
+</span><span id="Heading2Block-95"><a href="#Heading2Block-95"><span class="linenos">95</span></a>                <span class="p">],</span>
+</span><span id="Heading2Block-96"><a href="#Heading2Block-96"><span class="linenos">96</span></a>                <span class="s2">&quot;color&quot;</span><span class="p">:</span> <span class="s2">&quot;default&quot;</span><span class="p">,</span>
+</span><span id="Heading2Block-97"><a href="#Heading2Block-97"><span class="linenos">97</span></a>                <span class="s2">&quot;is_toggleable&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+</span><span id="Heading2Block-98"><a href="#Heading2Block-98"><span class="linenos">98</span></a>            <span class="p">}</span>
+</span><span id="Heading2Block-99"><a href="#Heading2Block-99"><span class="linenos">99</span></a>        <span class="p">)</span>
 </span></pre></div>
 
 
@@ -781,28 +786,28 @@
 
     </div>
     <a class="headerlink" href="#Heading2Block.new"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="Heading2Block.new-48"><a href="#Heading2Block.new-48"><span class="linenos">48</span></a>    <span class="nd">@classmethod</span>
-</span><span id="Heading2Block.new-49"><a href="#Heading2Block.new-49"><span class="linenos">49</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">new</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">rich_text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Heading2Block</span><span class="p">:</span>
-</span><span id="Heading2Block.new-50"><a href="#Heading2Block.new-50"><span class="linenos">50</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a new heading 2 block with plain text.</span>
-</span><span id="Heading2Block.new-51"><a href="#Heading2Block.new-51"><span class="linenos">51</span></a>
-</span><span id="Heading2Block.new-52"><a href="#Heading2Block.new-52"><span class="linenos">52</span></a><span class="sd">        Args:</span>
-</span><span id="Heading2Block.new-53"><a href="#Heading2Block.new-53"><span class="linenos">53</span></a><span class="sd">            rich_text: Plain text content</span>
-</span><span id="Heading2Block.new-54"><a href="#Heading2Block.new-54"><span class="linenos">54</span></a>
-</span><span id="Heading2Block.new-55"><a href="#Heading2Block.new-55"><span class="linenos">55</span></a><span class="sd">        Returns:</span>
-</span><span id="Heading2Block.new-56"><a href="#Heading2Block.new-56"><span class="linenos">56</span></a><span class="sd">            Heading2Block instance</span>
-</span><span id="Heading2Block.new-57"><a href="#Heading2Block.new-57"><span class="linenos">57</span></a><span class="sd">        &quot;&quot;&quot;</span>
-</span><span id="Heading2Block.new-58"><a href="#Heading2Block.new-58"><span class="linenos">58</span></a>        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
-</span><span id="Heading2Block.new-59"><a href="#Heading2Block.new-59"><span class="linenos">59</span></a>            <span class="n">heading_2</span><span class="o">=</span><span class="p">{</span>
-</span><span id="Heading2Block.new-60"><a href="#Heading2Block.new-60"><span class="linenos">60</span></a>                <span class="s2">&quot;rich_text&quot;</span><span class="p">:</span> <span class="p">[</span>
-</span><span id="Heading2Block.new-61"><a href="#Heading2Block.new-61"><span class="linenos">61</span></a>                    <span class="p">{</span>
-</span><span id="Heading2Block.new-62"><a href="#Heading2Block.new-62"><span class="linenos">62</span></a>                        <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;text&quot;</span><span class="p">,</span>
-</span><span id="Heading2Block.new-63"><a href="#Heading2Block.new-63"><span class="linenos">63</span></a>                        <span class="s2">&quot;text&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="n">rich_text</span><span class="p">},</span>
-</span><span id="Heading2Block.new-64"><a href="#Heading2Block.new-64"><span class="linenos">64</span></a>                    <span class="p">}</span>
-</span><span id="Heading2Block.new-65"><a href="#Heading2Block.new-65"><span class="linenos">65</span></a>                <span class="p">],</span>
-</span><span id="Heading2Block.new-66"><a href="#Heading2Block.new-66"><span class="linenos">66</span></a>                <span class="s2">&quot;color&quot;</span><span class="p">:</span> <span class="s2">&quot;default&quot;</span><span class="p">,</span>
-</span><span id="Heading2Block.new-67"><a href="#Heading2Block.new-67"><span class="linenos">67</span></a>                <span class="s2">&quot;is_toggleable&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
-</span><span id="Heading2Block.new-68"><a href="#Heading2Block.new-68"><span class="linenos">68</span></a>            <span class="p">}</span>
-</span><span id="Heading2Block.new-69"><a href="#Heading2Block.new-69"><span class="linenos">69</span></a>        <span class="p">)</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="Heading2Block.new-78"><a href="#Heading2Block.new-78"><span class="linenos">78</span></a>    <span class="nd">@classmethod</span>
+</span><span id="Heading2Block.new-79"><a href="#Heading2Block.new-79"><span class="linenos">79</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">new</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">rich_text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Heading2Block</span><span class="p">:</span>
+</span><span id="Heading2Block.new-80"><a href="#Heading2Block.new-80"><span class="linenos">80</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a new heading 2 block with plain text.</span>
+</span><span id="Heading2Block.new-81"><a href="#Heading2Block.new-81"><span class="linenos">81</span></a>
+</span><span id="Heading2Block.new-82"><a href="#Heading2Block.new-82"><span class="linenos">82</span></a><span class="sd">        Args:</span>
+</span><span id="Heading2Block.new-83"><a href="#Heading2Block.new-83"><span class="linenos">83</span></a><span class="sd">            rich_text: Plain text content</span>
+</span><span id="Heading2Block.new-84"><a href="#Heading2Block.new-84"><span class="linenos">84</span></a>
+</span><span id="Heading2Block.new-85"><a href="#Heading2Block.new-85"><span class="linenos">85</span></a><span class="sd">        Returns:</span>
+</span><span id="Heading2Block.new-86"><a href="#Heading2Block.new-86"><span class="linenos">86</span></a><span class="sd">            Heading2Block instance</span>
+</span><span id="Heading2Block.new-87"><a href="#Heading2Block.new-87"><span class="linenos">87</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="Heading2Block.new-88"><a href="#Heading2Block.new-88"><span class="linenos">88</span></a>        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+</span><span id="Heading2Block.new-89"><a href="#Heading2Block.new-89"><span class="linenos">89</span></a>            <span class="n">heading_2</span><span class="o">=</span><span class="p">{</span>
+</span><span id="Heading2Block.new-90"><a href="#Heading2Block.new-90"><span class="linenos">90</span></a>                <span class="s2">&quot;rich_text&quot;</span><span class="p">:</span> <span class="p">[</span>
+</span><span id="Heading2Block.new-91"><a href="#Heading2Block.new-91"><span class="linenos">91</span></a>                    <span class="p">{</span>
+</span><span id="Heading2Block.new-92"><a href="#Heading2Block.new-92"><span class="linenos">92</span></a>                        <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;text&quot;</span><span class="p">,</span>
+</span><span id="Heading2Block.new-93"><a href="#Heading2Block.new-93"><span class="linenos">93</span></a>                        <span class="s2">&quot;text&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="n">rich_text</span><span class="p">},</span>
+</span><span id="Heading2Block.new-94"><a href="#Heading2Block.new-94"><span class="linenos">94</span></a>                    <span class="p">}</span>
+</span><span id="Heading2Block.new-95"><a href="#Heading2Block.new-95"><span class="linenos">95</span></a>                <span class="p">],</span>
+</span><span id="Heading2Block.new-96"><a href="#Heading2Block.new-96"><span class="linenos">96</span></a>                <span class="s2">&quot;color&quot;</span><span class="p">:</span> <span class="s2">&quot;default&quot;</span><span class="p">,</span>
+</span><span id="Heading2Block.new-97"><a href="#Heading2Block.new-97"><span class="linenos">97</span></a>                <span class="s2">&quot;is_toggleable&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+</span><span id="Heading2Block.new-98"><a href="#Heading2Block.new-98"><span class="linenos">98</span></a>            <span class="p">}</span>
+</span><span id="Heading2Block.new-99"><a href="#Heading2Block.new-99"><span class="linenos">99</span></a>        <span class="p">)</span>
 </span></pre></div>
 
 
@@ -835,34 +840,34 @@
 
     </div>
     <a class="headerlink" href="#Heading3Block"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="Heading3Block-72"><a href="#Heading3Block-72"><span class="linenos">72</span></a><span class="k">class</span><span class="w"> </span><span class="nc">Heading3Block</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
-</span><span id="Heading3Block-73"><a href="#Heading3Block-73"><span class="linenos">73</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Heading 3 block.&quot;&quot;&quot;</span>
-</span><span id="Heading3Block-74"><a href="#Heading3Block-74"><span class="linenos">74</span></a>
-</span><span id="Heading3Block-75"><a href="#Heading3Block-75"><span class="linenos">75</span></a>    <span class="nb">type</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;heading_3&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;heading_3&quot;</span>
-</span><span id="Heading3Block-76"><a href="#Heading3Block-76"><span class="linenos">76</span></a>    <span class="n">heading_3</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">alias</span><span class="o">=</span><span class="s2">&quot;heading_3&quot;</span><span class="p">)</span>
-</span><span id="Heading3Block-77"><a href="#Heading3Block-77"><span class="linenos">77</span></a>
-</span><span id="Heading3Block-78"><a href="#Heading3Block-78"><span class="linenos">78</span></a>    <span class="nd">@classmethod</span>
-</span><span id="Heading3Block-79"><a href="#Heading3Block-79"><span class="linenos">79</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">new</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">rich_text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Heading3Block</span><span class="p">:</span>
-</span><span id="Heading3Block-80"><a href="#Heading3Block-80"><span class="linenos">80</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a new heading 3 block with plain text.</span>
-</span><span id="Heading3Block-81"><a href="#Heading3Block-81"><span class="linenos">81</span></a>
-</span><span id="Heading3Block-82"><a href="#Heading3Block-82"><span class="linenos">82</span></a><span class="sd">        Args:</span>
-</span><span id="Heading3Block-83"><a href="#Heading3Block-83"><span class="linenos">83</span></a><span class="sd">            rich_text: Plain text content</span>
-</span><span id="Heading3Block-84"><a href="#Heading3Block-84"><span class="linenos">84</span></a>
-</span><span id="Heading3Block-85"><a href="#Heading3Block-85"><span class="linenos">85</span></a><span class="sd">        Returns:</span>
-</span><span id="Heading3Block-86"><a href="#Heading3Block-86"><span class="linenos">86</span></a><span class="sd">            Heading3Block instance</span>
-</span><span id="Heading3Block-87"><a href="#Heading3Block-87"><span class="linenos">87</span></a><span class="sd">        &quot;&quot;&quot;</span>
-</span><span id="Heading3Block-88"><a href="#Heading3Block-88"><span class="linenos">88</span></a>        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
-</span><span id="Heading3Block-89"><a href="#Heading3Block-89"><span class="linenos">89</span></a>            <span class="n">heading_3</span><span class="o">=</span><span class="p">{</span>
-</span><span id="Heading3Block-90"><a href="#Heading3Block-90"><span class="linenos">90</span></a>                <span class="s2">&quot;rich_text&quot;</span><span class="p">:</span> <span class="p">[</span>
-</span><span id="Heading3Block-91"><a href="#Heading3Block-91"><span class="linenos">91</span></a>                    <span class="p">{</span>
-</span><span id="Heading3Block-92"><a href="#Heading3Block-92"><span class="linenos">92</span></a>                        <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;text&quot;</span><span class="p">,</span>
-</span><span id="Heading3Block-93"><a href="#Heading3Block-93"><span class="linenos">93</span></a>                        <span class="s2">&quot;text&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="n">rich_text</span><span class="p">},</span>
-</span><span id="Heading3Block-94"><a href="#Heading3Block-94"><span class="linenos">94</span></a>                    <span class="p">}</span>
-</span><span id="Heading3Block-95"><a href="#Heading3Block-95"><span class="linenos">95</span></a>                <span class="p">],</span>
-</span><span id="Heading3Block-96"><a href="#Heading3Block-96"><span class="linenos">96</span></a>                <span class="s2">&quot;color&quot;</span><span class="p">:</span> <span class="s2">&quot;default&quot;</span><span class="p">,</span>
-</span><span id="Heading3Block-97"><a href="#Heading3Block-97"><span class="linenos">97</span></a>                <span class="s2">&quot;is_toggleable&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
-</span><span id="Heading3Block-98"><a href="#Heading3Block-98"><span class="linenos">98</span></a>            <span class="p">}</span>
-</span><span id="Heading3Block-99"><a href="#Heading3Block-99"><span class="linenos">99</span></a>        <span class="p">)</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="Heading3Block-102"><a href="#Heading3Block-102"><span class="linenos">102</span></a><span class="k">class</span><span class="w"> </span><span class="nc">Heading3Block</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+</span><span id="Heading3Block-103"><a href="#Heading3Block-103"><span class="linenos">103</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Heading 3 block.&quot;&quot;&quot;</span>
+</span><span id="Heading3Block-104"><a href="#Heading3Block-104"><span class="linenos">104</span></a>
+</span><span id="Heading3Block-105"><a href="#Heading3Block-105"><span class="linenos">105</span></a>    <span class="nb">type</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;heading_3&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;heading_3&quot;</span>
+</span><span id="Heading3Block-106"><a href="#Heading3Block-106"><span class="linenos">106</span></a>    <span class="n">heading_3</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">alias</span><span class="o">=</span><span class="s2">&quot;heading_3&quot;</span><span class="p">)</span>
+</span><span id="Heading3Block-107"><a href="#Heading3Block-107"><span class="linenos">107</span></a>
+</span><span id="Heading3Block-108"><a href="#Heading3Block-108"><span class="linenos">108</span></a>    <span class="nd">@classmethod</span>
+</span><span id="Heading3Block-109"><a href="#Heading3Block-109"><span class="linenos">109</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">new</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">rich_text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Heading3Block</span><span class="p">:</span>
+</span><span id="Heading3Block-110"><a href="#Heading3Block-110"><span class="linenos">110</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a new heading 3 block with plain text.</span>
+</span><span id="Heading3Block-111"><a href="#Heading3Block-111"><span class="linenos">111</span></a>
+</span><span id="Heading3Block-112"><a href="#Heading3Block-112"><span class="linenos">112</span></a><span class="sd">        Args:</span>
+</span><span id="Heading3Block-113"><a href="#Heading3Block-113"><span class="linenos">113</span></a><span class="sd">            rich_text: Plain text content</span>
+</span><span id="Heading3Block-114"><a href="#Heading3Block-114"><span class="linenos">114</span></a>
+</span><span id="Heading3Block-115"><a href="#Heading3Block-115"><span class="linenos">115</span></a><span class="sd">        Returns:</span>
+</span><span id="Heading3Block-116"><a href="#Heading3Block-116"><span class="linenos">116</span></a><span class="sd">            Heading3Block instance</span>
+</span><span id="Heading3Block-117"><a href="#Heading3Block-117"><span class="linenos">117</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="Heading3Block-118"><a href="#Heading3Block-118"><span class="linenos">118</span></a>        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+</span><span id="Heading3Block-119"><a href="#Heading3Block-119"><span class="linenos">119</span></a>            <span class="n">heading_3</span><span class="o">=</span><span class="p">{</span>
+</span><span id="Heading3Block-120"><a href="#Heading3Block-120"><span class="linenos">120</span></a>                <span class="s2">&quot;rich_text&quot;</span><span class="p">:</span> <span class="p">[</span>
+</span><span id="Heading3Block-121"><a href="#Heading3Block-121"><span class="linenos">121</span></a>                    <span class="p">{</span>
+</span><span id="Heading3Block-122"><a href="#Heading3Block-122"><span class="linenos">122</span></a>                        <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;text&quot;</span><span class="p">,</span>
+</span><span id="Heading3Block-123"><a href="#Heading3Block-123"><span class="linenos">123</span></a>                        <span class="s2">&quot;text&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="n">rich_text</span><span class="p">},</span>
+</span><span id="Heading3Block-124"><a href="#Heading3Block-124"><span class="linenos">124</span></a>                    <span class="p">}</span>
+</span><span id="Heading3Block-125"><a href="#Heading3Block-125"><span class="linenos">125</span></a>                <span class="p">],</span>
+</span><span id="Heading3Block-126"><a href="#Heading3Block-126"><span class="linenos">126</span></a>                <span class="s2">&quot;color&quot;</span><span class="p">:</span> <span class="s2">&quot;default&quot;</span><span class="p">,</span>
+</span><span id="Heading3Block-127"><a href="#Heading3Block-127"><span class="linenos">127</span></a>                <span class="s2">&quot;is_toggleable&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+</span><span id="Heading3Block-128"><a href="#Heading3Block-128"><span class="linenos">128</span></a>            <span class="p">}</span>
+</span><span id="Heading3Block-129"><a href="#Heading3Block-129"><span class="linenos">129</span></a>        <span class="p">)</span>
 </span></pre></div>
 
 
@@ -906,28 +911,28 @@
 
     </div>
     <a class="headerlink" href="#Heading3Block.new"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="Heading3Block.new-78"><a href="#Heading3Block.new-78"><span class="linenos">78</span></a>    <span class="nd">@classmethod</span>
-</span><span id="Heading3Block.new-79"><a href="#Heading3Block.new-79"><span class="linenos">79</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">new</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">rich_text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Heading3Block</span><span class="p">:</span>
-</span><span id="Heading3Block.new-80"><a href="#Heading3Block.new-80"><span class="linenos">80</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a new heading 3 block with plain text.</span>
-</span><span id="Heading3Block.new-81"><a href="#Heading3Block.new-81"><span class="linenos">81</span></a>
-</span><span id="Heading3Block.new-82"><a href="#Heading3Block.new-82"><span class="linenos">82</span></a><span class="sd">        Args:</span>
-</span><span id="Heading3Block.new-83"><a href="#Heading3Block.new-83"><span class="linenos">83</span></a><span class="sd">            rich_text: Plain text content</span>
-</span><span id="Heading3Block.new-84"><a href="#Heading3Block.new-84"><span class="linenos">84</span></a>
-</span><span id="Heading3Block.new-85"><a href="#Heading3Block.new-85"><span class="linenos">85</span></a><span class="sd">        Returns:</span>
-</span><span id="Heading3Block.new-86"><a href="#Heading3Block.new-86"><span class="linenos">86</span></a><span class="sd">            Heading3Block instance</span>
-</span><span id="Heading3Block.new-87"><a href="#Heading3Block.new-87"><span class="linenos">87</span></a><span class="sd">        &quot;&quot;&quot;</span>
-</span><span id="Heading3Block.new-88"><a href="#Heading3Block.new-88"><span class="linenos">88</span></a>        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
-</span><span id="Heading3Block.new-89"><a href="#Heading3Block.new-89"><span class="linenos">89</span></a>            <span class="n">heading_3</span><span class="o">=</span><span class="p">{</span>
-</span><span id="Heading3Block.new-90"><a href="#Heading3Block.new-90"><span class="linenos">90</span></a>                <span class="s2">&quot;rich_text&quot;</span><span class="p">:</span> <span class="p">[</span>
-</span><span id="Heading3Block.new-91"><a href="#Heading3Block.new-91"><span class="linenos">91</span></a>                    <span class="p">{</span>
-</span><span id="Heading3Block.new-92"><a href="#Heading3Block.new-92"><span class="linenos">92</span></a>                        <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;text&quot;</span><span class="p">,</span>
-</span><span id="Heading3Block.new-93"><a href="#Heading3Block.new-93"><span class="linenos">93</span></a>                        <span class="s2">&quot;text&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="n">rich_text</span><span class="p">},</span>
-</span><span id="Heading3Block.new-94"><a href="#Heading3Block.new-94"><span class="linenos">94</span></a>                    <span class="p">}</span>
-</span><span id="Heading3Block.new-95"><a href="#Heading3Block.new-95"><span class="linenos">95</span></a>                <span class="p">],</span>
-</span><span id="Heading3Block.new-96"><a href="#Heading3Block.new-96"><span class="linenos">96</span></a>                <span class="s2">&quot;color&quot;</span><span class="p">:</span> <span class="s2">&quot;default&quot;</span><span class="p">,</span>
-</span><span id="Heading3Block.new-97"><a href="#Heading3Block.new-97"><span class="linenos">97</span></a>                <span class="s2">&quot;is_toggleable&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
-</span><span id="Heading3Block.new-98"><a href="#Heading3Block.new-98"><span class="linenos">98</span></a>            <span class="p">}</span>
-</span><span id="Heading3Block.new-99"><a href="#Heading3Block.new-99"><span class="linenos">99</span></a>        <span class="p">)</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="Heading3Block.new-108"><a href="#Heading3Block.new-108"><span class="linenos">108</span></a>    <span class="nd">@classmethod</span>
+</span><span id="Heading3Block.new-109"><a href="#Heading3Block.new-109"><span class="linenos">109</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">new</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">rich_text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Heading3Block</span><span class="p">:</span>
+</span><span id="Heading3Block.new-110"><a href="#Heading3Block.new-110"><span class="linenos">110</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a new heading 3 block with plain text.</span>
+</span><span id="Heading3Block.new-111"><a href="#Heading3Block.new-111"><span class="linenos">111</span></a>
+</span><span id="Heading3Block.new-112"><a href="#Heading3Block.new-112"><span class="linenos">112</span></a><span class="sd">        Args:</span>
+</span><span id="Heading3Block.new-113"><a href="#Heading3Block.new-113"><span class="linenos">113</span></a><span class="sd">            rich_text: Plain text content</span>
+</span><span id="Heading3Block.new-114"><a href="#Heading3Block.new-114"><span class="linenos">114</span></a>
+</span><span id="Heading3Block.new-115"><a href="#Heading3Block.new-115"><span class="linenos">115</span></a><span class="sd">        Returns:</span>
+</span><span id="Heading3Block.new-116"><a href="#Heading3Block.new-116"><span class="linenos">116</span></a><span class="sd">            Heading3Block instance</span>
+</span><span id="Heading3Block.new-117"><a href="#Heading3Block.new-117"><span class="linenos">117</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="Heading3Block.new-118"><a href="#Heading3Block.new-118"><span class="linenos">118</span></a>        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+</span><span id="Heading3Block.new-119"><a href="#Heading3Block.new-119"><span class="linenos">119</span></a>            <span class="n">heading_3</span><span class="o">=</span><span class="p">{</span>
+</span><span id="Heading3Block.new-120"><a href="#Heading3Block.new-120"><span class="linenos">120</span></a>                <span class="s2">&quot;rich_text&quot;</span><span class="p">:</span> <span class="p">[</span>
+</span><span id="Heading3Block.new-121"><a href="#Heading3Block.new-121"><span class="linenos">121</span></a>                    <span class="p">{</span>
+</span><span id="Heading3Block.new-122"><a href="#Heading3Block.new-122"><span class="linenos">122</span></a>                        <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;text&quot;</span><span class="p">,</span>
+</span><span id="Heading3Block.new-123"><a href="#Heading3Block.new-123"><span class="linenos">123</span></a>                        <span class="s2">&quot;text&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="n">rich_text</span><span class="p">},</span>
+</span><span id="Heading3Block.new-124"><a href="#Heading3Block.new-124"><span class="linenos">124</span></a>                    <span class="p">}</span>
+</span><span id="Heading3Block.new-125"><a href="#Heading3Block.new-125"><span class="linenos">125</span></a>                <span class="p">],</span>
+</span><span id="Heading3Block.new-126"><a href="#Heading3Block.new-126"><span class="linenos">126</span></a>                <span class="s2">&quot;color&quot;</span><span class="p">:</span> <span class="s2">&quot;default&quot;</span><span class="p">,</span>
+</span><span id="Heading3Block.new-127"><a href="#Heading3Block.new-127"><span class="linenos">127</span></a>                <span class="s2">&quot;is_toggleable&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+</span><span id="Heading3Block.new-128"><a href="#Heading3Block.new-128"><span class="linenos">128</span></a>            <span class="p">}</span>
+</span><span id="Heading3Block.new-129"><a href="#Heading3Block.new-129"><span class="linenos">129</span></a>        <span class="p">)</span>
 </span></pre></div>
 
 
@@ -960,45 +965,45 @@
 
     </div>
     <a class="headerlink" href="#ImageBlock"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="ImageBlock-161"><a href="#ImageBlock-161"><span class="linenos">161</span></a><span class="k">class</span><span class="w"> </span><span class="nc">ImageBlock</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
-</span><span id="ImageBlock-162"><a href="#ImageBlock-162"><span class="linenos">162</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Image block.&quot;&quot;&quot;</span>
-</span><span id="ImageBlock-163"><a href="#ImageBlock-163"><span class="linenos">163</span></a>
-</span><span id="ImageBlock-164"><a href="#ImageBlock-164"><span class="linenos">164</span></a>    <span class="nb">type</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;image&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;image&quot;</span>
-</span><span id="ImageBlock-165"><a href="#ImageBlock-165"><span class="linenos">165</span></a>    <span class="n">image</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
-</span><span id="ImageBlock-166"><a href="#ImageBlock-166"><span class="linenos">166</span></a>
-</span><span id="ImageBlock-167"><a href="#ImageBlock-167"><span class="linenos">167</span></a>    <span class="nd">@classmethod</span>
-</span><span id="ImageBlock-168"><a href="#ImageBlock-168"><span class="linenos">168</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">new</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ImageBlock</span><span class="p">:</span>
-</span><span id="ImageBlock-169"><a href="#ImageBlock-169"><span class="linenos">169</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a new image block with external URL.</span>
-</span><span id="ImageBlock-170"><a href="#ImageBlock-170"><span class="linenos">170</span></a>
-</span><span id="ImageBlock-171"><a href="#ImageBlock-171"><span class="linenos">171</span></a><span class="sd">        Args:</span>
-</span><span id="ImageBlock-172"><a href="#ImageBlock-172"><span class="linenos">172</span></a><span class="sd">            url: External image URL</span>
-</span><span id="ImageBlock-173"><a href="#ImageBlock-173"><span class="linenos">173</span></a>
-</span><span id="ImageBlock-174"><a href="#ImageBlock-174"><span class="linenos">174</span></a><span class="sd">        Returns:</span>
-</span><span id="ImageBlock-175"><a href="#ImageBlock-175"><span class="linenos">175</span></a><span class="sd">            ImageBlock instance</span>
-</span><span id="ImageBlock-176"><a href="#ImageBlock-176"><span class="linenos">176</span></a><span class="sd">        &quot;&quot;&quot;</span>
-</span><span id="ImageBlock-177"><a href="#ImageBlock-177"><span class="linenos">177</span></a>        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
-</span><span id="ImageBlock-178"><a href="#ImageBlock-178"><span class="linenos">178</span></a>            <span class="n">image</span><span class="o">=</span><span class="p">{</span>
-</span><span id="ImageBlock-179"><a href="#ImageBlock-179"><span class="linenos">179</span></a>                <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;external&quot;</span><span class="p">,</span>
-</span><span id="ImageBlock-180"><a href="#ImageBlock-180"><span class="linenos">180</span></a>                <span class="s2">&quot;external&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;url&quot;</span><span class="p">:</span> <span class="n">url</span><span class="p">},</span>
-</span><span id="ImageBlock-181"><a href="#ImageBlock-181"><span class="linenos">181</span></a>            <span class="p">}</span>
-</span><span id="ImageBlock-182"><a href="#ImageBlock-182"><span class="linenos">182</span></a>        <span class="p">)</span>
-</span><span id="ImageBlock-183"><a href="#ImageBlock-183"><span class="linenos">183</span></a>
-</span><span id="ImageBlock-184"><a href="#ImageBlock-184"><span class="linenos">184</span></a>    <span class="nd">@classmethod</span>
-</span><span id="ImageBlock-185"><a href="#ImageBlock-185"><span class="linenos">185</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">new_file_upload</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">file_upload_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ImageBlock</span><span class="p">:</span>
-</span><span id="ImageBlock-186"><a href="#ImageBlock-186"><span class="linenos">186</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a new image block with file upload ID.</span>
-</span><span id="ImageBlock-187"><a href="#ImageBlock-187"><span class="linenos">187</span></a>
-</span><span id="ImageBlock-188"><a href="#ImageBlock-188"><span class="linenos">188</span></a><span class="sd">        Args:</span>
-</span><span id="ImageBlock-189"><a href="#ImageBlock-189"><span class="linenos">189</span></a><span class="sd">            file_upload_id: File upload ID from Notion</span>
-</span><span id="ImageBlock-190"><a href="#ImageBlock-190"><span class="linenos">190</span></a>
-</span><span id="ImageBlock-191"><a href="#ImageBlock-191"><span class="linenos">191</span></a><span class="sd">        Returns:</span>
-</span><span id="ImageBlock-192"><a href="#ImageBlock-192"><span class="linenos">192</span></a><span class="sd">            ImageBlock instance</span>
-</span><span id="ImageBlock-193"><a href="#ImageBlock-193"><span class="linenos">193</span></a><span class="sd">        &quot;&quot;&quot;</span>
-</span><span id="ImageBlock-194"><a href="#ImageBlock-194"><span class="linenos">194</span></a>        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
-</span><span id="ImageBlock-195"><a href="#ImageBlock-195"><span class="linenos">195</span></a>            <span class="n">image</span><span class="o">=</span><span class="p">{</span>
-</span><span id="ImageBlock-196"><a href="#ImageBlock-196"><span class="linenos">196</span></a>                <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;file_upload&quot;</span><span class="p">,</span>
-</span><span id="ImageBlock-197"><a href="#ImageBlock-197"><span class="linenos">197</span></a>                <span class="s2">&quot;file_upload&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="n">file_upload_id</span><span class="p">},</span>
-</span><span id="ImageBlock-198"><a href="#ImageBlock-198"><span class="linenos">198</span></a>            <span class="p">}</span>
-</span><span id="ImageBlock-199"><a href="#ImageBlock-199"><span class="linenos">199</span></a>        <span class="p">)</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="ImageBlock-193"><a href="#ImageBlock-193"><span class="linenos">193</span></a><span class="k">class</span><span class="w"> </span><span class="nc">ImageBlock</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+</span><span id="ImageBlock-194"><a href="#ImageBlock-194"><span class="linenos">194</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Image block.&quot;&quot;&quot;</span>
+</span><span id="ImageBlock-195"><a href="#ImageBlock-195"><span class="linenos">195</span></a>
+</span><span id="ImageBlock-196"><a href="#ImageBlock-196"><span class="linenos">196</span></a>    <span class="nb">type</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;image&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;image&quot;</span>
+</span><span id="ImageBlock-197"><a href="#ImageBlock-197"><span class="linenos">197</span></a>    <span class="n">image</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
+</span><span id="ImageBlock-198"><a href="#ImageBlock-198"><span class="linenos">198</span></a>
+</span><span id="ImageBlock-199"><a href="#ImageBlock-199"><span class="linenos">199</span></a>    <span class="nd">@classmethod</span>
+</span><span id="ImageBlock-200"><a href="#ImageBlock-200"><span class="linenos">200</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">new</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ImageBlock</span><span class="p">:</span>
+</span><span id="ImageBlock-201"><a href="#ImageBlock-201"><span class="linenos">201</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a new image block with external URL.</span>
+</span><span id="ImageBlock-202"><a href="#ImageBlock-202"><span class="linenos">202</span></a>
+</span><span id="ImageBlock-203"><a href="#ImageBlock-203"><span class="linenos">203</span></a><span class="sd">        Args:</span>
+</span><span id="ImageBlock-204"><a href="#ImageBlock-204"><span class="linenos">204</span></a><span class="sd">            url: External image URL</span>
+</span><span id="ImageBlock-205"><a href="#ImageBlock-205"><span class="linenos">205</span></a>
+</span><span id="ImageBlock-206"><a href="#ImageBlock-206"><span class="linenos">206</span></a><span class="sd">        Returns:</span>
+</span><span id="ImageBlock-207"><a href="#ImageBlock-207"><span class="linenos">207</span></a><span class="sd">            ImageBlock instance</span>
+</span><span id="ImageBlock-208"><a href="#ImageBlock-208"><span class="linenos">208</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="ImageBlock-209"><a href="#ImageBlock-209"><span class="linenos">209</span></a>        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+</span><span id="ImageBlock-210"><a href="#ImageBlock-210"><span class="linenos">210</span></a>            <span class="n">image</span><span class="o">=</span><span class="p">{</span>
+</span><span id="ImageBlock-211"><a href="#ImageBlock-211"><span class="linenos">211</span></a>                <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;external&quot;</span><span class="p">,</span>
+</span><span id="ImageBlock-212"><a href="#ImageBlock-212"><span class="linenos">212</span></a>                <span class="s2">&quot;external&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;url&quot;</span><span class="p">:</span> <span class="n">url</span><span class="p">},</span>
+</span><span id="ImageBlock-213"><a href="#ImageBlock-213"><span class="linenos">213</span></a>            <span class="p">}</span>
+</span><span id="ImageBlock-214"><a href="#ImageBlock-214"><span class="linenos">214</span></a>        <span class="p">)</span>
+</span><span id="ImageBlock-215"><a href="#ImageBlock-215"><span class="linenos">215</span></a>
+</span><span id="ImageBlock-216"><a href="#ImageBlock-216"><span class="linenos">216</span></a>    <span class="nd">@classmethod</span>
+</span><span id="ImageBlock-217"><a href="#ImageBlock-217"><span class="linenos">217</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">new_file_upload</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">file_upload_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ImageBlock</span><span class="p">:</span>
+</span><span id="ImageBlock-218"><a href="#ImageBlock-218"><span class="linenos">218</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a new image block with file upload ID.</span>
+</span><span id="ImageBlock-219"><a href="#ImageBlock-219"><span class="linenos">219</span></a>
+</span><span id="ImageBlock-220"><a href="#ImageBlock-220"><span class="linenos">220</span></a><span class="sd">        Args:</span>
+</span><span id="ImageBlock-221"><a href="#ImageBlock-221"><span class="linenos">221</span></a><span class="sd">            file_upload_id: File upload ID from Notion</span>
+</span><span id="ImageBlock-222"><a href="#ImageBlock-222"><span class="linenos">222</span></a>
+</span><span id="ImageBlock-223"><a href="#ImageBlock-223"><span class="linenos">223</span></a><span class="sd">        Returns:</span>
+</span><span id="ImageBlock-224"><a href="#ImageBlock-224"><span class="linenos">224</span></a><span class="sd">            ImageBlock instance</span>
+</span><span id="ImageBlock-225"><a href="#ImageBlock-225"><span class="linenos">225</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="ImageBlock-226"><a href="#ImageBlock-226"><span class="linenos">226</span></a>        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+</span><span id="ImageBlock-227"><a href="#ImageBlock-227"><span class="linenos">227</span></a>            <span class="n">image</span><span class="o">=</span><span class="p">{</span>
+</span><span id="ImageBlock-228"><a href="#ImageBlock-228"><span class="linenos">228</span></a>                <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;file_upload&quot;</span><span class="p">,</span>
+</span><span id="ImageBlock-229"><a href="#ImageBlock-229"><span class="linenos">229</span></a>                <span class="s2">&quot;file_upload&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="n">file_upload_id</span><span class="p">},</span>
+</span><span id="ImageBlock-230"><a href="#ImageBlock-230"><span class="linenos">230</span></a>            <span class="p">}</span>
+</span><span id="ImageBlock-231"><a href="#ImageBlock-231"><span class="linenos">231</span></a>        <span class="p">)</span>
 </span></pre></div>
 
 
@@ -1042,22 +1047,22 @@
 
     </div>
     <a class="headerlink" href="#ImageBlock.new"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="ImageBlock.new-167"><a href="#ImageBlock.new-167"><span class="linenos">167</span></a>    <span class="nd">@classmethod</span>
-</span><span id="ImageBlock.new-168"><a href="#ImageBlock.new-168"><span class="linenos">168</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">new</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ImageBlock</span><span class="p">:</span>
-</span><span id="ImageBlock.new-169"><a href="#ImageBlock.new-169"><span class="linenos">169</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a new image block with external URL.</span>
-</span><span id="ImageBlock.new-170"><a href="#ImageBlock.new-170"><span class="linenos">170</span></a>
-</span><span id="ImageBlock.new-171"><a href="#ImageBlock.new-171"><span class="linenos">171</span></a><span class="sd">        Args:</span>
-</span><span id="ImageBlock.new-172"><a href="#ImageBlock.new-172"><span class="linenos">172</span></a><span class="sd">            url: External image URL</span>
-</span><span id="ImageBlock.new-173"><a href="#ImageBlock.new-173"><span class="linenos">173</span></a>
-</span><span id="ImageBlock.new-174"><a href="#ImageBlock.new-174"><span class="linenos">174</span></a><span class="sd">        Returns:</span>
-</span><span id="ImageBlock.new-175"><a href="#ImageBlock.new-175"><span class="linenos">175</span></a><span class="sd">            ImageBlock instance</span>
-</span><span id="ImageBlock.new-176"><a href="#ImageBlock.new-176"><span class="linenos">176</span></a><span class="sd">        &quot;&quot;&quot;</span>
-</span><span id="ImageBlock.new-177"><a href="#ImageBlock.new-177"><span class="linenos">177</span></a>        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
-</span><span id="ImageBlock.new-178"><a href="#ImageBlock.new-178"><span class="linenos">178</span></a>            <span class="n">image</span><span class="o">=</span><span class="p">{</span>
-</span><span id="ImageBlock.new-179"><a href="#ImageBlock.new-179"><span class="linenos">179</span></a>                <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;external&quot;</span><span class="p">,</span>
-</span><span id="ImageBlock.new-180"><a href="#ImageBlock.new-180"><span class="linenos">180</span></a>                <span class="s2">&quot;external&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;url&quot;</span><span class="p">:</span> <span class="n">url</span><span class="p">},</span>
-</span><span id="ImageBlock.new-181"><a href="#ImageBlock.new-181"><span class="linenos">181</span></a>            <span class="p">}</span>
-</span><span id="ImageBlock.new-182"><a href="#ImageBlock.new-182"><span class="linenos">182</span></a>        <span class="p">)</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="ImageBlock.new-199"><a href="#ImageBlock.new-199"><span class="linenos">199</span></a>    <span class="nd">@classmethod</span>
+</span><span id="ImageBlock.new-200"><a href="#ImageBlock.new-200"><span class="linenos">200</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">new</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ImageBlock</span><span class="p">:</span>
+</span><span id="ImageBlock.new-201"><a href="#ImageBlock.new-201"><span class="linenos">201</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a new image block with external URL.</span>
+</span><span id="ImageBlock.new-202"><a href="#ImageBlock.new-202"><span class="linenos">202</span></a>
+</span><span id="ImageBlock.new-203"><a href="#ImageBlock.new-203"><span class="linenos">203</span></a><span class="sd">        Args:</span>
+</span><span id="ImageBlock.new-204"><a href="#ImageBlock.new-204"><span class="linenos">204</span></a><span class="sd">            url: External image URL</span>
+</span><span id="ImageBlock.new-205"><a href="#ImageBlock.new-205"><span class="linenos">205</span></a>
+</span><span id="ImageBlock.new-206"><a href="#ImageBlock.new-206"><span class="linenos">206</span></a><span class="sd">        Returns:</span>
+</span><span id="ImageBlock.new-207"><a href="#ImageBlock.new-207"><span class="linenos">207</span></a><span class="sd">            ImageBlock instance</span>
+</span><span id="ImageBlock.new-208"><a href="#ImageBlock.new-208"><span class="linenos">208</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="ImageBlock.new-209"><a href="#ImageBlock.new-209"><span class="linenos">209</span></a>        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+</span><span id="ImageBlock.new-210"><a href="#ImageBlock.new-210"><span class="linenos">210</span></a>            <span class="n">image</span><span class="o">=</span><span class="p">{</span>
+</span><span id="ImageBlock.new-211"><a href="#ImageBlock.new-211"><span class="linenos">211</span></a>                <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;external&quot;</span><span class="p">,</span>
+</span><span id="ImageBlock.new-212"><a href="#ImageBlock.new-212"><span class="linenos">212</span></a>                <span class="s2">&quot;external&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;url&quot;</span><span class="p">:</span> <span class="n">url</span><span class="p">},</span>
+</span><span id="ImageBlock.new-213"><a href="#ImageBlock.new-213"><span class="linenos">213</span></a>            <span class="p">}</span>
+</span><span id="ImageBlock.new-214"><a href="#ImageBlock.new-214"><span class="linenos">214</span></a>        <span class="p">)</span>
 </span></pre></div>
 
 
@@ -1090,22 +1095,22 @@
 
     </div>
     <a class="headerlink" href="#ImageBlock.new_file_upload"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="ImageBlock.new_file_upload-184"><a href="#ImageBlock.new_file_upload-184"><span class="linenos">184</span></a>    <span class="nd">@classmethod</span>
-</span><span id="ImageBlock.new_file_upload-185"><a href="#ImageBlock.new_file_upload-185"><span class="linenos">185</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">new_file_upload</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">file_upload_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ImageBlock</span><span class="p">:</span>
-</span><span id="ImageBlock.new_file_upload-186"><a href="#ImageBlock.new_file_upload-186"><span class="linenos">186</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a new image block with file upload ID.</span>
-</span><span id="ImageBlock.new_file_upload-187"><a href="#ImageBlock.new_file_upload-187"><span class="linenos">187</span></a>
-</span><span id="ImageBlock.new_file_upload-188"><a href="#ImageBlock.new_file_upload-188"><span class="linenos">188</span></a><span class="sd">        Args:</span>
-</span><span id="ImageBlock.new_file_upload-189"><a href="#ImageBlock.new_file_upload-189"><span class="linenos">189</span></a><span class="sd">            file_upload_id: File upload ID from Notion</span>
-</span><span id="ImageBlock.new_file_upload-190"><a href="#ImageBlock.new_file_upload-190"><span class="linenos">190</span></a>
-</span><span id="ImageBlock.new_file_upload-191"><a href="#ImageBlock.new_file_upload-191"><span class="linenos">191</span></a><span class="sd">        Returns:</span>
-</span><span id="ImageBlock.new_file_upload-192"><a href="#ImageBlock.new_file_upload-192"><span class="linenos">192</span></a><span class="sd">            ImageBlock instance</span>
-</span><span id="ImageBlock.new_file_upload-193"><a href="#ImageBlock.new_file_upload-193"><span class="linenos">193</span></a><span class="sd">        &quot;&quot;&quot;</span>
-</span><span id="ImageBlock.new_file_upload-194"><a href="#ImageBlock.new_file_upload-194"><span class="linenos">194</span></a>        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
-</span><span id="ImageBlock.new_file_upload-195"><a href="#ImageBlock.new_file_upload-195"><span class="linenos">195</span></a>            <span class="n">image</span><span class="o">=</span><span class="p">{</span>
-</span><span id="ImageBlock.new_file_upload-196"><a href="#ImageBlock.new_file_upload-196"><span class="linenos">196</span></a>                <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;file_upload&quot;</span><span class="p">,</span>
-</span><span id="ImageBlock.new_file_upload-197"><a href="#ImageBlock.new_file_upload-197"><span class="linenos">197</span></a>                <span class="s2">&quot;file_upload&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="n">file_upload_id</span><span class="p">},</span>
-</span><span id="ImageBlock.new_file_upload-198"><a href="#ImageBlock.new_file_upload-198"><span class="linenos">198</span></a>            <span class="p">}</span>
-</span><span id="ImageBlock.new_file_upload-199"><a href="#ImageBlock.new_file_upload-199"><span class="linenos">199</span></a>        <span class="p">)</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="ImageBlock.new_file_upload-216"><a href="#ImageBlock.new_file_upload-216"><span class="linenos">216</span></a>    <span class="nd">@classmethod</span>
+</span><span id="ImageBlock.new_file_upload-217"><a href="#ImageBlock.new_file_upload-217"><span class="linenos">217</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">new_file_upload</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">file_upload_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ImageBlock</span><span class="p">:</span>
+</span><span id="ImageBlock.new_file_upload-218"><a href="#ImageBlock.new_file_upload-218"><span class="linenos">218</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a new image block with file upload ID.</span>
+</span><span id="ImageBlock.new_file_upload-219"><a href="#ImageBlock.new_file_upload-219"><span class="linenos">219</span></a>
+</span><span id="ImageBlock.new_file_upload-220"><a href="#ImageBlock.new_file_upload-220"><span class="linenos">220</span></a><span class="sd">        Args:</span>
+</span><span id="ImageBlock.new_file_upload-221"><a href="#ImageBlock.new_file_upload-221"><span class="linenos">221</span></a><span class="sd">            file_upload_id: File upload ID from Notion</span>
+</span><span id="ImageBlock.new_file_upload-222"><a href="#ImageBlock.new_file_upload-222"><span class="linenos">222</span></a>
+</span><span id="ImageBlock.new_file_upload-223"><a href="#ImageBlock.new_file_upload-223"><span class="linenos">223</span></a><span class="sd">        Returns:</span>
+</span><span id="ImageBlock.new_file_upload-224"><a href="#ImageBlock.new_file_upload-224"><span class="linenos">224</span></a><span class="sd">            ImageBlock instance</span>
+</span><span id="ImageBlock.new_file_upload-225"><a href="#ImageBlock.new_file_upload-225"><span class="linenos">225</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="ImageBlock.new_file_upload-226"><a href="#ImageBlock.new_file_upload-226"><span class="linenos">226</span></a>        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+</span><span id="ImageBlock.new_file_upload-227"><a href="#ImageBlock.new_file_upload-227"><span class="linenos">227</span></a>            <span class="n">image</span><span class="o">=</span><span class="p">{</span>
+</span><span id="ImageBlock.new_file_upload-228"><a href="#ImageBlock.new_file_upload-228"><span class="linenos">228</span></a>                <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;file_upload&quot;</span><span class="p">,</span>
+</span><span id="ImageBlock.new_file_upload-229"><a href="#ImageBlock.new_file_upload-229"><span class="linenos">229</span></a>                <span class="s2">&quot;file_upload&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="n">file_upload_id</span><span class="p">},</span>
+</span><span id="ImageBlock.new_file_upload-230"><a href="#ImageBlock.new_file_upload-230"><span class="linenos">230</span></a>            <span class="p">}</span>
+</span><span id="ImageBlock.new_file_upload-231"><a href="#ImageBlock.new_file_upload-231"><span class="linenos">231</span></a>        <span class="p">)</span>
 </span></pre></div>
 
 
@@ -1413,33 +1418,33 @@
 
     </div>
     <a class="headerlink" href="#QuoteBlock"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="QuoteBlock-225"><a href="#QuoteBlock-225"><span class="linenos">225</span></a><span class="k">class</span><span class="w"> </span><span class="nc">QuoteBlock</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
-</span><span id="QuoteBlock-226"><a href="#QuoteBlock-226"><span class="linenos">226</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Quote block.&quot;&quot;&quot;</span>
-</span><span id="QuoteBlock-227"><a href="#QuoteBlock-227"><span class="linenos">227</span></a>
-</span><span id="QuoteBlock-228"><a href="#QuoteBlock-228"><span class="linenos">228</span></a>    <span class="nb">type</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;quote&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;quote&quot;</span>
-</span><span id="QuoteBlock-229"><a href="#QuoteBlock-229"><span class="linenos">229</span></a>    <span class="n">quote</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
-</span><span id="QuoteBlock-230"><a href="#QuoteBlock-230"><span class="linenos">230</span></a>
-</span><span id="QuoteBlock-231"><a href="#QuoteBlock-231"><span class="linenos">231</span></a>    <span class="nd">@classmethod</span>
-</span><span id="QuoteBlock-232"><a href="#QuoteBlock-232"><span class="linenos">232</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">new</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">rich_text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QuoteBlock</span><span class="p">:</span>
-</span><span id="QuoteBlock-233"><a href="#QuoteBlock-233"><span class="linenos">233</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a new quote block with plain text.</span>
-</span><span id="QuoteBlock-234"><a href="#QuoteBlock-234"><span class="linenos">234</span></a>
-</span><span id="QuoteBlock-235"><a href="#QuoteBlock-235"><span class="linenos">235</span></a><span class="sd">        Args:</span>
-</span><span id="QuoteBlock-236"><a href="#QuoteBlock-236"><span class="linenos">236</span></a><span class="sd">            rich_text: Plain text content</span>
-</span><span id="QuoteBlock-237"><a href="#QuoteBlock-237"><span class="linenos">237</span></a>
-</span><span id="QuoteBlock-238"><a href="#QuoteBlock-238"><span class="linenos">238</span></a><span class="sd">        Returns:</span>
-</span><span id="QuoteBlock-239"><a href="#QuoteBlock-239"><span class="linenos">239</span></a><span class="sd">            QuoteBlock instance</span>
-</span><span id="QuoteBlock-240"><a href="#QuoteBlock-240"><span class="linenos">240</span></a><span class="sd">        &quot;&quot;&quot;</span>
-</span><span id="QuoteBlock-241"><a href="#QuoteBlock-241"><span class="linenos">241</span></a>        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
-</span><span id="QuoteBlock-242"><a href="#QuoteBlock-242"><span class="linenos">242</span></a>            <span class="n">quote</span><span class="o">=</span><span class="p">{</span>
-</span><span id="QuoteBlock-243"><a href="#QuoteBlock-243"><span class="linenos">243</span></a>                <span class="s2">&quot;rich_text&quot;</span><span class="p">:</span> <span class="p">[</span>
-</span><span id="QuoteBlock-244"><a href="#QuoteBlock-244"><span class="linenos">244</span></a>                    <span class="p">{</span>
-</span><span id="QuoteBlock-245"><a href="#QuoteBlock-245"><span class="linenos">245</span></a>                        <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;text&quot;</span><span class="p">,</span>
-</span><span id="QuoteBlock-246"><a href="#QuoteBlock-246"><span class="linenos">246</span></a>                        <span class="s2">&quot;text&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="n">rich_text</span><span class="p">},</span>
-</span><span id="QuoteBlock-247"><a href="#QuoteBlock-247"><span class="linenos">247</span></a>                    <span class="p">}</span>
-</span><span id="QuoteBlock-248"><a href="#QuoteBlock-248"><span class="linenos">248</span></a>                <span class="p">],</span>
-</span><span id="QuoteBlock-249"><a href="#QuoteBlock-249"><span class="linenos">249</span></a>                <span class="s2">&quot;color&quot;</span><span class="p">:</span> <span class="s2">&quot;default&quot;</span><span class="p">,</span>
-</span><span id="QuoteBlock-250"><a href="#QuoteBlock-250"><span class="linenos">250</span></a>            <span class="p">}</span>
-</span><span id="QuoteBlock-251"><a href="#QuoteBlock-251"><span class="linenos">251</span></a>        <span class="p">)</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="QuoteBlock-257"><a href="#QuoteBlock-257"><span class="linenos">257</span></a><span class="k">class</span><span class="w"> </span><span class="nc">QuoteBlock</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+</span><span id="QuoteBlock-258"><a href="#QuoteBlock-258"><span class="linenos">258</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Quote block.&quot;&quot;&quot;</span>
+</span><span id="QuoteBlock-259"><a href="#QuoteBlock-259"><span class="linenos">259</span></a>
+</span><span id="QuoteBlock-260"><a href="#QuoteBlock-260"><span class="linenos">260</span></a>    <span class="nb">type</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;quote&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;quote&quot;</span>
+</span><span id="QuoteBlock-261"><a href="#QuoteBlock-261"><span class="linenos">261</span></a>    <span class="n">quote</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
+</span><span id="QuoteBlock-262"><a href="#QuoteBlock-262"><span class="linenos">262</span></a>
+</span><span id="QuoteBlock-263"><a href="#QuoteBlock-263"><span class="linenos">263</span></a>    <span class="nd">@classmethod</span>
+</span><span id="QuoteBlock-264"><a href="#QuoteBlock-264"><span class="linenos">264</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">new</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">rich_text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QuoteBlock</span><span class="p">:</span>
+</span><span id="QuoteBlock-265"><a href="#QuoteBlock-265"><span class="linenos">265</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a new quote block with plain text.</span>
+</span><span id="QuoteBlock-266"><a href="#QuoteBlock-266"><span class="linenos">266</span></a>
+</span><span id="QuoteBlock-267"><a href="#QuoteBlock-267"><span class="linenos">267</span></a><span class="sd">        Args:</span>
+</span><span id="QuoteBlock-268"><a href="#QuoteBlock-268"><span class="linenos">268</span></a><span class="sd">            rich_text: Plain text content</span>
+</span><span id="QuoteBlock-269"><a href="#QuoteBlock-269"><span class="linenos">269</span></a>
+</span><span id="QuoteBlock-270"><a href="#QuoteBlock-270"><span class="linenos">270</span></a><span class="sd">        Returns:</span>
+</span><span id="QuoteBlock-271"><a href="#QuoteBlock-271"><span class="linenos">271</span></a><span class="sd">            QuoteBlock instance</span>
+</span><span id="QuoteBlock-272"><a href="#QuoteBlock-272"><span class="linenos">272</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="QuoteBlock-273"><a href="#QuoteBlock-273"><span class="linenos">273</span></a>        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+</span><span id="QuoteBlock-274"><a href="#QuoteBlock-274"><span class="linenos">274</span></a>            <span class="n">quote</span><span class="o">=</span><span class="p">{</span>
+</span><span id="QuoteBlock-275"><a href="#QuoteBlock-275"><span class="linenos">275</span></a>                <span class="s2">&quot;rich_text&quot;</span><span class="p">:</span> <span class="p">[</span>
+</span><span id="QuoteBlock-276"><a href="#QuoteBlock-276"><span class="linenos">276</span></a>                    <span class="p">{</span>
+</span><span id="QuoteBlock-277"><a href="#QuoteBlock-277"><span class="linenos">277</span></a>                        <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;text&quot;</span><span class="p">,</span>
+</span><span id="QuoteBlock-278"><a href="#QuoteBlock-278"><span class="linenos">278</span></a>                        <span class="s2">&quot;text&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="n">rich_text</span><span class="p">},</span>
+</span><span id="QuoteBlock-279"><a href="#QuoteBlock-279"><span class="linenos">279</span></a>                    <span class="p">}</span>
+</span><span id="QuoteBlock-280"><a href="#QuoteBlock-280"><span class="linenos">280</span></a>                <span class="p">],</span>
+</span><span id="QuoteBlock-281"><a href="#QuoteBlock-281"><span class="linenos">281</span></a>                <span class="s2">&quot;color&quot;</span><span class="p">:</span> <span class="s2">&quot;default&quot;</span><span class="p">,</span>
+</span><span id="QuoteBlock-282"><a href="#QuoteBlock-282"><span class="linenos">282</span></a>            <span class="p">}</span>
+</span><span id="QuoteBlock-283"><a href="#QuoteBlock-283"><span class="linenos">283</span></a>        <span class="p">)</span>
 </span></pre></div>
 
 
@@ -1483,27 +1488,27 @@
 
     </div>
     <a class="headerlink" href="#QuoteBlock.new"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="QuoteBlock.new-231"><a href="#QuoteBlock.new-231"><span class="linenos">231</span></a>    <span class="nd">@classmethod</span>
-</span><span id="QuoteBlock.new-232"><a href="#QuoteBlock.new-232"><span class="linenos">232</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">new</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">rich_text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QuoteBlock</span><span class="p">:</span>
-</span><span id="QuoteBlock.new-233"><a href="#QuoteBlock.new-233"><span class="linenos">233</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a new quote block with plain text.</span>
-</span><span id="QuoteBlock.new-234"><a href="#QuoteBlock.new-234"><span class="linenos">234</span></a>
-</span><span id="QuoteBlock.new-235"><a href="#QuoteBlock.new-235"><span class="linenos">235</span></a><span class="sd">        Args:</span>
-</span><span id="QuoteBlock.new-236"><a href="#QuoteBlock.new-236"><span class="linenos">236</span></a><span class="sd">            rich_text: Plain text content</span>
-</span><span id="QuoteBlock.new-237"><a href="#QuoteBlock.new-237"><span class="linenos">237</span></a>
-</span><span id="QuoteBlock.new-238"><a href="#QuoteBlock.new-238"><span class="linenos">238</span></a><span class="sd">        Returns:</span>
-</span><span id="QuoteBlock.new-239"><a href="#QuoteBlock.new-239"><span class="linenos">239</span></a><span class="sd">            QuoteBlock instance</span>
-</span><span id="QuoteBlock.new-240"><a href="#QuoteBlock.new-240"><span class="linenos">240</span></a><span class="sd">        &quot;&quot;&quot;</span>
-</span><span id="QuoteBlock.new-241"><a href="#QuoteBlock.new-241"><span class="linenos">241</span></a>        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
-</span><span id="QuoteBlock.new-242"><a href="#QuoteBlock.new-242"><span class="linenos">242</span></a>            <span class="n">quote</span><span class="o">=</span><span class="p">{</span>
-</span><span id="QuoteBlock.new-243"><a href="#QuoteBlock.new-243"><span class="linenos">243</span></a>                <span class="s2">&quot;rich_text&quot;</span><span class="p">:</span> <span class="p">[</span>
-</span><span id="QuoteBlock.new-244"><a href="#QuoteBlock.new-244"><span class="linenos">244</span></a>                    <span class="p">{</span>
-</span><span id="QuoteBlock.new-245"><a href="#QuoteBlock.new-245"><span class="linenos">245</span></a>                        <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;text&quot;</span><span class="p">,</span>
-</span><span id="QuoteBlock.new-246"><a href="#QuoteBlock.new-246"><span class="linenos">246</span></a>                        <span class="s2">&quot;text&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="n">rich_text</span><span class="p">},</span>
-</span><span id="QuoteBlock.new-247"><a href="#QuoteBlock.new-247"><span class="linenos">247</span></a>                    <span class="p">}</span>
-</span><span id="QuoteBlock.new-248"><a href="#QuoteBlock.new-248"><span class="linenos">248</span></a>                <span class="p">],</span>
-</span><span id="QuoteBlock.new-249"><a href="#QuoteBlock.new-249"><span class="linenos">249</span></a>                <span class="s2">&quot;color&quot;</span><span class="p">:</span> <span class="s2">&quot;default&quot;</span><span class="p">,</span>
-</span><span id="QuoteBlock.new-250"><a href="#QuoteBlock.new-250"><span class="linenos">250</span></a>            <span class="p">}</span>
-</span><span id="QuoteBlock.new-251"><a href="#QuoteBlock.new-251"><span class="linenos">251</span></a>        <span class="p">)</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="QuoteBlock.new-263"><a href="#QuoteBlock.new-263"><span class="linenos">263</span></a>    <span class="nd">@classmethod</span>
+</span><span id="QuoteBlock.new-264"><a href="#QuoteBlock.new-264"><span class="linenos">264</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">new</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">rich_text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QuoteBlock</span><span class="p">:</span>
+</span><span id="QuoteBlock.new-265"><a href="#QuoteBlock.new-265"><span class="linenos">265</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a new quote block with plain text.</span>
+</span><span id="QuoteBlock.new-266"><a href="#QuoteBlock.new-266"><span class="linenos">266</span></a>
+</span><span id="QuoteBlock.new-267"><a href="#QuoteBlock.new-267"><span class="linenos">267</span></a><span class="sd">        Args:</span>
+</span><span id="QuoteBlock.new-268"><a href="#QuoteBlock.new-268"><span class="linenos">268</span></a><span class="sd">            rich_text: Plain text content</span>
+</span><span id="QuoteBlock.new-269"><a href="#QuoteBlock.new-269"><span class="linenos">269</span></a>
+</span><span id="QuoteBlock.new-270"><a href="#QuoteBlock.new-270"><span class="linenos">270</span></a><span class="sd">        Returns:</span>
+</span><span id="QuoteBlock.new-271"><a href="#QuoteBlock.new-271"><span class="linenos">271</span></a><span class="sd">            QuoteBlock instance</span>
+</span><span id="QuoteBlock.new-272"><a href="#QuoteBlock.new-272"><span class="linenos">272</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="QuoteBlock.new-273"><a href="#QuoteBlock.new-273"><span class="linenos">273</span></a>        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+</span><span id="QuoteBlock.new-274"><a href="#QuoteBlock.new-274"><span class="linenos">274</span></a>            <span class="n">quote</span><span class="o">=</span><span class="p">{</span>
+</span><span id="QuoteBlock.new-275"><a href="#QuoteBlock.new-275"><span class="linenos">275</span></a>                <span class="s2">&quot;rich_text&quot;</span><span class="p">:</span> <span class="p">[</span>
+</span><span id="QuoteBlock.new-276"><a href="#QuoteBlock.new-276"><span class="linenos">276</span></a>                    <span class="p">{</span>
+</span><span id="QuoteBlock.new-277"><a href="#QuoteBlock.new-277"><span class="linenos">277</span></a>                        <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;text&quot;</span><span class="p">,</span>
+</span><span id="QuoteBlock.new-278"><a href="#QuoteBlock.new-278"><span class="linenos">278</span></a>                        <span class="s2">&quot;text&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="n">rich_text</span><span class="p">},</span>
+</span><span id="QuoteBlock.new-279"><a href="#QuoteBlock.new-279"><span class="linenos">279</span></a>                    <span class="p">}</span>
+</span><span id="QuoteBlock.new-280"><a href="#QuoteBlock.new-280"><span class="linenos">280</span></a>                <span class="p">],</span>
+</span><span id="QuoteBlock.new-281"><a href="#QuoteBlock.new-281"><span class="linenos">281</span></a>                <span class="s2">&quot;color&quot;</span><span class="p">:</span> <span class="s2">&quot;default&quot;</span><span class="p">,</span>
+</span><span id="QuoteBlock.new-282"><a href="#QuoteBlock.new-282"><span class="linenos">282</span></a>            <span class="p">}</span>
+</span><span id="QuoteBlock.new-283"><a href="#QuoteBlock.new-283"><span class="linenos">283</span></a>        <span class="p">)</span>
 </span></pre></div>
 
 
