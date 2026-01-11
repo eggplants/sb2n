@@ -66,6 +66,24 @@ sb2n migrate --dry-run -n 5 --skip-existing
 sb2n -v migrate
 ```
 
+### 4. Restore internal links
+
+After migration, restore [Scrapbox internal links](https://scrapbox.io/help-jp/ページをリンクする) (`[PageName]` format) to actual [Notion page mentions](https://www.notion.com/help/create-links-and-backlinks#inline-in-a-paragraph):
+
+```sh
+# Restore links in all pages
+sb2n restore-link
+
+# Dry run (preview changes without applying)
+sb2n restore-link --dry-run
+
+# Restore links in specific pages only
+sb2n restore-link --pages "HomePage,Getting Started"
+
+# Enable verbose logging
+sb2n -v restore-link
+```
+
 ## Development
 
 See [docs/specification.md](docs/specification.md) for detailed specifications.
