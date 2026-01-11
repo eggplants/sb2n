@@ -250,6 +250,74 @@ class QuoteBlock(BaseModel):
         )
 
 
+class TableBlock(BaseModel):
+    """Table block."""
+
+    type: Literal["table"] = "table"
+    table: dict[str, Any]
+
+    @classmethod
+    def new(cls, table_width: int, *, has_column_header: bool = True, has_row_header: bool = False) -> TableBlock:
+        """Create a new table block.
+
+        Args:
+            table_width: Number of columns in the table
+            has_column_header: Whether the first row is a header
+            has_row_header: Whether the first column is a header
+
+        Returns:
+            TableBlock instance
+        """
+        return cls(
+            table={
+                "table_width": table_width,
+                "has_column_header": has_column_header,
+                "has_row_header": has_row_header,
+            }
+        )
+
+
+class TableRowBlock(BaseModel):
+    """Table row block."""
+
+    type: Literal["table_row"] = "table_row"
+    table_row: dict[str, Any]
+
+    @classmethod
+    def new(cls, cells: list[str]) -> TableRowBlock:
+        """Create a new table row block.
+
+        Args:
+            cells: List of cell contents
+
+        Returns:
+            TableRowBlock instance
+        """
+        return cls(
+            table_row={
+                "cells": [
+                    [
+                        {
+                            "type": "text",
+                            "text": {"content": cell},
+                        }
+                    ]
+                    for cell in cells
+                ]
+            }
+        )
+
+
+class TableBlockWithChildren(BaseModel):
+    """Table block with children (table rows).
+
+    This is used as an intermediate representation before converting to Notion API format.
+    """
+
+    block: TableBlock
+    children: list[TableRowBlock]
+
+
 # Union type for all block types
 BlockObject = (
     ParagraphBlock
@@ -260,4 +328,7 @@ BlockObject = (
     | ImageBlock
     | BookmarkBlock
     | QuoteBlock
+    | TableBlock
+    | TableRowBlock
+    | TableBlockWithChildren
 )

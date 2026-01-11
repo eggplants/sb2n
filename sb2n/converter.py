@@ -105,7 +105,14 @@ class NotionBlockConverter:
         if parsed_line.line_type == LineType.URL:
             return self.notion_service.create_bookmark_block(parsed_line.content)
 
-        # Table start (create as paragraph for now - full table support would require more complex logic)
+        # Table blocks
+        if parsed_line.line_type == LineType.TABLE:
+            if parsed_line.table_rows:
+                return self.notion_service.create_table_block(parsed_line.table_rows)
+            # Fallback if no rows
+            return self.notion_service.create_heading_block(f"Table: {parsed_line.table_name}", 3)
+
+        # Table start (shouldn't happen with new parser, but keep for safety)
         if parsed_line.line_type == LineType.TABLE_START:
             # For now, just create a heading to indicate table start
             # Full table implementation would require parsing subsequent lines

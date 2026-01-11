@@ -20,6 +20,7 @@ from sb2n.models import (
     QueryDatabaseResponse,
     QuoteBlock,
 )
+from sb2n.models.blocks import TableBlock, TableBlockWithChildren, TableRowBlock
 
 if TYPE_CHECKING:
     from datetime import datetime
@@ -201,7 +202,7 @@ class NotionService:
 
         Args:
             page_id: Notion page ID
-            blocks: List of block objects to append
+            blocks: List of block objects to append (can include table blocks with children)
 
         Raises:
             Exception: If block append fails
@@ -218,10 +219,22 @@ class NotionService:
             for i in range(0, len(blocks), batch_size):
                 batch = blocks[i : i + batch_size]
                 # Convert pydantic models to dicts, or use dict directly
-                batch_dicts = [
-                    block.model_dump(mode="json", exclude_none=True) if hasattr(block, "model_dump") else block
-                    for block in batch
-                ]
+                batch_dicts = []
+                for block in batch:
+                    # Handle table blocks with children
+                    if isinstance(block, TableBlockWithChildren):
+                        # Convert table block and its children
+                        table_dict = block.block.model_dump(mode="json", exclude_none=True)
+                        # Add children to the table object, not at the top level
+                        table_dict["table"]["children"] = [
+                            child.model_dump(mode="json", exclude_none=True) for child in block.children
+                        ]
+                        batch_dicts.append(table_dict)
+                    elif hasattr(block, "model_dump"):
+                        batch_dicts.append(block.model_dump(mode="json", exclude_none=True))
+                    else:
+                        batch_dicts.append(block)
+
                 self.client.blocks.children.append(block_id=str(page_id), children=batch_dicts)
                 logger.debug(
                     "Appended batch %(batch_num)d (%(count)d blocks)",
@@ -381,6 +394,40 @@ class NotionService:
             type="quote",
             quote={"rich_text": rich_text_array, "color": "default"},
         )
+
+    def create_table_block(
+        self, table_rows: list[list[str]], *, has_column_header: bool = True, has_row_header: bool = False
+    ) -> TableBlockWithChildren:
+        """Create a table block with rows.
+
+        Args:
+            table_rows: List of rows, each row is a list of cell contents
+            has_column_header: Whether the first row is a header
+            has_row_header: Whether the first column is a header
+
+        Returns:
+            TableBlockWithChildren instance
+        """
+        if not table_rows:
+            msg = "Table must have at least one row"
+            raise ValueError(msg)
+
+        # Determine table width from the maximum row length
+        table_width = max(len(row) for row in table_rows)
+
+        # Normalize all rows to have the same width (pad with empty strings)
+        normalized_rows = [
+            row + [""] * (table_width - len(row)) if len(row) < table_width else row for row in table_rows
+        ]
+        # Create table block
+        table_block = TableBlock.new(
+            table_width=table_width, has_column_header=has_column_header, has_row_header=has_row_header
+        )
+
+        # Create table row blocks
+        row_blocks = [TableRowBlock.new(cells=row) for row in normalized_rows]
+
+        return TableBlockWithChildren(block=table_block, children=row_blocks)
 
     def _convert_rich_text_elements(self, elements: list[RichTextElement]) -> list[dict]:
         """Convert RichTextElement list to Notion rich_text format.

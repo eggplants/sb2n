@@ -232,9 +232,7 @@ class Migrator:
 
             # Convert and append blocks
             if self.converter:
-                blocks = self.converter.convert_to_blocks(page_text)
-                if blocks:
-                    self.notion_service.append_blocks(notion_page_id, blocks)
+                self.notion_service.append_blocks(notion_page_id, self.converter.convert_to_blocks(page_text))
 
             return MigrationResult(
                 page_title=page_title,

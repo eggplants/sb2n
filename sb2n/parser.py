@@ -28,6 +28,7 @@ class LineType(Enum):
     IMAGE = "image"
     URL = "url"
     QUOTE = "quote"
+    TABLE = "table"
     TABLE_START = "table_start"
     CODE_START = "code_start"
     EXTERNAL_LINK = "external_link"
@@ -80,13 +81,14 @@ class ParsedLine:
 
     Attributes:
         original: Original line text
-        line_type: Type of line (paragraph, heading_2, heading_3, code, list, image, url, quote, table_start)
+        line_type: Type of line (paragraph, heading_2, heading_3, code, list, image, url, quote, table, table_start)
         content: Processed content
         indent_level: Indentation level (for lists)
         language: Language for code blocks
         rich_text: Rich text elements with styling (for paragraphs, lists, headings)
         link_text: Display text for links
         table_name: Name for table blocks
+        table_rows: Rows for table blocks (list of lists of cell content)
     """
 
     original: str
@@ -97,6 +99,7 @@ class ParsedLine:
     rich_text: list[RichTextElement] | None = None
     link_text: str | None = None
     table_name: str | None = None
+    table_rows: list[list[str]] | None = None
 
 
 class ScrapboxParser:
@@ -309,10 +312,10 @@ class ScrapboxParser:
             List of parsed lines
         """
         lines = text.split("\n")[1:]  # Skip title line
-        parsed_lines = []
-        in_code_block = False
-        code_buffer = []
+        parsed_lines, code_buffer, table_buffer = [], [], []
+        in_code_block, in_table_block = False, False
         code_language = "plain text"
+        table_name = ""
 
         for line in lines:
             parsed = ScrapboxParser.parse_line(line)
@@ -349,6 +352,40 @@ class ScrapboxParser:
                     code_buffer.append(line.removeprefix(" "))
                 continue
 
+            # Handle table blocks
+            if parsed.line_type == LineType.TABLE_START:
+                in_table_block = True
+                table_name = parsed.content
+                table_buffer = []
+                continue
+
+            if in_table_block:
+                # Empty line or unindented line ends table block
+                if not line.strip() or (line and not line.startswith(" ") and not line.startswith("\t")):
+                    # Save table block
+                    if table_buffer:
+                        parsed_lines.append(
+                            ParsedLine(
+                                original=f"table:{table_name}",
+                                line_type=LineType.TABLE,
+                                content=table_name,
+                                table_name=table_name,
+                                table_rows=table_buffer,
+                            )
+                        )
+                    in_table_block = False
+                    table_buffer = []
+                    # Process current line normally
+                    if line.strip():
+                        parsed = ScrapboxParser.parse_line(line)
+                        parsed_lines.append(parsed)
+                else:
+                    # Add to table buffer (split by tabs, remove one level of indent)
+                    row_content = line.removeprefix(" ").removeprefix("\t")
+                    cells = row_content.split("\t")
+                    table_buffer.append(cells)
+                continue
+
             parsed_lines.append(parsed)
 
         # Handle unclosed code block
@@ -360,6 +397,18 @@ class ScrapboxParser:
                     line_type=LineType.CODE,
                     content=code_content,
                     language=code_language,
+                )
+            )
+
+        # Handle unclosed table block
+        if in_table_block and table_buffer:
+            parsed_lines.append(
+                ParsedLine(
+                    original=f"table:{table_name}",
+                    line_type=LineType.TABLE,
+                    content=table_name,
+                    table_name=table_name,
+                    table_rows=table_buffer,
                 )
             )
 
