@@ -1,7 +1,7 @@
 """Converter from Scrapbox notation to Notion blocks."""
 
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from sb2n.parser import LineType, ParsedLine, RichTextElement, ScrapboxParser
 
@@ -42,10 +42,55 @@ class NotionBlockConverter:
         parsed_lines = ScrapboxParser.parse_text(text)
         blocks = []
 
+        # Stack to track parent blocks and their dictionaries at each indent level
+        # Store: `(indent_level, block_object, block_dict)`
+        # block_dict is what gets modified when adding children
+        list_stack: list[tuple[int, BlockObject, dict[str, Any]]] = []
+
         for parsed_line in parsed_lines:
-            block = self._convert_line_to_block(parsed_line)
-            if block:
-                blocks.append(block)
+            # Handle list items with nesting
+            if parsed_line.line_type == LineType.LIST:
+                # Notion API only supports 2 levels of nesting (3 total levels including top)
+                # Clamp indent_level to maximum of 2
+                effective_indent = min(parsed_line.indent_level, 2)
+
+                # Pop stack until we find the correct parent level
+                # Parent should have indent_level < current indent_level
+                while list_stack and list_stack[-1][0] >= effective_indent:
+                    list_stack.pop()
+
+                # Create the list item block
+                block = self._convert_line_to_block(parsed_line)
+                if block:
+                    if list_stack:
+                        # Convert to dict immediately
+                        block_dict = block.model_dump(mode="json", exclude_none=True)
+
+                        # Add as child to the most recent parent
+                        _, _, parent_dict = list_stack[-1]
+                        # Ensure parent has children array
+                        # parent_dict might be the full block dict or just the bulleted_list_item dict
+                        item_dict = parent_dict.get("bulleted_list_item", parent_dict)
+                        if "children" not in item_dict:  # noqa: PLR2004
+                            item_dict["children"] = []
+                        # Add block dict to parent's children
+                        item_dict["children"].append(block_dict)
+                        # Add current block dict to stack so it can have children too
+                        list_stack.append((effective_indent, block, block_dict["bulleted_list_item"]))
+                    else:
+                        # Top-level list item - we need to use the pydantic object's internal dict
+                        # so that modifications to it will be reflected in the final output
+                        blocks.append(block)
+                        # Get reference to the block's internal dict for modifications
+                        block_dict = block.bulleted_list_item  # ty:ignore[possibly-missing-attribute]
+                        list_stack.append((effective_indent, block, block_dict))
+            else:
+                # Clear list stack for non-list items
+                list_stack = []
+
+                block = self._convert_line_to_block(parsed_line)
+                if block:
+                    blocks.append(block)
 
         logger.debug(
             "Converted %(parsed_lines)d lines to %(blocks)d blocks",

@@ -105,26 +105,28 @@ class BulletedListItemBlock(BaseModel):
     bulleted_list_item: dict[str, Any]
 
     @classmethod
-    def new(cls, rich_text: str) -> BulletedListItemBlock:
+    def new(cls, rich_text: str, *, children: list[dict[str, Any]] | None = None) -> BulletedListItemBlock:
         """Create a new bulleted list item block with plain text.
 
         Args:
             rich_text: Plain text content
+            children: Optional nested child blocks
 
         Returns:
             BulletedListItemBlock instance
         """
-        return cls(
-            bulleted_list_item={
-                "rich_text": [
-                    {
-                        "type": "text",
-                        "text": {"content": rich_text},
-                    }
-                ],
-                "color": "default",
-            }
-        )
+        item_data = {
+            "rich_text": [
+                {
+                    "type": "text",
+                    "text": {"content": rich_text},
+                }
+            ],
+            "color": "default",
+        }
+        if children:
+            item_data["children"] = children
+        return cls(bulleted_list_item=item_data)
 
 
 class CodeBlock(BaseModel):
