@@ -446,7 +446,7 @@ class NotionService:
                 "strikethrough": elem.strikethrough,
                 "underline": elem.underline,
                 "code": elem.code,
-                "color": "default",
+                "color": elem.background_color if elem.background_color else "default",
             }
 
             if elem.link_url:

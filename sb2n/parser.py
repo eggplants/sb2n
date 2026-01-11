@@ -15,6 +15,9 @@ class DecorationType(Enum):
     UNDERLINE = "underline"
     CODE = "code"
     LINK = "link"
+    RED_BACKGROUND = "red_background"
+    GREEN_BACKGROUND = "green_background"
+    BLUE_BACKGROUND = "blue_background"
 
 
 class LineType(Enum):
@@ -65,6 +68,7 @@ class RichTextElement:
         underline: Underline styling
         code: Inline code styling
         link_url: URL if this is a link
+        background_color: Background color (red_background, green_background, blue_background, or None)
     """
 
     text: str
@@ -74,6 +78,7 @@ class RichTextElement:
     underline: bool = False
     code: bool = False
     link_url: str | None = None
+    background_color: str | None = None
 
 
 @dataclass
@@ -140,6 +145,10 @@ class ScrapboxParser:
     INLINE_CODE_PATTERN = re.compile(r"`([^`]+)`")
     # Icon notation: [page_name.icon] or [/icons/page_name.icon]
     ICON_PATTERN = re.compile(r"^\[(/icons/)?([^\]]+)\.icon\]$")
+    # Background colors: [! text], [# text], [% text]
+    RED_BACKGROUND_PATTERN = re.compile(r"\[!\s*([^\]]+)\]")
+    GREEN_BACKGROUND_PATTERN = re.compile(r"\[#\s*([^\]]+)\]")
+    BLUE_BACKGROUND_PATTERN = re.compile(r"\[%\s*([^\]]+)\]")
 
     @staticmethod
     def extract_tags(text: str) -> list[str]:
@@ -506,6 +515,21 @@ class ScrapboxParser:
                 )
                 for match in ScrapboxParser.EXTERNAL_LINK_PATTERN.finditer(text)
             ],
+            # Red background: [! text]
+            *[
+                Decoration(match.start(), match.end(), DecorationType.RED_BACKGROUND, match.group(1), None)
+                for match in ScrapboxParser.RED_BACKGROUND_PATTERN.finditer(text)
+            ],
+            # Green background: [# text]
+            *[
+                Decoration(match.start(), match.end(), DecorationType.GREEN_BACKGROUND, match.group(1), None)
+                for match in ScrapboxParser.GREEN_BACKGROUND_PATTERN.finditer(text)
+            ],
+            # Blue background: [% text]
+            *[
+                Decoration(match.start(), match.end(), DecorationType.BLUE_BACKGROUND, match.group(1), None)
+                for match in ScrapboxParser.BLUE_BACKGROUND_PATTERN.finditer(text)
+            ],
         ]
 
         # If no decorations found, return plain text
@@ -552,6 +576,12 @@ class ScrapboxParser:
                 element.code = True
             elif style == DecorationType.LINK:
                 element.link_url = url
+            elif style == DecorationType.RED_BACKGROUND:
+                element.background_color = "red_background"
+            elif style == DecorationType.GREEN_BACKGROUND:
+                element.background_color = "green_background"
+            elif style == DecorationType.BLUE_BACKGROUND:
+                element.background_color = "blue_background"
             elements.append(element)
 
             last_pos = end
