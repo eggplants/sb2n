@@ -195,9 +195,11 @@ class NotionBlockConverter:
             # Fallback to bookmark
             return self.notion_service.create_bookmark_block(parsed_line.content)
 
-        # URL/Bookmark blocks
+        # URL/Bookmark blocks - convert to paragraph with link
         if parsed_line.line_type == LineType.URL:
-            return self.notion_service.create_bookmark_block(parsed_line.content)
+            # Create a rich text element with the URL as both text and link
+            rich_text = [RichTextElement(text=parsed_line.content, link_url=parsed_line.content)]
+            return self.notion_service.create_paragraph_block(rich_text)
 
         # Table blocks
         if parsed_line.line_type == LineType.TABLE:

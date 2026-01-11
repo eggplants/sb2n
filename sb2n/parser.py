@@ -152,6 +152,8 @@ class ScrapboxParser:
     RED_BACKGROUND_PATTERN = re.compile(r"\[!\s*([^\]]+)\]")
     GREEN_BACKGROUND_PATTERN = re.compile(r"\[#\s*([^\]]+)\]")
     BLUE_BACKGROUND_PATTERN = re.compile(r"\[%\s*([^\]]+)\]")
+    # Plain URL (not in brackets): https://... or http://...
+    PLAIN_URL_PATTERN = re.compile(r"https?://[^\s\]]+")
 
     @staticmethod
     def extract_tags(text: str) -> list[str]:
@@ -551,6 +553,17 @@ class ScrapboxParser:
                     match.group(2) if match.group(1) else match.group(3),
                 )
                 for match in ScrapboxParser.EXTERNAL_LINK_PATTERN.finditer(text)
+            ],
+            # Plain URLs: https://... or http://...
+            *[
+                Decoration(
+                    match.start(),
+                    match.end(),
+                    DecorationType.LINK,
+                    match.group(0),  # Use the URL itself as the text
+                    match.group(0),  # And as the link URL
+                )
+                for match in ScrapboxParser.PLAIN_URL_PATTERN.finditer(text)
             ],
             # Red background: [! text]
             *[

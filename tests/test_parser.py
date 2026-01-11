@@ -328,6 +328,7 @@ def test_parse_inline_bold_asterisk() -> None:
     bold_elems = [elem for elem in parsed.rich_text or [] if elem.bold]
     assert len(bold_elems) == 2
 
+
 def test_parse_cross_project_link() -> None:
     """Test cross-project link parsing."""
     # Basic cross-project link
