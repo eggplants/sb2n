@@ -444,24 +444,103 @@ Scrapboxのアイコン記法は、指定したページに設定されている
 ## コマンドラインインターフェース
 
 ```bash
-# 基本的な実行
-sb2n migrate
+# Notion移行コマンド
+sb2n migrate                      # 基本的な実行
+sb2n migrate --env-file /path/to/.env  # .envファイルを指定
+sb2n migrate --dry-run            # ドライラン（実際には移行しない）
+sb2n migrate --pages "ページ1,ページ2"  # 特定のページのみ移行
+sb2n migrate --skip-existing      # 既存ページをスキップ
+sb2n migrate --icon               # アイコン画像も移行
 
-# .envファイルを指定
-sb2n migrate --env-file /path/to/.env
+# 内部リンク復元コマンド
+sb2n restore-link                 # 移行済みページの内部リンクを復元
+sb2n restore-link --dry-run       # リンク復元のドライラン
+sb2n restore-link --pages "ページ1"  # 特定ページのみ処理
 
-# ドライラン（実際には移行しない）
-sb2n migrate --dry-run
-
-# 特定のページのみ移行
-sb2n migrate --pages "ページ1,ページ2"
-
-# 既存ページをスキップ
-sb2n migrate --skip-existing
-
-# Scrapbox内部リンクの復元
-sb2n restore-link
+# Markdownエクスポートコマンド
+sb2n export                       # デフォルト（./out）にエクスポート
+sb2n export -d /path/to/output    # 出力先ディレクトリを指定
+sb2n export --limit 10            # エクスポートするページ数を制限
 ```
+
+### `migrate` コマンド
+
+ScrapboxページをNotionデータベースに移行します。
+
+#### `migrate` のオプション
+
+- `--env-file PATH`: 環境変数ファイルのパス（デフォルト: `.env`）
+- `--dry-run`: 実際には移行せず、動作を確認
+- `--limit N`: 移行するページ数の上限
+- `--skip-existing`: Notionに既存のページをスキップ
+- `--icon`: Scrapboxのアイコン記法（`[icon.icon]`）の画像も移行
+- `-v, --verbose`: 詳細ログを出力
+
+### `export` コマンド
+
+ScrapboxページをMarkdown形式でエクスポートします。画像ファイルは `assets/` ディレクトリに保存され、Markdownファイルから相対パスで参照されます。
+
+#### 使用例
+
+```bash
+# デフォルトディレクトリ（./out）にエクスポート
+sb2n export
+
+# 出力先を指定
+sb2n export -d ./my-export
+
+# 件数制限付きでエクスポート
+sb2n export --limit 10
+```
+
+#### 出力構造
+
+```text
+output-dir/
+├── assets/              # 画像ファイル
+│   ├── abc123def456.png
+│   ├── 789ghijk012.jpg
+│   └── ...
+├── page1.md            # Markdownファイル
+├── page2.md
+└── ...
+```
+
+#### 変換内容
+
+| Scrapbox記法 | Markdown出力 |
+| ------------- | ------------- |
+| `[* 見出し]` | `## 見出し` |
+| `[** 見出し]` | `### 見出し` |
+| `[*** 見出し]` | `#### 見出し` |
+| `[[太字]]` | `**太字**` |
+| `[/ 斜体]` | `*斜体*` |
+| `[- 取り消し線]` | `~~取り消し線~~` |
+| `[_ 下線]` | `<u>下線</u>` |
+| `` `コード` `` | `` `コード` `` |
+| `[! 赤背景]` | `<span style="background-color: #ffebee">赤背景</span>` |
+| `[# 緑背景]` | `<span style="background-color: #e8f5e9">緑背景</span>` |
+| `[% 青背景]` | `<span style="background-color: #e3f2fd">青背景</span>` |
+| `[画像URL]` | `![image](assets/xxx.png)` |
+| `[リンクテキスト URL]` | `[リンクテキスト](URL)` |
+| `[/project/page]` | `[https://scrapbox.io/project/page](https://scrapbox.io/project/page)` |
+| `リスト項目` | `- リスト項目` |
+| `> 引用` | `> 引用` |
+| `code:python` | ` ```python ` |
+
+#### `export` のオプション
+
+- `--env-file PATH`: 環境変数ファイルのパス（デフォルト: `.env`）
+- `-d, --output-dir DIR`: 出力先ディレクトリ（デフォルト: `./out`）
+- `--limit N`: エクスポートするページ数の上限
+- `-v, --verbose`: 詳細ログを出力
+
+#### 注意事項
+
+1. **画像のダウンロード**: Scrapbox内の画像および外部画像URLはすべてダウンロードされ、`assets/` ディレクトリに保存されます
+2. **ファイル名**: ページタイトルがそのままファイル名になります。特殊文字は `_` に置換されます
+3. **相対リンク**: Markdown内の画像参照は相対パス（`assets/xxx.png`）で記述されます
+4. **Notion移行不要**: このコマンドはScrapbox APIのみを使用し、Notion APIは不要です
 
 ### `restore-link` コマンド
 
