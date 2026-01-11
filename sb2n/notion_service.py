@@ -2,10 +2,11 @@
 
 import logging
 from io import BytesIO
-from typing import TYPE_CHECKING, Literal, TypedDict
+from typing import TYPE_CHECKING, Literal
 from uuid import UUID
 
 from notion_client import Client
+from pydantic import BaseModel
 
 from sb2n.models import (
     BlockObject,
@@ -32,7 +33,7 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-class FileUploadResponse(TypedDict):
+class FileUploadResponse(BaseModel):
     """Response from file_uploads.create() API.
 
     Reference: https://developers.notion.com/reference/create-a-file-upload
@@ -94,15 +95,15 @@ class NotionService:
                 )
 
                 # Execute query
-                response_dict = self.client.databases.query(**query_request.model_dump(mode="json", exclude_none=True))  # type: ignore[union-attr]
+                response_dict = self.client.databases.query(**query_request.model_dump(mode="json", exclude_none=True))  # ty:ignore[possibly-missing-attribute]
                 response = QueryDatabaseResponse.model_validate(response_dict)
 
                 for page in response.results:
                     # Extract title from properties
                     properties = page.properties if hasattr(page, "properties") else {}
-                    title_prop = properties.get("Title") or properties.get("Name")  # type: ignore[union-attr]
+                    title_prop = properties.get("Title") or properties.get("Name")  # ty:ignore[unresolved-attribute]
                     if title_prop and hasattr(title_prop, "title"):
-                        title_content = title_prop.title  # type: ignore[attr-defined]
+                        title_content = title_prop.title
                         if title_content:
                             title_text = title_content[0].plain_text if hasattr(title_content[0], "plain_text") else ""
                             if title_text:
@@ -162,12 +163,12 @@ class NotionService:
         try:
             # Create request object
             create_request = CreatePageRequest(
-                parent={"database_id": self.database_id},  # type: ignore[typeddict-item]
-                properties=properties,  # type: ignore[arg-type]
+                parent={"database_id": self.database_id},
+                properties=properties,
             )
 
             # Execute request
-            response_dict = self.client.pages.create(**create_request.model_dump(mode="json", exclude_none=True))  # type: ignore[union-attr]
+            response_dict = self.client.pages.create(**create_request.model_dump(mode="json", exclude_none=True))
 
             # Return raw dict instead of validating with Page model
             # because pydantic-api-models-notion may not support all parent types (e.g., data_source_id)
@@ -229,7 +230,7 @@ class NotionService:
         rich_text_array = self._convert_rich_text_elements(text)
         return ParagraphBlock(
             type="paragraph",
-            paragraph={"rich_text": rich_text_array, "color": "default"},  # type: ignore[typeddict-item]
+            paragraph={"rich_text": rich_text_array, "color": "default"},
         )
 
     def create_heading_block(self, text: str | list[RichTextElement], level: int = 2) -> Heading2Block | Heading3Block:
@@ -243,18 +244,18 @@ class NotionService:
             Heading block object
         """
         if isinstance(text, str):
-            if level == 2:  # noqa: PLR2004
+            if level == 2:
                 return Heading2Block.new(rich_text=text)
             return Heading3Block.new(rich_text=text)
         rich_text_array = self._convert_rich_text_elements(text)
-        if level == 2:  # noqa: PLR2004
+        if level == 2:
             return Heading2Block(
                 type="heading_2",
-                heading_2={"rich_text": rich_text_array, "color": "default", "is_toggleable": False},  # type: ignore[typeddict-item]
+                heading_2={"rich_text": rich_text_array, "color": "default", "is_toggleable": False},
             )
         return Heading3Block(
             type="heading_3",
-            heading_3={"rich_text": rich_text_array, "color": "default", "is_toggleable": False},  # type: ignore[typeddict-item]
+            heading_3={"rich_text": rich_text_array, "color": "default", "is_toggleable": False},
         )
 
     def create_bulleted_list_block(self, text: str | list[RichTextElement]) -> BulletedListItemBlock:
@@ -271,7 +272,7 @@ class NotionService:
         rich_text_array = self._convert_rich_text_elements(text)
         return BulletedListItemBlock(
             type="bulleted_list_item",
-            bulleted_list_item={"rich_text": rich_text_array, "color": "default"},  # type: ignore[typeddict-item]
+            bulleted_list_item={"rich_text": rich_text_array, "color": "default"},
         )
 
     def create_code_block(self, code: str, language: str = "plain text") -> CodeBlock:
@@ -284,9 +285,9 @@ class NotionService:
         Returns:
             Code block object
         """
-        return CodeBlock.new(code=code, language=language)  # type: ignore[arg-type]
+        return CodeBlock.new(code=code, language=language)
 
-    def create_image_block(self, url: str, file_upload_id: str | None = None) -> ImageBlock | dict:
+    def create_image_block(self, url: str, file_upload_id: str | None = None) -> ImageBlock:
         """Create an image block.
 
         Args:
@@ -294,15 +295,11 @@ class NotionService:
             file_upload_id: Optional file upload ID from Notion's file_uploads API
 
         Returns:
-            Image block object or raw dict for file uploads
+            Image block object
         """
         if file_upload_id:
-            # Use uploaded file from Notion - return raw dict
-            # pydantic-api-models-notion doesn't support file_upload type yet
-            return {
-                "type": "image",
-                "image": {"type": "file_upload", "file_upload": {"id": file_upload_id}},
-            }
+            # Use uploaded file from Notion - return ImageBlock instance
+            return ImageBlock.new_file_upload(file_upload_id=file_upload_id)
         # Use external URL
         return ImageBlock.new(url=url)
 
@@ -321,15 +318,14 @@ class NotionService:
         """
         try:
             # Step 1: Create file upload
-            file_upload: FileUploadResponse = self.client.file_uploads.create(mode="single_part")  # type: ignore[assignment]
-            file_upload_id = file_upload["id"]
-            logger.debug("Created file upload with ID: %(file_upload_id)s", {"file_upload_id": file_upload_id})
+            file_upload = FileUploadResponse.model_validate(self.client.file_uploads.create(mode="single_part"))
+            logger.debug("Created file upload with ID: %(file_upload_id)s", {"file_upload_id": file_upload.id})
 
             # Step 2: Send file data
             file_obj = BytesIO(image_data)
             file_obj.name = filename
             self.client.file_uploads.send(
-                file_upload_id=file_upload_id,
+                file_upload_id=file_upload.id,
                 file=file_obj,
             )
             logger.debug("Uploaded image to Notion: %(filename)s", {"filename": filename})
@@ -337,7 +333,7 @@ class NotionService:
             logger.exception("Failed to upload image: %(filename)s", {"filename": filename})
             raise
         else:
-            return file_upload_id
+            return file_upload.id
 
     def create_bookmark_block(self, url: str) -> BookmarkBlock:
         """Create a bookmark block.
@@ -364,7 +360,7 @@ class NotionService:
         rich_text_array = self._convert_rich_text_elements(text)
         return QuoteBlock(
             type="quote",
-            quote={"rich_text": rich_text_array, "color": "default"},  # type: ignore[typeddict-item]
+            quote={"rich_text": rich_text_array, "color": "default"},
         )
 
     def _convert_rich_text_elements(self, elements: list[RichTextElement]) -> list[dict]:

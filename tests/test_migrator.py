@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from unittest.mock import MagicMock, patch
-
 from sb2n.config import Config
 from sb2n.migrator import Migrator
 

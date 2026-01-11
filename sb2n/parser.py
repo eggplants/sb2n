@@ -2,6 +2,53 @@
 
 import re
 from dataclasses import dataclass
+from enum import Enum
+from typing import NamedTuple
+
+
+class DecorationType(Enum):
+    """Text decoration style types."""
+
+    BOLD = "bold"
+    ITALIC = "italic"
+    STRIKETHROUGH = "strikethrough"
+    UNDERLINE = "underline"
+    CODE = "code"
+    LINK = "link"
+
+
+class LineType(Enum):
+    """Line type for parsed Scrapbox lines."""
+
+    PARAGRAPH = "paragraph"
+    HEADING_2 = "heading_2"
+    HEADING_3 = "heading_3"
+    CODE = "code"
+    LIST = "list"
+    IMAGE = "image"
+    URL = "url"
+    QUOTE = "quote"
+    TABLE_START = "table_start"
+    CODE_START = "code_start"
+    EXTERNAL_LINK = "external_link"
+
+
+class Decoration(NamedTuple):
+    """Decoration match information.
+
+    Attributes:
+        start: Start position in text
+        end: End position in text
+        style: Style type (bold, italic, strikethrough, underline, code, link)
+        content: Decorated text content
+        url: URL for link decorations (None for other styles)
+    """
+
+    start: int
+    end: int
+    style: DecorationType
+    content: str
+    url: str | None
 
 
 @dataclass
@@ -43,7 +90,7 @@ class ParsedLine:
     """
 
     original: str
-    line_type: str
+    line_type: LineType
     content: str
     indent_level: int = 0
     language: str = "plain text"
@@ -137,7 +184,7 @@ class ScrapboxParser:
         return ScrapboxParser.URL_PATTERN.findall(text)
 
     @staticmethod
-    def parse_line(line: str) -> ParsedLine:  # noqa: C901, PLR0911
+    def parse_line(line: str) -> ParsedLine:
         """Parse a single line of Scrapbox text.
 
         Args:
@@ -150,7 +197,7 @@ class ScrapboxParser:
 
         # Empty line
         if not stripped:
-            return ParsedLine(original=line, line_type="paragraph", content="")
+            return ParsedLine(original=line, line_type=LineType.PARAGRAPH, content="")
 
         # Calculate indentation level
         indent_level = (len(line) - len(line.lstrip())) // 1  # Scrapbox uses spaces for indent
@@ -163,9 +210,10 @@ class ScrapboxParser:
             level = min(len(asterisks) + 1, 3)  # [*] -> heading_2, [**] -> heading_3
             # Parse rich text in heading
             rich_text = ScrapboxParser._parse_rich_text(title)
+            line_type = LineType.HEADING_2 if level == 2 else LineType.HEADING_3
             return ParsedLine(
                 original=line,
-                line_type=f"heading_{level}",
+                line_type=line_type,
                 content=title,
                 rich_text=rich_text,
             )
@@ -177,7 +225,7 @@ class ScrapboxParser:
             rich_text = ScrapboxParser._parse_rich_text(quote_text)
             return ParsedLine(
                 original=line,
-                line_type="quote",
+                line_type=LineType.QUOTE,
                 content=quote_text,
                 rich_text=rich_text,
             )
@@ -188,7 +236,7 @@ class ScrapboxParser:
             filename = code_match.group(1)
             # Try to detect language from filename extension
             language = ScrapboxParser._detect_language(filename)
-            return ParsedLine(original=line, line_type="code_start", content=filename, language=language)
+            return ParsedLine(original=line, line_type=LineType.CODE_START, content=filename, language=language)
 
         # Table start: table:name
         table_match = ScrapboxParser.TABLE_PATTERN.match(stripped)
@@ -196,7 +244,7 @@ class ScrapboxParser:
             table_name = table_match.group(1)
             return ParsedLine(
                 original=line,
-                line_type="table_start",
+                line_type=LineType.TABLE_START,
                 content=table_name,
                 table_name=table_name,
             )
@@ -204,7 +252,7 @@ class ScrapboxParser:
         # Image URL
         image_urls = ScrapboxParser.extract_image_urls(stripped)
         if image_urls:
-            return ParsedLine(original=line, line_type="image", content=image_urls[0])
+            return ParsedLine(original=line, line_type=LineType.IMAGE, content=image_urls[0])
 
         # External link with display text: [text url] or [url text]
         # Only treat as external_link if the entire line is the link
@@ -219,7 +267,7 @@ class ScrapboxParser:
                 link_text = external_link_match.group(4)
             return ParsedLine(
                 original=line,
-                line_type="external_link",
+                line_type=LineType.EXTERNAL_LINK,
                 content=url,
                 link_text=link_text,
             )
@@ -227,14 +275,14 @@ class ScrapboxParser:
         # Regular URL (bookmark)
         urls = ScrapboxParser.extract_urls(stripped)
         if urls and stripped.startswith("[") and stripped.endswith("]"):
-            return ParsedLine(original=line, line_type="url", content=urls[0])  # List item (indented)
+            return ParsedLine(original=line, line_type=LineType.URL, content=urls[0])  # List item (indented)
         if indent_level > 0:
             # Parse rich text for list items
             rich_text = ScrapboxParser._parse_rich_text(stripped)
             content = ScrapboxParser._clean_links(stripped)
             return ParsedLine(
                 original=line,
-                line_type="list",
+                line_type=LineType.LIST,
                 content=content,
                 indent_level=indent_level,
                 rich_text=rich_text,
@@ -245,7 +293,7 @@ class ScrapboxParser:
         content = ScrapboxParser._clean_links(stripped)
         return ParsedLine(
             original=line,
-            line_type="paragraph",
+            line_type=LineType.PARAGRAPH,
             content=content,
             rich_text=rich_text,
         )
@@ -270,7 +318,7 @@ class ScrapboxParser:
             parsed = ScrapboxParser.parse_line(line)
 
             # Handle code blocks
-            if parsed.line_type == "code_start":
+            if parsed.line_type == LineType.CODE_START:
                 in_code_block = True
                 code_language = parsed.language
                 code_buffer = []
@@ -285,7 +333,7 @@ class ScrapboxParser:
                         parsed_lines.append(
                             ParsedLine(
                                 original=code_content,
-                                line_type="code",
+                                line_type=LineType.CODE,
                                 content=code_content,
                                 language=code_language,
                             )
@@ -309,7 +357,7 @@ class ScrapboxParser:
             parsed_lines.append(
                 ParsedLine(
                     original=code_content,
-                    line_type="code",
+                    line_type=LineType.CODE,
                     content=code_content,
                     language=code_language,
                 )
@@ -318,7 +366,7 @@ class ScrapboxParser:
         return parsed_lines
 
     @staticmethod
-    def _parse_rich_text(text: str) -> list[RichTextElement]:  # noqa: C901, PLR0912
+    def _parse_rich_text(text: str) -> list[RichTextElement]:
         """Parse text with decorations into rich text elements.
 
         Args:
@@ -334,43 +382,43 @@ class ScrapboxParser:
         # This is a basic implementation that handles non-nested decorations
 
         # First, let's find all decoration matches with their positions
-        decorations: list[tuple[int, int, str, str, str | None]] = [
+        decorations: list[Decoration] = [
             # Bold: `[[text]]`
             *[
-                (match.start(), match.end(), "bold", match.group(1), None)
+                Decoration(match.start(), match.end(), DecorationType.BOLD, match.group(1), None)
                 for match in ScrapboxParser.BOLD_PATTERN.finditer(text)
             ],
             # Bold asterisk: `[* text]`
             *[
-                (match.start(), match.end(), "bold", match.group(1), None)
+                Decoration(match.start(), match.end(), DecorationType.BOLD, match.group(1), None)
                 for match in ScrapboxParser.BOLD_ASTERISK_PATTERN.finditer(text)
             ],
             # Italic: `[/ text]`
             *[
-                (match.start(), match.end(), "italic", match.group(1), None)
+                Decoration(match.start(), match.end(), DecorationType.ITALIC, match.group(1), None)
                 for match in ScrapboxParser.ITALIC_PATTERN.finditer(text)
             ],
             # Strikethrough: `[- text]`
             *[
-                (match.start(), match.end(), "strikethrough", match.group(1), None)
+                Decoration(match.start(), match.end(), DecorationType.STRIKETHROUGH, match.group(1), None)
                 for match in ScrapboxParser.STRIKETHROUGH_PATTERN.finditer(text)
             ],
             # Underline: `[_ text]`
             *[
-                (match.start(), match.end(), "underline", match.group(1), None)
+                Decoration(match.start(), match.end(), DecorationType.UNDERLINE, match.group(1), None)
                 for match in ScrapboxParser.UNDERLINE_PATTERN.finditer(text)
             ],
             # Inline code: `code`
             *[
-                (match.start(), match.end(), "code", match.group(1), None)
+                Decoration(match.start(), match.end(), DecorationType.CODE, match.group(1), None)
                 for match in ScrapboxParser.INLINE_CODE_PATTERN.finditer(text)
             ],
             # External links: [text url] or [url text]
             *[
-                (
+                Decoration(
                     match.start(),
                     match.end(),
-                    "link",
+                    DecorationType.LINK,
                     match.group(1) if match.group(1) else match.group(4),
                     match.group(2) if match.group(1) else match.group(3),
                 )
@@ -383,20 +431,25 @@ class ScrapboxParser:
             return [RichTextElement(text=text)]
 
         # Sort by position, then by length (shorter matches first to handle nested patterns)
-        decorations.sort(key=lambda x: (x[0], x[1] - x[0]))
+        decorations.sort(key=lambda x: (x.start, x.end - x.start))
 
         # Remove overlapping decorations (keep the first one at each position)
-        filtered_decorations: list[tuple[int, int, str, str, str | None]] = []
+        filtered_decorations: list[Decoration] = []
         last_end = 0
         for decoration in decorations:
-            start = decoration[0]
+            start = decoration.start
             if start >= last_end:
                 filtered_decorations.append(decoration)
-                last_end = decoration[1]
+                last_end = decoration.end
 
         # Build elements
         last_pos = 0
-        for start, end, style, content, url in filtered_decorations:
+        for decoration in filtered_decorations:
+            start = decoration.start
+            end = decoration.end
+            style = decoration.style
+            content = decoration.content
+            url = decoration.url
             # Add plain text before this decoration
             if start > last_pos:
                 plain_text = text[last_pos:start]
@@ -405,17 +458,17 @@ class ScrapboxParser:
 
             # Add styled text
             element = RichTextElement(text=content)
-            if style == "bold":
+            if style == DecorationType.BOLD:
                 element.bold = True
-            elif style == "italic":
+            elif style == DecorationType.ITALIC:
                 element.italic = True
-            elif style == "strikethrough":
+            elif style == DecorationType.STRIKETHROUGH:
                 element.strikethrough = True
-            elif style == "underline":
+            elif style == DecorationType.UNDERLINE:
                 element.underline = True
-            elif style == "code":
+            elif style == DecorationType.CODE:
                 element.code = True
-            elif style == "link":
+            elif style == DecorationType.LINK:
                 element.link_url = url
             elements.append(element)
 

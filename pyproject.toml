@@ -68,12 +68,17 @@ lint.ignore = [
   "COM812",
   "D203",
   "D213",
+  "S101",   # Use of assert detected
 ]
 lint.per-file-ignores."tests/test_*.py" = [
   "D",
-  "S101", # Use of assert detected
+  "PLR2004",
 ]
+lint.mccabe.max-complexity = 15
 lint.pydocstyle.convention = "google"
+lint.pylint.allow-magic-value-types = [ "int" ]
+lint.pylint.max-branches = 15
+lint.pylint.max-returns = 15
 
 [tool.uv-dynamic-versioning]
 vcs = "git"

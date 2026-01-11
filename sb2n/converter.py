@@ -3,7 +3,7 @@
 import logging
 from typing import TYPE_CHECKING
 
-from sb2n.parser import ParsedLine, RichTextElement, ScrapboxParser
+from sb2n.parser import LineType, ParsedLine, RichTextElement, ScrapboxParser
 
 if TYPE_CHECKING:
     from sb2n.models import BlockObject
@@ -53,7 +53,7 @@ class NotionBlockConverter:
         )
         return blocks
 
-    def _convert_line_to_block(self, parsed_line: ParsedLine) -> BlockObject | None:  # noqa: C901, PLR0911
+    def _convert_line_to_block(self, parsed_line: ParsedLine) -> BlockObject | None:
         """Convert a single parsed line to a Notion block.
 
         Args:
@@ -63,31 +63,31 @@ class NotionBlockConverter:
             Notion block object or None if line should be skipped
         """
         # Skip empty lines
-        if not parsed_line.content and parsed_line.line_type == "paragraph":
+        if not parsed_line.content and parsed_line.line_type == LineType.PARAGRAPH:
             return None
 
         # Heading blocks
-        if parsed_line.line_type in ["heading_2", "heading_3"]:
-            level = int(parsed_line.line_type.split("_")[1])
+        if parsed_line.line_type in [LineType.HEADING_2, LineType.HEADING_3]:
+            level = int(parsed_line.line_type.value.split("_")[1])
             # Use rich_text if available, otherwise use plain content
             text = parsed_line.rich_text if parsed_line.rich_text else parsed_line.content
             return self.notion_service.create_heading_block(text, level)
 
         # Quote blocks
-        if parsed_line.line_type == "quote":
+        if parsed_line.line_type == LineType.QUOTE:
             text = parsed_line.rich_text if parsed_line.rich_text else parsed_line.content
             return self.notion_service.create_quote_block(text)
 
         # Code blocks
-        if parsed_line.line_type == "code":
+        if parsed_line.line_type == LineType.CODE_START:
             return self.notion_service.create_code_block(parsed_line.content, parsed_line.language)
 
         # Image blocks
-        if parsed_line.line_type == "image":
+        if parsed_line.line_type == LineType.IMAGE:
             return self._create_image_block(parsed_line.content)
 
         # External link with display text
-        if parsed_line.line_type == "external_link":
+        if parsed_line.line_type == LineType.EXTERNAL_LINK:
             # Create a paragraph with a link
             if parsed_line.link_text:
                 link_element = RichTextElement(
@@ -99,17 +99,17 @@ class NotionBlockConverter:
             return self.notion_service.create_bookmark_block(parsed_line.content)
 
         # URL/Bookmark blocks
-        if parsed_line.line_type == "url":
+        if parsed_line.line_type == LineType.URL:
             return self.notion_service.create_bookmark_block(parsed_line.content)
 
         # Table start (create as paragraph for now - full table support would require more complex logic)
-        if parsed_line.line_type == "table_start":
+        if parsed_line.line_type == LineType.TABLE_START:
             # For now, just create a heading to indicate table start
             # Full table implementation would require parsing subsequent lines
             return self.notion_service.create_heading_block(f"Table: {parsed_line.table_name}", 3)
 
         # List items
-        if parsed_line.line_type == "list":
+        if parsed_line.line_type == LineType.LIST:
             text = parsed_line.rich_text if parsed_line.rich_text else parsed_line.content
             return self.notion_service.create_bulleted_list_block(text)
 
@@ -120,7 +120,7 @@ class NotionBlockConverter:
 
         return None
 
-    def _create_image_block(self, image_url: str):  # noqa: ANN202
+    def _create_image_block(self, image_url: str) -> BlockObject:
         """Create an image block, downloading from Scrapbox if necessary.
 
         Args:
@@ -138,9 +138,13 @@ class NotionBlockConverter:
                 image_data = self.scrapbox_service.download_file(image_url)
 
                 # Extract filename from URL
-                filename = image_url.split("/")[-1] if "/" in image_url else "image.png"
+                filename = (
+                    image_url.split("/")[-1]
+                    if "/" in image_url  # noqa: PLR2004
+                    else "image.png"
+                )
                 # Ensure filename has an extension
-                if "." not in filename:
+                if "." not in filename:  # noqa: PLR2004
                     filename += ".png"
 
                 # Upload to Notion

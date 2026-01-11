@@ -3,12 +3,30 @@
 import argparse
 import logging
 import sys
+from enum import Enum
 from pathlib import Path
 
 from sb2n.config import Config
 from sb2n.migrator import Migrator
 
 logger = logging.getLogger(__name__)
+
+
+class Command(Enum):
+    """Available CLI commands."""
+
+    MIGRATE = "migrate"
+
+
+class Args(argparse.Namespace):
+    """Type definition for command-line arguments."""
+
+    command: Command | None
+    env_file: str | None
+    dry_run: bool
+    limit: int | None
+    skip_existing: bool
+    verbose: bool
 
 
 def setup_logging(*, verbose: bool = False) -> None:
@@ -25,7 +43,7 @@ def setup_logging(*, verbose: bool = False) -> None:
     )
 
 
-def migrate_command(args: argparse.Namespace) -> int:
+def migrate_command(args: Args) -> int:
     """Execute the migrate command.
 
     Args:
@@ -108,13 +126,13 @@ def main() -> None:
         help="Skip pages that already exist in Notion database",
     )
 
-    args = parser.parse_args()
+    args = parser.parse_args(namespace=Args())
 
     # Set up logging
     setup_logging(verbose=args.verbose)
 
     # Handle commands
-    if args.command == "migrate":
+    if args.command == Command.MIGRATE:
         exit_code = migrate_command(args)
         sys.exit(exit_code)
     else:

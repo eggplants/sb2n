@@ -3,7 +3,8 @@
 import logging
 from dataclasses import dataclass
 from datetime import UTC, datetime
-from typing import TYPE_CHECKING, Literal
+from enum import Enum
+from typing import TYPE_CHECKING
 
 from sb2n.converter import NotionBlockConverter
 from sb2n.notion_service import NotionService
@@ -16,6 +17,13 @@ if TYPE_CHECKING:
     from sb2n.config import Config
 
 logger = logging.getLogger(__name__)
+
+
+class SpecialPageId(str, Enum):
+    """Special Notion page IDs used in migration."""
+
+    DRY_RUN_ID = "dry-run-id"
+    SKIPPED_ID = "skipped"
 
 
 @dataclass
@@ -32,7 +40,7 @@ class MigrationResult:
     page_title: str
     success: bool
     error: str | None = None
-    notion_page_id: Literal["skipped", "dry-run-id"] | UUID | None = None
+    notion_page_id: SpecialPageId | UUID | None = None
 
 
 @dataclass
@@ -135,7 +143,7 @@ class Migrator:
                         MigrationResult(
                             page_title=page.title,
                             success=True,
-                            notion_page_id="skipped",
+                            notion_page_id=SpecialPageId.SKIPPED_ID,
                         )
                     )
                     continue
@@ -162,8 +170,8 @@ class Migrator:
                     )
 
         # Calculate summary
-        skipped_count = sum(1 for r in results if r.success and r.notion_page_id == "skipped")
-        successful_count = sum(1 for r in results if r.success and r.notion_page_id != "skipped")
+        skipped_count = sum(1 for r in results if r.success and r.notion_page_id == SpecialPageId.SKIPPED_ID)
+        successful_count = sum(1 for r in results if r.success and r.notion_page_id != SpecialPageId.SKIPPED_ID)
         summary = MigrationSummary(
             total_pages=total,
             successful=successful_count,
@@ -209,7 +217,7 @@ class Migrator:
                 return MigrationResult(
                     page_title=page_title,
                     success=True,
-                    notion_page_id="dry-run-id",
+                    notion_page_id=SpecialPageId.DRY_RUN_ID,
                 )
 
             # Create Notion page
@@ -220,7 +228,7 @@ class Migrator:
                 tags=tags,
             )
 
-            notion_page_id = notion_page["id"]  # type: ignore[not-subscriptable]
+            notion_page_id = notion_page["id"]  # ty:ignore[not-subscriptable]
 
             # Convert and append blocks
             if self.converter:

@@ -64,10 +64,10 @@ class Config:
             raise ValueError(msg)
 
         # At this point, all values are guaranteed to be non-None
-        assert scrapbox_project is not None  # noqa: S101
-        assert scrapbox_connect_sid is not None  # noqa: S101
-        assert notion_api_key is not None  # noqa: S101
-        assert notion_database_id is not None  # noqa: S101
+        assert scrapbox_project is not None
+        assert scrapbox_connect_sid is not None
+        assert notion_api_key is not None
+        assert notion_database_id is not None
 
         return cls(
             scrapbox_project=scrapbox_project,

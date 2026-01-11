@@ -164,7 +164,7 @@ class ImageBlock(BaseModel):
     image: dict[str, Any]
 
     @classmethod
-    def new(cls, url: str) -> ImageBlock:
+    def new(cls, *, url: str) -> ImageBlock:
         """Create a new image block with external URL.
 
         Args:
@@ -177,6 +177,23 @@ class ImageBlock(BaseModel):
             image={
                 "type": "external",
                 "external": {"url": url},
+            }
+        )
+
+    @classmethod
+    def new_file_upload(cls, file_upload_id: str) -> ImageBlock:
+        """Create a new image block with file upload ID.
+
+        Args:
+            file_upload_id: File upload ID from Notion
+
+        Returns:
+            ImageBlock instance
+        """
+        return cls(
+            image={
+                "type": "file_upload",
+                "file_upload": {"id": file_upload_id},
             }
         )
 
