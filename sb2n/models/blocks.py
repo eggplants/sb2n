@@ -38,6 +38,36 @@ class ParagraphBlock(BaseModel):
         )
 
 
+class Heading1Block(BaseModel):
+    """Heading 1 block."""
+
+    type: Literal["heading_1"] = "heading_1"
+    heading_1: dict[str, Any] = Field(alias="heading_1")
+
+    @classmethod
+    def new(cls, rich_text: str) -> Heading1Block:
+        """Create a new heading 1 block with plain text.
+
+        Args:
+            rich_text: Plain text content
+
+        Returns:
+            Heading1Block instance
+        """
+        return cls(
+            heading_1={
+                "rich_text": [
+                    {
+                        "type": "text",
+                        "text": {"content": rich_text},
+                    }
+                ],
+                "color": "default",
+                "is_toggleable": False,
+            }
+        )
+
+
 class Heading2Block(BaseModel):
     """Heading 2 block."""
 
@@ -328,6 +358,7 @@ class TableBlockWithChildren(BaseModel):
 # Union type for all block types
 BlockObject = (
     ParagraphBlock
+    | Heading1Block
     | Heading2Block
     | Heading3Block
     | BulletedListItemBlock

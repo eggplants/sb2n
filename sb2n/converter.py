@@ -39,7 +39,7 @@ class NotionBlockConverter:
         self.enable_icon = enable_icon
         self.scrapbox_service = scrapbox_service
 
-    def convert_to_blocks(self, text: str) -> list[BlockObject]:  # noqa: PLR0912
+    def convert_to_blocks(self, text: str) -> list[BlockObject]:
         """Convert Scrapbox text to Notion blocks.
 
         Args:
@@ -131,7 +131,7 @@ class NotionBlockConverter:
         )
         return blocks
 
-    def _convert_line_to_block(self, parsed_line: ParsedLine) -> BlockObject | None:  # noqa: C901, PLR0911, PLR0912
+    def _convert_line_to_block(self, parsed_line: ParsedLine) -> BlockObject | None:  # noqa: PLR0911
         """Convert a single parsed line to a Notion block.
 
         Args:
@@ -145,7 +145,7 @@ class NotionBlockConverter:
             return None
 
         # Heading blocks
-        if parsed_line.line_type in [LineType.HEADING_2, LineType.HEADING_3]:
+        if parsed_line.line_type in [LineType.HEADING_1, LineType.HEADING_2, LineType.HEADING_3]:
             level = int(parsed_line.line_type.value.split("_")[1])
             # Use rich_text if available, otherwise use plain content
             text = parsed_line.rich_text if parsed_line.rich_text else parsed_line.content

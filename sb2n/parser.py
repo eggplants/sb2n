@@ -24,6 +24,7 @@ class LineType(Enum):
     """Line type for parsed Scrapbox lines."""
 
     PARAGRAPH = "paragraph"
+    HEADING_1 = "heading_1"
     HEADING_2 = "heading_2"
     HEADING_3 = "heading_3"
     CODE = "code"
@@ -87,7 +88,7 @@ class ParsedLine:
 
     Attributes:
         original: Original line text
-        line_type: Type of line (paragraph, heading_2, heading_3, code, list, image, url, quote, table, table_start)
+        line_type: Type of line
         content: Processed content
         indent_level: Indentation level (for lists)
         language: Language for code blocks
@@ -224,10 +225,16 @@ class ScrapboxParser:
         if heading_match:
             asterisks = heading_match.group(1)
             title = heading_match.group(2)
-            level = min(len(asterisks) + 1, 3)  # [*] -> heading_2, [**] -> heading_3
+            asterisk_count = len(asterisks)
+            # Map: [*] -> H1, [**] -> H2, [***+] -> H3
+            if asterisk_count == 1:
+                line_type = LineType.HEADING_1
+            elif asterisk_count == 2:
+                line_type = LineType.HEADING_2
+            else:
+                line_type = LineType.HEADING_3
             # Parse rich text in heading
             rich_text = ScrapboxParser._parse_rich_text(title)
-            line_type = LineType.HEADING_2 if level == 2 else LineType.HEADING_3
             return ParsedLine(
                 original=line,
                 line_type=line_type,

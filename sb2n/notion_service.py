@@ -20,7 +20,7 @@ from sb2n.models import (
     QueryDatabaseResponse,
     QuoteBlock,
 )
-from sb2n.models.blocks import TableBlock, TableBlockWithChildren, TableRowBlock
+from sb2n.models.blocks import Heading1Block, TableBlock, TableBlockWithChildren, TableRowBlock
 
 if TYPE_CHECKING:
     from datetime import datetime
@@ -263,21 +263,30 @@ class NotionService:
             paragraph={"rich_text": rich_text_array, "color": "default"},
         )
 
-    def create_heading_block(self, text: str | list[RichTextElement], level: int = 2) -> Heading2Block | Heading3Block:
+    def create_heading_block(
+        self, text: str | list[RichTextElement], level: int = 1
+    ) -> Heading1Block | Heading2Block | Heading3Block:
         """Create a heading block.
 
         Args:
             text: Heading text content (plain string or rich text elements)
-            level: Heading level (2 or 3)
+            level: Heading level (1, 2, or 3)
 
         Returns:
             Heading block object
         """
         if isinstance(text, str):
+            if level == 1:
+                return Heading1Block.new(rich_text=text)
             if level == 2:
                 return Heading2Block.new(rich_text=text)
             return Heading3Block.new(rich_text=text)
         rich_text_array = self._convert_rich_text_elements(text)
+        if level == 1:
+            return Heading1Block(
+                type="heading_1",
+                heading_1={"rich_text": rich_text_array, "color": "default", "is_toggleable": False},
+            )
         if level == 2:
             return Heading2Block(
                 type="heading_2",

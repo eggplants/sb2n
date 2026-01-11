@@ -35,12 +35,12 @@ def test_parse_heading() -> None:
     """Test heading parsing."""
     line = "[* Main Heading]"
     parsed = ScrapboxParser.parse_line(line)
-    assert parsed.line_type == LineType.HEADING_2
+    assert parsed.line_type == LineType.HEADING_1
     assert parsed.content == "Main Heading"
 
     line = "[** Sub Heading]"
     parsed = ScrapboxParser.parse_line(line)
-    assert parsed.line_type == LineType.HEADING_3
+    assert parsed.line_type == LineType.HEADING_2
     assert parsed.content == "Sub Heading"
 
 
@@ -65,7 +65,7 @@ def test_parse_text_with_multiple_lines() -> None:
     text = "Title\n[* Title]\nThis is a paragraph.\n List item 1\n List item 2\n#tag1 #tag2"
     parsed_lines = ScrapboxParser.parse_text(text)
     assert len(parsed_lines) > 0
-    assert parsed_lines[0].line_type == LineType.HEADING_2
+    assert parsed_lines[0].line_type == LineType.HEADING_1
     assert any(line.line_type == LineType.LIST for line in parsed_lines)
 
 
@@ -229,3 +229,32 @@ def test_parse_inline_link_with_decorations() -> None:
     assert len(link_elems) > 0
     assert link_elems[0].text == "simple syntax"
     assert link_elems[0].link_url == "https://scrapbox.io/help/Syntax"
+
+
+def test_parse_multiple_heading_levels() -> None:
+    """Test various heading levels (asterisk counts)."""
+    # [*******] (7 asterisks) - should be heading_3 (max level)
+    line = "[******* 大見出し/h1]"
+    parsed = ScrapboxParser.parse_line(line)
+    assert parsed.line_type == LineType.HEADING_3
+    assert parsed.content == "大見出し/h1"
+    assert parsed.rich_text is not None
+    assert parsed.rich_text[0].text == "大見出し/h1"
+
+    # [***] (3 asterisks) - should be heading_3
+    line = "[*** 大見出し/h1]"
+    parsed = ScrapboxParser.parse_line(line)
+    assert parsed.line_type == LineType.HEADING_3
+    assert parsed.content == "大見出し/h1"
+
+    # [**] (2 asterisks) - should be heading_2
+    line = "[** 小見出し/h2]"
+    parsed = ScrapboxParser.parse_line(line)
+    assert parsed.line_type == LineType.HEADING_2
+    assert parsed.content == "小見出し/h2"
+
+    # [*] (1 asterisk) - should be heading_1
+    line = "[* 見出し/h3]"
+    parsed = ScrapboxParser.parse_line(line)
+    assert parsed.line_type == LineType.HEADING_1
+    assert parsed.content == "見出し/h3"
