@@ -44,8 +44,8 @@ class MarkdownExporter:
         """
         logger.info("Exporting page: %s", page_title)
 
-        # Parse the page
-        parsed_lines = ScrapboxParser.parse_text(page_text)
+        # Parse the page with project name for internal fragment links
+        parsed_lines = ScrapboxParser.parse_text(page_text, self.scrapbox_service.project_name)
 
         # Convert to Markdown
         markdown_lines = []

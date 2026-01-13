@@ -374,6 +374,34 @@ def test_parse_cross_project_link() -> None:
     assert parsed.icon_project == "icons"
 
 
+def test_parse_internal_fragment_link() -> None:
+    """Test internal link with fragment parsing."""
+    project_name = "myproject"
+
+    # Basic internal fragment link
+    line = "[PageTitle#section]"
+    parsed = ScrapboxParser.parse_line(line, project_name)
+    assert parsed.line_type == LineType.URL
+    assert parsed.content == "https://scrapbox.io/myproject/PageTitle#section"
+
+    # Internal fragment link with Japanese page name and fragment
+    line = "[ページタイトル#セクション]"
+    parsed = ScrapboxParser.parse_line(line, project_name)
+    assert parsed.line_type == LineType.URL
+    assert parsed.content == "https://scrapbox.io/myproject/ページタイトル#セクション"
+
+    # Without project_name, should not be treated as URL
+    line = "[PageTitle#section]"
+    parsed = ScrapboxParser.parse_line(line)
+    assert parsed.line_type != LineType.URL
+
+    # Cross-project links with fragment should still work (starts with /)
+    line = "[/otherproject/Page#section]"
+    parsed = ScrapboxParser.parse_line(line)
+    assert parsed.line_type == LineType.URL
+    assert parsed.content == "https://scrapbox.io/otherproject/Page#section"
+
+
 def test_parse_deeply_nested_code_block() -> None:
     """Test that code blocks inside deeply nested lists have indent removed."""
     text = """test0

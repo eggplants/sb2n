@@ -48,7 +48,8 @@ class NotionBlockConverter:
         Returns:
             List of Notion block objects
         """
-        parsed_lines = ScrapboxParser.parse_text(text)
+        project_name = self.scrapbox_service.project_name if self.scrapbox_service else None
+        parsed_lines = ScrapboxParser.parse_text(text, project_name)
         blocks = []
 
         # Stack to track parent blocks and their dictionaries at each indent level

@@ -148,8 +148,12 @@ class ScrapboxParser:
     # Icon notation: [page_name.icon] or [/icons/page_name.icon]
     ICON_PATTERN = re.compile(r"^\[(/icons/)?([^\]]+)\.icon\]$")
     # Cross-project link: [/project/page] (not ending in .icon)
-    CROSS_PROJECT_LINK_PATTERN = re.compile(r"^\[/([^/\]]+)/([^\]]+)\]$")
-    # Background colors: [! text], [# text], [% text]
+    CROSS_PROJECT_LINK_PATTERN = re.compile(
+        r"^\[/([^/\]]+)/([^\]]+)\]$"
+    )  # Internal link with fragment: [page#fragment] (not starting with /)
+    INTERNAL_FRAGMENT_LINK_PATTERN = re.compile(
+        r"^\[([^/\]]+)#([^\]]+)\]$"
+    )  # Background colors: [! text], [# text], [% text]
     RED_BACKGROUND_PATTERN = re.compile(r"\[!\s*([^\]]+)\]")
     GREEN_BACKGROUND_PATTERN = re.compile(r"\[#\s*([^\]]+)\]")
     BLUE_BACKGROUND_PATTERN = re.compile(r"\[%\s*([^\]]+)\]")
@@ -207,11 +211,12 @@ class ScrapboxParser:
         return ScrapboxParser.URL_PATTERN.findall(text)
 
     @staticmethod
-    def parse_line(line: str) -> ParsedLine:  # noqa: PLR0915
+    def parse_line(line: str, project_name: str | None = None) -> ParsedLine:  # noqa: PLR0915
         """Parse a single line of Scrapbox text.
 
         Args:
             line: Line to parse
+            project_name: Optional Scrapbox project name for internal fragment links
 
         Returns:
             Parsed line with type and content
@@ -333,6 +338,20 @@ class ScrapboxParser:
                     indent_level=indent_level,
                 )
 
+        # Internal link with fragment: [page#fragment] (same project)
+        if project_name:
+            internal_fragment_match = ScrapboxParser.INTERNAL_FRAGMENT_LINK_PATTERN.match(stripped)
+            if internal_fragment_match:
+                page_title = internal_fragment_match.group(1)
+                fragment = internal_fragment_match.group(2)
+                url = f"https://scrapbox.io/{project_name}/{page_title}#{fragment}"
+                return ParsedLine(
+                    original=line,
+                    line_type=LineType.URL,
+                    content=url,
+                    indent_level=indent_level,
+                )
+
         # External link with display text: [text url] or [url text]
         # Only treat as external_link if the entire line is the link
         external_link_match = ScrapboxParser.EXTERNAL_LINK_PATTERN.search(stripped)
@@ -380,11 +399,12 @@ class ScrapboxParser:
         )
 
     @staticmethod
-    def parse_text(text: str) -> list[ParsedLine]:  # noqa: PLR0915
+    def parse_text(text: str, project_name: str | None = None) -> list[ParsedLine]:  # noqa: PLR0915
         """Parse entire Scrapbox text into structured lines.
 
         Args:
             text: Full text content from Scrapbox
+            project_name: Optional Scrapbox project name for internal fragment links
 
         Returns:
             List of parsed lines
@@ -398,7 +418,7 @@ class ScrapboxParser:
         table_indent_level = 0
 
         for line in lines:
-            parsed = ScrapboxParser.parse_line(line)
+            parsed = ScrapboxParser.parse_line(line, project_name)
 
             # Handle code blocks
             if parsed.line_type == LineType.CODE_START:
