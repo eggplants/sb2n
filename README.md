@@ -84,6 +84,40 @@ sb2n restore-link --pages "HomePage,Getting Started"
 sb2n -v restore-link
 ```
 
+### Appendix 1. Export as Markdown with images
+
+Export Scrapbox pages to Markdown format with downloaded images. Images are saved in an `assets/` directory and referenced with relative paths in the Markdown files.
+
+```sh
+# Export to default directory (./out)
+sb2n export
+
+# Specify output directory
+sb2n export -d /path/to/output
+
+# Limit number of pages to export
+sb2n export --limit 10
+
+# Combine options
+sb2n export -d ./my-export --limit 5
+
+# Enable verbose logging
+sb2n -v export
+```
+
+#### Structure of extracted data
+
+```text
+output-dir/
+├── assets/              # Downloaded images
+│   ├── abc123def456.png
+│   ├── 789ghijk012.jpg
+│   └── ...
+├── page1.md            # Markdown files
+├── page2.md
+└── ...
+```
+
 ## Development
 
 See [docs/specification.md](docs/specification.md) for detailed specifications.
