@@ -268,11 +268,19 @@ notion.blocks.children.append(
 | Scrapbox記法 | 説明 | 実装状態 | 優先度 |
 | ------------- | ----- | --------- | ------- |
 | `[リンクテキスト]` | 内部リンク（同一プロジェクト） | ✅（テキスト化） | - |
+| `[page#fragment]` | フラグメント付き内部リンク | ✅ | 中 |
 | `[/project/page]` | クロスプロジェクトリンク | ✅ | 高 |
 | `[リンクテキスト URL]` | 外部リンク（表示テキスト付き） | ✅ | - |
 | `[URL リンクテキスト]` | 外部リンク（表示テキスト付き・逆順） | ✅ | - |
 | `http://example.com` | URL自動リンク | 部分的 | 中 |
 | `#ハッシュタグ` | ハッシュタグ（内部リンク） | ✅（タグ抽出） | - |
+
+**フラグメント付き内部リンクの変換:**
+
+Scrapboxでは `[page#fragment]` 形式で同一プロジェクト内のページの特定セクションへリンクできます。これをNotionでは外部URLリンクとして変換します。
+
+- `[PageTitle#section]` → `https://scrapbox.io/{project}/PageTitle#section` へのリンク
+- `[ページタイトル#セクション]` → `https://scrapbox.io/{project}/ページタイトル#セクション` へのリンク
 
 **クロスプロジェクトリンクの変換:**
 
@@ -280,6 +288,12 @@ Scrapboxでは `[/project/page]` 形式でScrapbox内の他のプロジェクト
 
 - `[/icons/hr]` → `https://scrapbox.io/icons/hr` へのリンク
 - `[/help-jp/記法]` → `https://scrapbox.io/help-jp/記法` へのリンク
+
+**クロスプロジェクトリンクのフラグメント:**
+
+クロスプロジェクトリンクもフラグメントをサポートします:
+
+- `[/project/page#fragment]` → `https://scrapbox.io/project/page#fragment` へのリンク
 
 **アイコン記法との違い:**
 
