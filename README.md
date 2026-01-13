@@ -84,11 +84,9 @@ sb2n restore-link --pages "HomePage,Getting Started"
 sb2n -v restore-link
 ```
 
-## Appendix 1. Export as Markdown with images
+### Appendix 1. Export as Markdown with images
 
 Export Scrapbox pages to Markdown format with downloaded images. Images are saved in an `assets/` directory and referenced with relative paths in the Markdown files.
-
-### Usage
 
 ```sh
 # Export to default directory (./out)
@@ -107,14 +105,7 @@ sb2n export -d ./my-export --limit 5
 sb2n -v export
 ```
 
-### Options
-
-- `--env-file PATH` - Path to .env file (default: `.env`)
-- `-d, --output-dir DIR` - Output directory for exported files (default: `./out`)
-- `--limit N` - Limit the number of pages to export
-- `-v, --verbose` - Enable verbose logging
-
-### Output Structure
+#### Structure of extracted data
 
 ```text
 output-dir/
@@ -126,35 +117,6 @@ output-dir/
 ├── page2.md
 └── ...
 ```
-
-### Conversion Rules
-
-| Scrapbox Notation | Markdown Output |
-| ----------------- | --------------- |
-| `[* Heading]` | `## Heading` |
-| `[** Heading]` | `### Heading` |
-| `[*** Heading]` | `#### Heading` |
-| `[[Bold]]` | `**Bold**` |
-| `[/ Italic]` | `*Italic*` |
-| `[- Strikethrough]` | `~~Strikethrough~~` |
-| `[_ Underline]` | `<u>Underline</u>` |
-| `` `Code` `` | `` `Code` `` |
-| `[! Red background]` | `<span style="background-color: #ffebee">Red background</span>` |
-| `[# Green background]` | `<span style="background-color: #e8f5e9">Green background</span>` |
-| `[% Blue background]` | `<span style="background-color: #e3f2fd">Blue background</span>` |
-| `[Image URL]` | `![image](assets/xxx.png)` |
-| `[Link text URL]` | `[Link text](URL)` |
-| `[/project/page]` | `[https://scrapbox.io/project/page](https://scrapbox.io/project/page)` |
-| List item | `- List item` |
-| `> Quote` | `> Quote` |
-| `code:python` | ` ```python ` |
-
-### Important Notes
-
-1. **Image Download**: All images from Scrapbox (including external URLs) are downloaded and saved to the `assets/` directory
-2. **Filename**: Page titles become filenames. Special characters are replaced with `_`
-3. **Relative Links**: Image references in Markdown use relative paths (`assets/xxx.png`)
-4. **No Notion Required**: This command only uses the Scrapbox API and does not require Notion configuration
 
 ## Development
 
