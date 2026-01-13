@@ -146,6 +146,42 @@ sb2n<span class="w"> </span>-v<span class="w"> </span>restore-link
 </code></pre>
 </div>
 
+<h3 id="appendix-1-export-as-markdown-with-images">Appendix 1. Export as Markdown with images</h3>
+
+<p>Export Scrapbox pages to Markdown format with downloaded images. Images are saved in an <code>assets/</code> directory and referenced with relative paths in the Markdown files.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="c1"># Export to default directory (./out)</span>
+sb2n<span class="w"> </span><span class="nb">export</span>
+
+<span class="c1"># Specify output directory</span>
+sb2n<span class="w"> </span><span class="nb">export</span><span class="w"> </span>-d<span class="w"> </span>/path/to/output
+
+<span class="c1"># Limit number of pages to export</span>
+sb2n<span class="w"> </span><span class="nb">export</span><span class="w"> </span>--limit<span class="w"> </span><span class="m">10</span>
+
+<span class="c1"># Combine options</span>
+sb2n<span class="w"> </span><span class="nb">export</span><span class="w"> </span>-d<span class="w"> </span>./my-export<span class="w"> </span>--limit<span class="w"> </span><span class="m">5</span>
+
+<span class="c1"># Enable verbose logging</span>
+sb2n<span class="w"> </span>-v<span class="w"> </span><span class="nb">export</span>
+</code></pre>
+</div>
+
+<h4 id="structure-of-extracted-data">Structure of extracted data</h4>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code>output-dir/
+├── assets/              # Downloaded images
+│   ├── abc123def456.png
+│   ├── 789ghijk012.jpg
+│   └── ...
+├── page1.md            # Markdown files
+├── page2.md
+└── ...
+</code></pre>
+</div>
+
 <h2 id="development">Development</h2>
 
 <p>See <a href="docs/specification.md">docs/specification.md</a> for detailed specifications.</p>
