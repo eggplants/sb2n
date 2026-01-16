@@ -3,8 +3,10 @@
 import argparse
 import logging
 import sys
+from datetime import datetime
 from enum import Enum
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 from sb2n.config import Config
 from sb2n.exporter import MarkdownExporter
@@ -36,20 +38,44 @@ class Args(argparse.Namespace):
     pages: str | None
     enable_icon: bool
     output_dir: str
+    log: bool
 
 
-def setup_logging(*, verbose: bool = False) -> None:
+def setup_logging(*, verbose: bool = False, log_file: str | None = None) -> None:
     """Set up logging configuration.
 
     Args:
         verbose: If True, set log level to DEBUG
+        log_file: If specified, write logs to this file in addition to console.
+                  If set to True (boolean), automatically generates filename.
     """
     level = logging.DEBUG if verbose else logging.INFO
+
+    # Set up handlers
+    handlers: list[logging.Handler] = [logging.StreamHandler()]
+
+    if log_file:
+        # Create log file handler
+        file_handler = logging.FileHandler(log_file, mode="a", encoding="utf-8")
+        handlers.append(file_handler)
+        logger.info("Logging to file: %(log_file)s", {"log_file": log_file})
+
     logging.basicConfig(
         level=level,
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
+        handlers=handlers,
     )
+
+
+def generate_log_filename() -> str:
+    """Generate a log filename with current timestamp.
+
+    Returns:
+        Log filename in the format: sb2n.YYYYmmDD_HHMMSS.log
+    """
+    timestamp = datetime.now(tz=ZoneInfo("Asia/Tokyo")).strftime("%Y%m%d_%H%M%S")
+    return f"sb2n.{timestamp}.log"
 
 
 def migrate_command(args: Args) -> int:
@@ -279,6 +305,13 @@ def main() -> None:
         help="Enable icon notation migration (fetch icons from Scrapbox pages)",
     )
 
+    migrate_parser.add_argument(
+        "-l",
+        "--log",
+        action="store_true",
+        help="Enable logging to file with auto-generated filename (sb2n.YYYYmmDD_HHMMSS.log)",
+    )
+
     # restore-link command
     restore_link_parser = subparsers.add_parser(
         "restore-link",
@@ -301,6 +334,13 @@ def main() -> None:
         "--pages",
         type=str,
         help="Comma-separated list of specific page titles to process",
+    )
+
+    restore_link_parser.add_argument(
+        "-l",
+        "--log",
+        action="store_true",
+        help="Enable logging to file with auto-generated filename (sb2n.YYYYmmDD_HHMMSS.log)",
     )
 
     # export command
@@ -329,10 +369,23 @@ def main() -> None:
         help="Limit the number of pages to export",
     )
 
+    export_parser.add_argument(
+        "-l",
+        "--log",
+        action="store_true",
+        help="Enable logging to file with auto-generated filename (sb2n.YYYYmmDD_HHMMSS.log)",
+    )
+
     args = parser.parse_args(namespace=Args())
 
+    # Determine log file path
+    log_file_path = None
+    if hasattr(args, "log") and args.log:
+        # Auto-generate log filename
+        log_file_path = generate_log_filename()
+
     # Set up logging
-    setup_logging(verbose=args.verbose)
+    setup_logging(verbose=args.verbose, log_file=log_file_path)
 
     # Handle commands
     if args.command == Command.MIGRATE.value:
