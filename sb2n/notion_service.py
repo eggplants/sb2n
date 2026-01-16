@@ -197,6 +197,22 @@ class NotionService:
         else:
             return response_dict
 
+    def delete_page(self, page_id: UUID | str) -> None:
+        """Delete (archive) a Notion page.
+
+        Args:
+            page_id: Notion page ID to delete
+
+        Raises:
+            Exception: If page deletion fails
+        """
+        try:
+            self.client.pages.update(page_id=str(page_id), archived=True)
+            logger.info("Deleted page: %(page_id)s", {"page_id": page_id})
+        except Exception:
+            logger.exception("Failed to delete page: %(page_id)s", {"page_id": page_id})
+            raise
+
     def append_blocks(self, page_id: UUID, blocks: list[BlockObject]) -> None:
         """Append blocks to a Notion page.
 

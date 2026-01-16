@@ -240,7 +240,24 @@ class Migrator:
 
             # Convert and append blocks
             if self.converter:
-                self.notion_service.append_blocks(notion_page_id, self.converter.convert_to_blocks(page_text))
+                try:
+                    self.notion_service.append_blocks(notion_page_id, self.converter.convert_to_blocks(page_text))
+                except Exception:
+                    # If block append fails, delete the created page
+                    logger.exception(
+                        "Failed to append blocks to page '%(title)s'. Deleting the page...",
+                        {"title": page_title},
+                    )
+                    try:
+                        self.notion_service.delete_page(notion_page_id)
+                        logger.info("Successfully deleted incomplete page: %(title)s", {"title": page_title})
+                    except Exception:
+                        logger.exception(
+                            "Failed to delete incomplete page '%(title)s'",
+                            {"title": page_title},
+                        )
+                    # Re-raise the original error
+                    raise
 
             return MigrationResult(
                 page_title=page_title,
