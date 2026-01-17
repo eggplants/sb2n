@@ -164,7 +164,7 @@ class ScrapboxParser:
     def extract_tags(text: str) -> list[str]:
         """Extract hashtags from text.
 
-        Excludes hashtags inside inline code (backticks).
+        Excludes hashtags inside inline code (backticks) and code blocks.
 
         Args:
             text: Text to parse
@@ -172,9 +172,44 @@ class ScrapboxParser:
         Returns:
             List of tag names (without # prefix)
         """
+        lines = text.split("\n")
+        filtered_lines = []
+        in_code_block = False
+        code_indent_level = 0
+
+        for line in lines:
+            stripped = line.strip()
+
+            # Check if this is a code block start
+            code_match = ScrapboxParser.CODE_BLOCK_PATTERN.match(stripped)
+            if code_match:
+                in_code_block = True
+                code_indent_level = len(line) - len(line.lstrip())
+                continue
+
+            # Check if we're exiting a code block
+            if in_code_block:
+                current_indent = len(line) - len(line.lstrip())
+                # Exit code block if empty line or indent level decreased
+                if not line.strip() or current_indent <= code_indent_level:
+                    in_code_block = False
+                    code_indent_level = 0
+                    # Process this line normally if it's not empty
+                    if line.strip():
+                        filtered_lines.append(line)
+                # Skip lines inside code blocks
+                continue
+
+            # Add non-code lines
+            filtered_lines.append(line)
+
+        # Rejoin filtered lines
+        text_without_code_blocks = "\n".join(filtered_lines)
+
         # Remove inline code (backticks) to avoid extracting tags from code
         # Match both single backticks and triple backticks
-        text_without_code = re.sub(r"`[^`]*`", "", text)
+        text_without_code = re.sub(r"`[^`]*`", "", text_without_code_blocks)
+
         return ScrapboxParser.TAG_PATTERN.findall(text_without_code)
 
     @staticmethod
@@ -211,7 +246,7 @@ class ScrapboxParser:
         return ScrapboxParser.URL_PATTERN.findall(text)
 
     @staticmethod
-    def parse_line(line: str, project_name: str | None = None) -> ParsedLine:  # noqa: PLR0915
+    def parse_line(line: str, project_name: str | None = None) -> ParsedLine:  # noqa: PLR0912, PLR0915
         """Parse a single line of Scrapbox text.
 
         Args:

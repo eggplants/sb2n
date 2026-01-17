@@ -23,6 +23,51 @@ def test_extract_tags_ignores_inline_code() -> None:
     assert tags == ["tag"]
 
 
+def test_extract_tags_ignores_code_blocks() -> None:
+    """Test that tags inside code blocks are ignored."""
+    # Simple code block with hashtags
+    text = """Page Title
+Some text #realtag
+code:example.py
+ def function():
+     #comment
+     value = "#notag"
+After code block #anothertag"""
+    tags = ScrapboxParser.extract_tags(text)
+    assert tags == ["realtag", "anothertag"]
+    assert "comment" not in tags
+    assert "notag" not in tags
+
+    # Code block with commas (like the error case)
+    text = """Test page
+code:config.txt
+ EXTINF:3.00000,
+ EXT-X-STREAM-INF:BANDWIDTH=6899200,AVERAGE-BANDWIDTH=4611200
+ selector(Self.viewWillEnterForeground(_:)),
+ vis_check_object=True,
+End of code #validtag"""
+    tags = ScrapboxParser.extract_tags(text)
+    assert tags == ["validtag"]
+    # Make sure no code content is extracted as tag
+    assert not any("," in tag for tag in tags)
+
+    # Multiple code blocks
+    text = """Title
+#tag1
+code:first.py
+ #notatag1
+End
+#tag2
+code:second.js
+ #notatag2
+End
+#tag3"""
+    tags = ScrapboxParser.extract_tags(text)
+    assert tags == ["tag1", "tag2", "tag3"]
+    assert "notatag1" not in tags
+    assert "notatag2" not in tags
+
+
 def test_extract_tags_ignores_url_fragments() -> None:
     """Test that URL fragments are not detected as tags."""
     # URL fragment should not be detected as tag
