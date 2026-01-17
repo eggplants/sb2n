@@ -69,7 +69,7 @@ class Migrator:
     including progress tracking, error handling, and summary reporting.
     """
 
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
         config: Config,
         *,
@@ -77,6 +77,7 @@ class Migrator:
         limit: int | None = None,
         skip_existing: bool = False,
         enable_icon: bool = False,
+        page_titles: list[str] | None = None,
     ) -> None:
         """Initialize the migrator.
 
@@ -86,12 +87,14 @@ class Migrator:
             limit: Maximum number of pages to migrate (None for all pages)
             skip_existing: If True, skip pages that already exist in Notion
             enable_icon: If True, fetch and migrate Scrapbox icon notation
+            page_titles: List of specific page titles to migrate (None for all pages)
         """
         self.config = config
         self.dry_run = dry_run
         self.limit = limit
         self.skip_existing = skip_existing
         self.enable_icon = enable_icon
+        self.page_titles = page_titles
         self.notion_service = NotionService(config.notion_api_key, config.notion_database_id)
         # Converter will be initialized with scrapbox_service in migrate_all
         self.converter: NotionBlockConverter | None = None
@@ -121,35 +124,52 @@ class Migrator:
             # Initialize converter with scrapbox service for image downloads
             self.converter = NotionBlockConverter(self.notion_service, scrapbox, enable_icon=self.enable_icon)
 
-            # Get all pages
-            all_pages = scrapbox.get_all_pages()
-
-            # Apply limit if specified
-            if self.limit is not None:
-                pages = all_pages[: self.limit]
+            # If specific pages are requested, process them directly
+            if self.page_titles:
                 logger.info(
-                    "Found %(total)d pages, migrating %(migrating)d pages (limited by -n option)",
-                    {"total": len(all_pages), "migrating": len(pages)},
+                    "Processing %(count)d specific pages by --pages option",
+                    {"count": len(self.page_titles)},
                 )
+                pages_to_process = self.page_titles
+                # Apply limit if specified
+                if self.limit is not None:
+                    pages_to_process = pages_to_process[: self.limit]
+                    logger.info(
+                        "Limiting to %(migrating)d pages by -n option",
+                        {"migrating": len(pages_to_process)},
+                    )
             else:
-                pages = all_pages
-                logger.info("Found %(count)d pages to migrate", {"count": len(pages)})
+                # Get all pages
+                all_pages = scrapbox.get_all_pages()
 
-            total = len(pages)
+                # Apply limit if specified
+                if self.limit is not None:
+                    pages_list = all_pages[: self.limit]
+                    logger.info(
+                        "Found %(total)d pages, migrating %(migrating)d pages (limited by -n option)",
+                        {"total": len(all_pages), "migrating": len(pages_list)},
+                    )
+                else:
+                    pages_list = all_pages
+                    logger.info("Found %(count)d pages to migrate", {"count": len(pages_list)})
+
+                pages_to_process = [p.title for p in pages_list]
+
+            total = len(pages_to_process)
 
             # Migrate each page
-            for i, page in enumerate(pages, 1):
+            for i, page_title in enumerate(pages_to_process, 1):
                 logger.info(
                     "Processing page %(current)d/%(total)d: %(title)s",
-                    {"current": i, "total": total, "title": page.title},
+                    {"current": i, "total": total, "title": page_title},
                 )
 
                 # Check if page already exists and should be skipped
-                if self.skip_existing and page.title in existing_titles:
-                    logger.info("⊘ Skipping existing page: %(title)s", {"title": page.title})
+                if self.skip_existing and page_title in existing_titles:
+                    logger.info("⊘ Skipping existing page: %(title)s", {"title": page_title})
                     results.append(
                         MigrationResult(
-                            page_title=page.title,
+                            page_title=page_title,
                             success=True,
                             notion_page_id=SpecialPageId.SKIPPED_ID,
                         )
@@ -157,21 +177,21 @@ class Migrator:
                     continue
 
                 try:
-                    result = self._migrate_page(scrapbox, page.title)
+                    result = self._migrate_page(scrapbox, page_title)
                     results.append(result)
 
                     if result.success:
-                        logger.info("✓ Successfully migrated: %(title)s", {"title": page.title})
+                        logger.info("✓ Successfully migrated: %(title)s", {"title": page_title})
                     else:
                         logger.error(
-                            "✗ Failed to migrate: %(title)s - %(error)s", {"title": page.title, "error": result.error}
+                            "✗ Failed to migrate: %(title)s - %(error)s", {"title": page_title, "error": result.error}
                         )
 
                 except Exception as e:
-                    logger.exception("Unexpected error migrating %(title)s", {"title": page.title})
+                    logger.exception("Unexpected error migrating %(title)s", {"title": page_title})
                     results.append(
                         MigrationResult(
-                            page_title=page.title,
+                            page_title=page_title,
                             success=False,
                             error=str(e),
                         )

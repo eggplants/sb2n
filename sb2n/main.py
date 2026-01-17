@@ -93,6 +93,11 @@ def migrate_command(args: Args) -> int:
         config = Config.from_env(env_file)
         config.validate()
 
+        # Parse page filter
+        page_titles = None
+        if args.pages:
+            page_titles = [title.strip() for title in args.pages.split(",")]
+
         # Create and run migrator
         migrator = Migrator(
             config,
@@ -100,6 +105,7 @@ def migrate_command(args: Args) -> int:
             limit=args.limit,
             skip_existing=args.skip_existing,
             enable_icon=args.enable_icon,
+            page_titles=page_titles,
         )
         summary = migrator.migrate_all()
 
@@ -194,7 +200,19 @@ def export_command(args: Args) -> int:
 
             # Get pages
             logger.info("Fetching pages from Scrapbox project: %s", config.scrapbox_project)
-            pages = scrapbox_service.get_all_pages(limit=args.limit or 1000)
+            all_pages = scrapbox_service.get_all_pages(limit=args.limit or 1000)
+
+            # Apply page title filter if specified
+            if args.pages:
+                page_titles_filter = [title.strip() for title in args.pages.split(",")]
+                pages = [p for p in all_pages if p.title in page_titles_filter]
+                logger.info(
+                    "Found %(total)d pages, filtering to %(filtered)d pages by --pages option",
+                    {"total": len(all_pages), "filtered": len(pages)},
+                )
+            else:
+                pages = all_pages
+
             logger.info("Found %d pages to export", len(pages))
 
             # Export each page
@@ -312,6 +330,12 @@ def main() -> None:
         help="Enable logging to file with auto-generated filename (sb2n.YYYYmmDD_HHMMSS.log)",
     )
 
+    migrate_parser.add_argument(
+        "--pages",
+        type=str,
+        help="Comma-separated list of specific page titles to migrate",
+    )
+
     # restore-link command
     restore_link_parser = subparsers.add_parser(
         "restore-link",
@@ -374,6 +398,12 @@ def main() -> None:
         "--log",
         action="store_true",
         help="Enable logging to file with auto-generated filename (sb2n.YYYYmmDD_HHMMSS.log)",
+    )
+
+    export_parser.add_argument(
+        "--pages",
+        type=str,
+        help="Comma-separated list of specific page titles to export",
     )
 
     args = parser.parse_args(namespace=Args())

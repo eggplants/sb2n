@@ -536,15 +536,17 @@ class NotionService:
 
             # Check if scheme is present and valid
             if not parsed.scheme or parsed.scheme not in ("http", "https"):
+                logger.debug("Invalid URL scheme: %(url)s (scheme: %(scheme)s)", {"url": url, "scheme": parsed.scheme})
                 return None
 
             # Check if netloc (domain) is present
             if not parsed.netloc:
+                logger.debug("Invalid URL, missing netloc: %(url)s", {"url": url})
                 return None
 
             # Reconstruct URL with proper encoding
             # This ensures that fragments and query parameters are properly encoded
-            return urllib.parse.urlunparse(
+            sanitized = urllib.parse.urlunparse(
                 (
                     parsed.scheme,
                     parsed.netloc,
@@ -554,9 +556,12 @@ class NotionService:
                     urllib.parse.quote(parsed.fragment, safe=""),
                 )
             )
+
+            logger.debug("Sanitized URL: %(original)s -> %(sanitized)s", {"original": url, "sanitized": sanitized})
         except Exception:
             logger.exception("Failed to sanitize URL: %(url)s", {"url": url})
             return None
+        return sanitized
 
     def get_page_title_to_id_map(self) -> dict[str, str]:
         """Get mapping of page titles to page IDs from the database.
