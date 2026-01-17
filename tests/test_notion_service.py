@@ -77,7 +77,43 @@ class TestNotionService:
         assert result == "https://example.com:8080/path"
 
     def test_sanitize_url_localhost(self) -> None:
-        """Test sanitizing localhost URL."""
+        """Test sanitizing localhost URL (should return None to treat as plain text)."""
         url = "http://localhost:3000/path"
         result = NotionService._sanitize_url(url)  # noqa: SLF001
-        assert result == "http://localhost:3000/path"
+        assert result is None
+
+    def test_sanitize_url_0_0_0_0(self) -> None:
+        """Test sanitizing 0.0.0.0 URL (should return None to treat as plain text)."""
+        url = "http://0.0.0.0:8000"
+        result = NotionService._sanitize_url(url)  # noqa: SLF001
+        assert result is None
+
+    def test_sanitize_url_127_0_0_1(self) -> None:
+        """Test sanitizing 127.0.0.1 URL (should return None to treat as plain text)."""
+        url = "http://127.0.0.1:8000"
+        result = NotionService._sanitize_url(url)  # noqa: SLF001
+        assert result is None
+
+    def test_sanitize_url_with_trailing_quote(self) -> None:
+        """Test sanitizing URL with trailing single quote."""
+        url = "https://github.com/example/repo.git'"
+        result = NotionService._sanitize_url(url)  # noqa: SLF001
+        assert result == "https://github.com/example/repo.git"
+
+    def test_sanitize_url_with_trailing_html(self) -> None:
+        """Test sanitizing URL with trailing HTML characters (localhost should be treated as plain text)."""
+        url = 'http://localhost:3000/addText">'
+        result = NotionService._sanitize_url(url)  # noqa: SLF001
+        assert result is None
+
+    def test_sanitize_url_with_trailing_parenthesis(self) -> None:
+        """Test sanitizing URL with trailing parenthesis."""
+        url = "https://example.com/path)"
+        result = NotionService._sanitize_url(url)  # noqa: SLF001
+        assert result == "https://example.com/path"
+
+    def test_sanitize_url_with_multiple_trailing_chars(self) -> None:
+        """Test sanitizing URL with multiple trailing characters."""
+        url = "https://example.com/path'\">"
+        result = NotionService._sanitize_url(url)  # noqa: SLF001
+        assert result == "https://example.com/path"

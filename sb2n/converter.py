@@ -165,7 +165,8 @@ class NotionBlockConverter:
 
         # Image blocks
         if parsed_line.line_type == LineType.IMAGE:
-            return self._create_image_block(parsed_line.content)
+            block = self._create_image_block(parsed_line.content)
+            return block if block else None
 
         # Icon blocks - fetch icon URL from Scrapbox and create image block
         if parsed_line.line_type == LineType.ICON:
@@ -173,7 +174,9 @@ class NotionBlockConverter:
             if self.enable_icon and self.scrapbox_service and parsed_line.icon_page_name:
                 icon_url = self.scrapbox_service.get_page_icon_url(parsed_line.icon_page_name, parsed_line.icon_project)
                 if icon_url:
-                    return self._create_image_block(icon_url)
+                    block = self._create_image_block(icon_url)
+                    if block:
+                        return block
                 # If no icon found, create a paragraph with the original text
                 logger.warning(
                     "Icon not found for page: %(page_name)s, creating paragraph instead",
@@ -193,7 +196,8 @@ class NotionBlockConverter:
                 )
                 return self.notion_service.create_paragraph_block([link_element])
             # Fallback to bookmark
-            return self.notion_service.create_bookmark_block(parsed_line.content)
+            block = self.notion_service.create_bookmark_block(parsed_line.content)
+            return block if block else None
 
         # URL/Bookmark blocks - convert to paragraph with link
         if parsed_line.line_type == LineType.URL:
@@ -226,7 +230,7 @@ class NotionBlockConverter:
 
         return None
 
-    def _create_image_block(self, image_url: str) -> BlockObject:
+    def _create_image_block(self, image_url: str) -> BlockObject | None:
         """Create an image block, downloading from Scrapbox if necessary.
 
         Args:

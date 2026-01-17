@@ -343,7 +343,7 @@ class NotionService:
         """
         return CodeBlock.new(code=code, language=language)
 
-    def create_image_block(self, url: str, file_upload_id: str | None = None) -> ImageBlock:
+    def create_image_block(self, url: str, file_upload_id: str | None = None) -> ImageBlock | None:
         """Create an image block.
 
         Args:
@@ -359,8 +359,8 @@ class NotionService:
         # Use external URL - sanitize it first
         sanitized_url = self._sanitize_url(url)
         if not sanitized_url:
-            logger.warning("Invalid image URL: %(url)s", {"url": url})
-            sanitized_url = url  # Use original if sanitization fails
+            logger.warning("Invalid image URL, skipping: %(url)s", {"url": url})
+            return None  # Skip invalid image URLs
         return ImageBlock.new(url=sanitized_url)
 
     def upload_image(self, image_data: bytes, filename: str = "image.png") -> str:
@@ -397,19 +397,19 @@ class NotionService:
         else:
             return file_upload.id
 
-    def create_bookmark_block(self, url: str) -> BookmarkBlock:
+    def create_bookmark_block(self, url: str) -> BookmarkBlock | None:
         """Create a bookmark block.
 
         Args:
             url: URL to bookmark
 
         Returns:
-            Bookmark block object
+            Bookmark block object or None if URL is invalid
         """
         sanitized_url = self._sanitize_url(url)
         if not sanitized_url:
-            logger.warning("Invalid bookmark URL: %(url)s", {"url": url})
-            sanitized_url = url  # Use original if sanitization fails
+            logger.warning("Invalid bookmark URL, skipping: %(url)s", {"url": url})
+            return None  # Skip invalid bookmark URLs
         return BookmarkBlock.new(url=sanitized_url)
 
     def create_quote_block(self, text: str | list[RichTextElement]) -> QuoteBlock:
@@ -531,33 +531,62 @@ class NotionService:
             return None
 
         try:
+            # Remove trailing characters that are likely from text extraction errors
+            # These patterns often appear when URLs are extracted from code or markdown
+            original_url = url
+            url = url.rstrip("'\">`)")
+
             # Parse the URL
             parsed = urllib.parse.urlparse(url)
 
             # Check if scheme is present and valid
             if not parsed.scheme or parsed.scheme not in ("http", "https"):
-                logger.debug("Invalid URL scheme: %(url)s (scheme: %(scheme)s)", {"url": url, "scheme": parsed.scheme})
+                logger.debug(
+                    "Invalid URL scheme: %(url)s (scheme: %(scheme)s)", {"url": original_url, "scheme": parsed.scheme}
+                )
                 return None
 
             # Check if netloc (domain) is present
             if not parsed.netloc:
-                logger.debug("Invalid URL, missing netloc: %(url)s", {"url": url})
+                logger.debug("Invalid URL, missing netloc: %(url)s", {"url": original_url})
                 return None
+
+            # Skip localhost URLs - treat them as plain text
+            if parsed.netloc in ("localhost", "127.0.0.1", "0.0.0.0") or parsed.netloc.startswith(  # noqa: S104
+                ("localhost:", "127.0.0.1:", "0.0.0.0:")
+            ):
+                logger.debug("Skipping localhost URL (treating as plain text): %(url)s", {"url": url})
+                return None
+
+            # Decode then re-encode to avoid double-encoding
+            # unquote handles %XX encoded characters
+            decoded_path = urllib.parse.unquote(parsed.path)
+            decoded_query = urllib.parse.unquote(parsed.query)
+            decoded_fragment = urllib.parse.unquote(parsed.fragment)
+
+            # Remove trailing slash from .git/ paths (common in git URLs)
+            if decoded_path.endswith(".git/"):
+                decoded_path = decoded_path[:-1]
 
             # Reconstruct URL with proper encoding
             # This ensures that fragments and query parameters are properly encoded
+            # For fragments, preserve common characters used in URL fragments:
+            # : (colon), ~ (tilde), = (equals), ; (semicolon), - (hyphen)
             sanitized = urllib.parse.urlunparse(
                 (
                     parsed.scheme,
                     parsed.netloc,
-                    urllib.parse.quote(parsed.path, safe="/"),
+                    urllib.parse.quote(decoded_path, safe="/"),
                     parsed.params,
-                    urllib.parse.quote(parsed.query, safe="=&"),
-                    urllib.parse.quote(parsed.fragment, safe=""),
+                    urllib.parse.quote(decoded_query, safe="=&:"),
+                    urllib.parse.quote(decoded_fragment, safe=":~=;-"),
                 )
             )
 
-            logger.debug("Sanitized URL: %(original)s -> %(sanitized)s", {"original": url, "sanitized": sanitized})
+            if sanitized != original_url:
+                logger.debug(
+                    "Sanitized URL: %(original)s -> %(sanitized)s", {"original": original_url, "sanitized": sanitized}
+                )
         except Exception:
             logger.exception("Failed to sanitize URL: %(url)s", {"url": url})
             return None
