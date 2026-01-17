@@ -1,6 +1,7 @@
 """Notion API client wrapper."""
 
 import logging
+import urllib.parse
 from io import BytesIO
 from typing import TYPE_CHECKING, Any, Literal
 
@@ -355,8 +356,12 @@ class NotionService:
         if file_upload_id:
             # Use uploaded file from Notion - return ImageBlock instance
             return ImageBlock.new_file_upload(file_upload_id=file_upload_id)
-        # Use external URL
-        return ImageBlock.new(url=url)
+        # Use external URL - sanitize it first
+        sanitized_url = self._sanitize_url(url)
+        if not sanitized_url:
+            logger.warning("Invalid image URL: %(url)s", {"url": url})
+            sanitized_url = url  # Use original if sanitization fails
+        return ImageBlock.new(url=sanitized_url)
 
     def upload_image(self, image_data: bytes, filename: str = "image.png") -> str:
         """Upload an image to Notion using file_uploads API.
@@ -401,7 +406,11 @@ class NotionService:
         Returns:
             Bookmark block object
         """
-        return BookmarkBlock.new(url=url)
+        sanitized_url = self._sanitize_url(url)
+        if not sanitized_url:
+            logger.warning("Invalid bookmark URL: %(url)s", {"url": url})
+            sanitized_url = url  # Use original if sanitization fails
+        return BookmarkBlock.new(url=sanitized_url)
 
     def create_quote_block(self, text: str | list[RichTextElement]) -> QuoteBlock:
         """Create a quote block.
@@ -475,14 +484,27 @@ class NotionService:
             }
 
             if elem.link_url:
-                # Link with annotations
-                result.append(
-                    {
-                        "type": "text",
-                        "text": {"content": elem.text, "link": {"url": elem.link_url}},
-                        "annotations": annotations,
-                    }
-                )
+                # Sanitize and validate URL
+                sanitized_url = self._sanitize_url(elem.link_url)
+                if sanitized_url:
+                    # Link with annotations
+                    result.append(
+                        {
+                            "type": "text",
+                            "text": {"content": elem.text, "link": {"url": sanitized_url}},
+                            "annotations": annotations,
+                        }
+                    )
+                else:
+                    # If URL is invalid, treat as plain text
+                    logger.warning("Invalid URL, treating as plain text: %(url)s", {"url": elem.link_url})
+                    result.append(
+                        {
+                            "type": "text",
+                            "text": {"content": elem.text},
+                            "annotations": annotations,
+                        }
+                    )
             else:
                 # Plain text with annotations
                 result.append(
@@ -494,6 +516,47 @@ class NotionService:
                 )
 
         return result
+
+    @staticmethod
+    def _sanitize_url(url: str) -> str | None:
+        """Sanitize and validate URL for Notion API.
+
+        Args:
+            url: URL to sanitize
+
+        Returns:
+            Sanitized URL or None if invalid
+        """
+        if not url:
+            return None
+
+        try:
+            # Parse the URL
+            parsed = urllib.parse.urlparse(url)
+
+            # Check if scheme is present and valid
+            if not parsed.scheme or parsed.scheme not in ("http", "https"):
+                return None
+
+            # Check if netloc (domain) is present
+            if not parsed.netloc:
+                return None
+
+            # Reconstruct URL with proper encoding
+            # This ensures that fragments and query parameters are properly encoded
+            return urllib.parse.urlunparse(
+                (
+                    parsed.scheme,
+                    parsed.netloc,
+                    urllib.parse.quote(parsed.path, safe="/"),
+                    parsed.params,
+                    urllib.parse.quote(parsed.query, safe="=&"),
+                    urllib.parse.quote(parsed.fragment, safe=""),
+                )
+            )
+        except Exception:
+            logger.exception("Failed to sanitize URL: %(url)s", {"url": url})
+            return None
 
     def get_page_title_to_id_map(self) -> dict[str, str]:
         """Get mapping of page titles to page IDs from the database.
