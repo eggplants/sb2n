@@ -37,6 +37,7 @@ class LineType(Enum):
     TABLE_START = "table_start"
     CODE_START = "code_start"
     EXTERNAL_LINK = "external_link"
+    IMAGE_LINK = "image_link"
 
 
 class Decoration(NamedTuple):
@@ -109,6 +110,7 @@ class ParsedLine:
     table_rows: list[list[str]] | None = None
     icon_page_name: str | None = None
     icon_project: str | None = None
+    image_url: str | None = None
 
 
 class ScrapboxParser:
@@ -130,6 +132,13 @@ class ScrapboxParser:
     TABLE_PATTERN = re.compile(r"^table:(.+)$")
     QUOTE_PATTERN = re.compile(r"^>\s*(.+)$")
     LINK_PATTERN = re.compile(r"\[([^\]]+)\]")
+    # Image link patterns: [url image_url] or [image_url url]
+    # Matches image URLs (ending in common image extensions)
+    IMAGE_URL_PATTERN = r"https?://[^\s\]]+\.(?:png|jpg|jpeg|gif|webp|svg)(?:\?[^\s\]]*)?"
+    # [url image_url] format
+    IMAGE_LINK_URL_FIRST_PATTERN = re.compile(rf"\[(https?://[^\s\]]+)\s+({IMAGE_URL_PATTERN})\]")
+    # [image_url url] format
+    IMAGE_LINK_IMAGE_FIRST_PATTERN = re.compile(rf"\[({IMAGE_URL_PATTERN})\s+(https?://[^\s\]]+)\]")
     # External link with display text: [text url] or [url text]
     # Matches: [text with spaces https://url] or [https://url text with spaces]
     # Negative lookahead to exclude decoration patterns: [* ], [- ], [/ ], [_ ], [[ ]]
@@ -246,7 +255,7 @@ class ScrapboxParser:
         return ScrapboxParser.URL_PATTERN.findall(text)
 
     @staticmethod
-    def parse_line(line: str, project_name: str | None = None) -> ParsedLine:  # noqa: PLR0912
+    def parse_line(line: str, project_name: str | None = None) -> ParsedLine:
         """Parse a single line of Scrapbox text.
 
         Args:
@@ -335,6 +344,34 @@ class ScrapboxParser:
                 line_type=LineType.TABLE_START,
                 content=table_name,
                 table_name=table_name,
+                indent_level=indent_level,
+            )
+
+        # Image link: [url image_url] or [image_url url]
+        # Check this BEFORE regular image check to avoid false positives
+        # Check URL-first format: [url image_url]
+        image_link_url_first = ScrapboxParser.IMAGE_LINK_URL_FIRST_PATTERN.match(stripped)
+        if image_link_url_first:
+            url = image_link_url_first.group(1)
+            image_url = image_link_url_first.group(2)
+            return ParsedLine(
+                original=line,
+                line_type=LineType.IMAGE_LINK,
+                content=url,
+                image_url=image_url,
+                indent_level=indent_level,
+            )
+
+        # Check image-first format: [image_url url]
+        image_link_image_first = ScrapboxParser.IMAGE_LINK_IMAGE_FIRST_PATTERN.match(stripped)
+        if image_link_image_first:
+            image_url = image_link_image_first.group(1)
+            url = image_link_image_first.group(2)
+            return ParsedLine(
+                original=line,
+                line_type=LineType.IMAGE_LINK,
+                content=url,
+                image_url=image_url,
                 indent_level=indent_level,
             )
 

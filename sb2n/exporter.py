@@ -32,17 +32,26 @@ class MarkdownExporter:
         self.assets_dir = output_dir / "assets"
         self.assets_dir.mkdir(parents=True, exist_ok=True)
 
-    def export_page(self, page_title: str, page_text: str) -> Path:
+    def export_page(self, page_title: str, page_text: str, *, skip_existing: bool = False) -> Path | None:
         """Export a single page as Markdown.
 
         Args:
             page_title: Title of the page
             page_text: Full text content
+            skip_existing: If True, skip exporting if the file already exists
 
         Returns:
-            Path to the exported Markdown file
+            Path to the exported Markdown file, or None if skipped
         """
         logger.info("Exporting page: %s", page_title)
+
+        # Check if file already exists
+        safe_filename = self._sanitize_filename(page_title)
+        output_path = self.output_dir / f"{safe_filename}.md"
+
+        if skip_existing and output_path.exists():
+            logger.debug("Skipping existing file: %s", output_path)
+            return None
 
         # Parse the page with project name for internal fragment links
         parsed_lines = ScrapboxParser.parse_text(page_text, self.scrapbox_service.project_name)
@@ -57,8 +66,6 @@ class MarkdownExporter:
                 markdown_lines.append(md_line)
 
         # Write to file
-        safe_filename = self._sanitize_filename(page_title)
-        output_path = self.output_dir / f"{safe_filename}.md"
         output_path.write_text("\n".join(markdown_lines), encoding="utf-8")
 
         logger.info("Exported to: %s", output_path)
@@ -117,6 +124,17 @@ class MarkdownExporter:
         if parsed_line.line_type == LineType.EXTERNAL_LINK:
             link_text = parsed_line.link_text or parsed_line.content
             return f"[{link_text}]({parsed_line.content})\n"
+
+        # Image link (link with thumbnail image)
+        if parsed_line.line_type == LineType.IMAGE_LINK:
+            # Download the thumbnail image
+            image_path = self._download_image(str(parsed_line.image_url))
+            if image_path:
+                relative_path = image_path.relative_to(self.output_dir)
+                # Create a linked image in Markdown
+                return f"[![image]({relative_path})]({parsed_line.content})\n"
+            # Fallback if image download fails
+            return f"[![image]({parsed_line.image_url})]({parsed_line.content})\n"
 
         # List item
         if parsed_line.line_type == LineType.LIST:

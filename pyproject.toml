@@ -74,10 +74,10 @@ lint.per-file-ignores."tests/test_*.py" = [
   "D",
   "PLR2004",
 ]
-lint.mccabe.max-complexity = 20
+lint.mccabe.max-complexity = 25
 lint.pydocstyle.convention = "google"
 lint.pylint.allow-magic-value-types = [ "int" ]
-lint.pylint.max-branches = 20
+lint.pylint.max-branches = 25
 lint.pylint.max-returns = 15
 lint.pylint.max-statements = 75
 

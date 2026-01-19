@@ -218,6 +218,7 @@ def export_command(args: Args) -> int:
             # Export each page
             successful = 0
             failed = 0
+            skipped = 0
             failed_pages = []
 
             for i, page in enumerate(pages, 1):
@@ -231,10 +232,14 @@ def export_command(args: Args) -> int:
                         logger.warning("Empty page content for: %s", page_title)
                         continue
 
-                    # Export to Markdown
-                    exporter.export_page(page_title, page_text)
-                    successful += 1
-                    logger.info("✓ Exported: %s", page_title)
+                    # Export to Markdown (use skip_existing for export command)
+                    result = exporter.export_page(page_title, page_text, skip_existing=args.skip_existing)
+                    if result is None:
+                        skipped += 1
+                        logger.info("⊘ Skipped (already exists): %s", page_title)
+                    else:
+                        successful += 1
+                        logger.info("✓ Exported: %s", page_title)
 
                 except Exception as e:
                     logger.exception("Error exporting page: %s", page_title)
@@ -247,6 +252,7 @@ def export_command(args: Args) -> int:
         logger.info("=" * 60)
         logger.info("Total pages:      %d", len(pages))
         logger.info("Successful:       %d", successful)
+        logger.info("Skipped:          %d", skipped)
         logger.info("Failed:           %d", failed)
         logger.info("=" * 60)
 
@@ -404,6 +410,12 @@ def main() -> None:
         "--pages",
         type=str,
         help="Comma-separated list of specific page titles to export",
+    )
+
+    export_parser.add_argument(
+        "--skip-existing",
+        action="store_true",
+        help="Skip exporting pages that already exist in the output directory",
     )
 
     args = parser.parse_args(namespace=Args())

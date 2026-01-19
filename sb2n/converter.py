@@ -39,7 +39,7 @@ class NotionBlockConverter:
         self.enable_icon = enable_icon
         self.scrapbox_service = scrapbox_service
 
-    def convert_to_blocks(self, text: str) -> list[BlockObject]:  # noqa: PLR0912
+    def convert_to_blocks(self, text: str) -> list[BlockObject]:
         """Convert Scrapbox text to Notion blocks.
 
         Args:
