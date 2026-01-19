@@ -246,7 +246,7 @@ class ScrapboxParser:
         return ScrapboxParser.URL_PATTERN.findall(text)
 
     @staticmethod
-    def parse_line(line: str, project_name: str | None = None) -> ParsedLine:  # noqa: PLR0912, PLR0915
+    def parse_line(line: str, project_name: str | None = None) -> ParsedLine:  # noqa: PLR0912
         """Parse a single line of Scrapbox text.
 
         Args:
@@ -434,7 +434,7 @@ class ScrapboxParser:
         )
 
     @staticmethod
-    def parse_text(text: str, project_name: str | None = None) -> list[ParsedLine]:  # noqa: PLR0915
+    def parse_text(text: str, project_name: str | None = None) -> list[ParsedLine]:
         """Parse entire Scrapbox text into structured lines.
 
         Args:

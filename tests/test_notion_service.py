@@ -1,6 +1,7 @@
 """Tests for notion_service module."""
 
 from sb2n.notion_service import NotionService
+from sb2n.parser import RichTextElement
 
 
 class TestNotionService:
@@ -117,3 +118,69 @@ class TestNotionService:
         url = "https://example.com/path'\">"
         result = NotionService._sanitize_url(url)  # noqa: SLF001
         assert result == "https://example.com/path"
+
+    def test_create_paragraph_with_long_url(self) -> None:
+        """Test creating paragraph with URL exceeding 2000 characters."""
+        # Create a service instance (note: this won't actually connect to Notion)
+        service = NotionService(api_key="test_key", database_id="test_db")
+
+        # Create a very long URL (over 2000 characters)
+        long_url = "https://example.com/path?" + "a" * 2000
+
+        # Create rich text with long URL
+        rich_text = [RichTextElement(text="Link", link_url=long_url)]
+
+        # Create paragraph block
+        block = service.create_paragraph_block(rich_text)
+
+        # Verify the block was created
+        assert block is not None
+        assert block.type == "paragraph"
+
+        # The rich text should exist
+        rich_text_array = block.paragraph["rich_text"]
+        assert len(rich_text_array) > 0
+
+        # URL should NOT be in the link (should be treated as plain text)
+        # because it exceeds 2000 characters
+        assert "link" not in rich_text_array[0]["text"]
+
+    def test_create_table_with_many_rows(self) -> None:
+        """Test creating table with more than 100 rows (should split into multiple tables)."""
+        service = NotionService(api_key="test_key", database_id="test_db")
+
+        # Create a table with 120 rows (exceeds 100 limit)
+        table_rows = [["Header1", "Header2"]]
+        table_rows.extend([[f"Cell {i}A", f"Cell {i}B"] for i in range(120)])
+
+        # Create table block
+        result = service.create_table_block(table_rows, has_column_header=True)
+
+        # Should return a list of tables (split)
+        assert isinstance(result, list)
+        assert len(result) > 1
+
+        # First table should have 100 rows (including header)
+        first_table = result[0]
+        assert len(first_table.children) == 100
+
+        # Second table should have remaining rows plus header
+        # Total: 121 rows (1 header + 120 data)
+        # First: 100 rows, Second: 22 rows (1 header + 21 data)
+        second_table = result[1]
+        assert len(second_table.children) == 22
+
+    def test_create_table_exactly_100_rows(self) -> None:
+        """Test creating table with exactly 100 rows (should not split)."""
+        service = NotionService(api_key="test_key", database_id="test_db")
+
+        # Create a table with exactly 100 rows (including header)
+        table_rows = [["Header1", "Header2"]]
+        table_rows.extend([[f"Cell {i}A", f"Cell {i}B"] for i in range(99)])
+
+        # Create table block
+        result = service.create_table_block(table_rows, has_column_header=True)
+
+        # Should return a single table (not a list)
+        assert not isinstance(result, list)
+        assert len(result.children) == 100

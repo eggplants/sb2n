@@ -79,6 +79,7 @@ lint.pydocstyle.convention = "google"
 lint.pylint.allow-magic-value-types = [ "int" ]
 lint.pylint.max-branches = 20
 lint.pylint.max-returns = 15
+lint.pylint.max-statements = 75
 
 [tool.uv-dynamic-versioning]
 vcs = "git"

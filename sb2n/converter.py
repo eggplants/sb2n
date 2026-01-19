@@ -39,7 +39,7 @@ class NotionBlockConverter:
         self.enable_icon = enable_icon
         self.scrapbox_service = scrapbox_service
 
-    def convert_to_blocks(self, text: str) -> list[BlockObject]:
+    def convert_to_blocks(self, text: str) -> list[BlockObject]:  # noqa: PLR0912
         """Convert Scrapbox text to Notion blocks.
 
         Args:
@@ -71,59 +71,94 @@ class NotionBlockConverter:
                 # Create the list item block
                 block = self._convert_line_to_block(parsed_line)
                 if block:
-                    if list_stack:
-                        # Convert to dict immediately
-                        block_dict = block.model_dump(mode="json", exclude_none=True)
+                    # _convert_line_to_block may return a list of blocks (e.g., split code blocks)
+                    blocks_to_add = block if isinstance(block, list) else [block]
 
-                        # Add as child to the most recent parent
-                        _, _, parent_dict = list_stack[-1]
-                        # Ensure parent has children array
-                        # parent_dict might be the full block dict or just the bulleted_list_item dict
-                        item_dict = parent_dict.get("bulleted_list_item", parent_dict)
-                        if "children" not in item_dict:  # noqa: PLR2004
-                            item_dict["children"] = []
-                        # Add block dict to parent's children
-                        item_dict["children"].append(block_dict)
-                        # Add current block dict to stack so it can have children too
-                        list_stack.append((effective_indent, block, block_dict["bulleted_list_item"]))
-                    else:
-                        # Top-level list item - we need to use the pydantic object's internal dict
-                        # so that modifications to it will be reflected in the final output
-                        blocks.append(block)
-                        # Get reference to the block's internal dict for modifications
-                        block_dict = block.bulleted_list_item  # ty:ignore[possibly-missing-attribute]
-                        list_stack.append((effective_indent, block, block_dict))
+                    for single_block in blocks_to_add:
+                        if list_stack:
+                            # Convert to dict immediately
+                            block_dict = single_block.model_dump(mode="json", exclude_none=True)
+
+                            # Add as child to the most recent parent
+                            _, _, parent_dict = list_stack[-1]
+                            # Ensure parent has children array
+                            # parent_dict might be the full block dict or just the bulleted_list_item dict
+                            item_dict = parent_dict.get("bulleted_list_item", parent_dict)
+                            if "children" not in item_dict:  # noqa: PLR2004
+                                item_dict["children"] = []
+
+                            # Notion API limit: bulleted_list_item.children.length should be ≤ 100
+                            if len(item_dict["children"]) >= 100:
+                                logger.warning(
+                                    "List item has %(count)d children (max 100). Creating new top-level list item instead.",  # noqa: E501
+                                    {"count": len(item_dict["children"])},
+                                )
+                                # Add as top-level block instead
+                                blocks.append(single_block)
+                                # Clear list stack to prevent further nesting issues
+                                list_stack = []
+                            else:
+                                # Add block dict to parent's children
+                                item_dict["children"].append(block_dict)
+                                # Add current block dict to stack so it can have children too
+                                if single_block == blocks_to_add[0]:  # Only first block goes on stack
+                                    list_stack.append(
+                                        (effective_indent, single_block, block_dict["bulleted_list_item"])
+                                    )
+                        else:
+                            # Top-level list item - we need to use the pydantic object's internal dict
+                            # so that modifications to it will be reflected in the final output
+                            blocks.append(single_block)
+                            # Get reference to the block's internal dict for modifications
+                            if single_block == blocks_to_add[0]:  # Only first block goes on stack
+                                block_dict = single_block.bulleted_list_item  # ty:ignore[possibly-missing-attribute]
+                                list_stack.append((effective_indent, single_block, block_dict))
             else:
                 # For non-list items, check if they should be nested in a list item
                 block = self._convert_line_to_block(parsed_line)
                 if block:
-                    # Tables cannot be nested inside list items in Notion API
-                    # So treat them as top-level blocks and clear the list stack
-                    if parsed_line.line_type == LineType.TABLE:
-                        blocks.append(block)
-                        list_stack = []  # Clear stack as tables break nesting
-                    # If the block has an indent level and there's an active list context
-                    elif parsed_line.indent_level > 0 and list_stack:
-                        # Pop stack until we find a parent with lower indent level
-                        while list_stack and list_stack[-1][0] >= parsed_line.indent_level:
-                            list_stack.pop()
+                    # _convert_line_to_block may return a list of blocks (e.g., split code blocks)
+                    blocks_to_add = block if isinstance(block, list) else [block]
 
-                        if list_stack:
-                            # Add this block as child to the most recent list item
-                            block_dict = block.model_dump(mode="json", exclude_none=True)
-                            _, _, parent_dict = list_stack[-1]
-                            item_dict = parent_dict.get("bulleted_list_item", parent_dict)
-                            if "children" not in item_dict:  # noqa: PLR2004
-                                item_dict["children"] = []
-                            item_dict["children"].append(block_dict)
+                    for single_block in blocks_to_add:
+                        # Tables cannot be nested inside list items in Notion API
+                        # So treat them as top-level blocks and clear the list stack
+                        if parsed_line.line_type == LineType.TABLE:
+                            blocks.append(single_block)
+                            list_stack = []  # Clear stack as tables break nesting
+                        # If the block has an indent level and there's an active list context
+                        elif parsed_line.indent_level > 0 and list_stack:
+                            # Pop stack until we find a parent with lower indent level
+                            while list_stack and list_stack[-1][0] >= parsed_line.indent_level:
+                                list_stack.pop()
+
+                            if list_stack:
+                                # Add this block as child to the most recent list item
+                                block_dict = single_block.model_dump(mode="json", exclude_none=True)
+                                _, _, parent_dict = list_stack[-1]
+                                item_dict = parent_dict.get("bulleted_list_item", parent_dict)
+                                if "children" not in item_dict:  # noqa: PLR2004
+                                    item_dict["children"] = []
+
+                                # Notion API limit: bulleted_list_item.children.length should be ≤ 100
+                                if len(item_dict["children"]) >= 100:
+                                    logger.warning(
+                                        "List item has %(count)d children (max 100). Creating new top-level block instead.",  # noqa: E501
+                                        {"count": len(item_dict["children"])},
+                                    )
+                                    # Add as top-level block instead
+                                    blocks.append(single_block)
+                                    list_stack = []
+                                else:
+                                    item_dict["children"].append(block_dict)
+                            else:
+                                # No suitable parent, add to top level
+                                blocks.append(single_block)
+                                list_stack = []  # Clear stack
                         else:
-                            # No suitable parent, add to top level
-                            blocks.append(block)
-                            list_stack = []  # Clear stack
-                    else:
-                        # Top-level block (no indent or no list context)
-                        blocks.append(block)
-                        list_stack = []  # Clear stack for top-level non-list items
+                            # Top-level block (no indent or no list context)
+                            blocks.append(single_block)
+                            list_stack = []  # Clear stack for top-level non-list items
 
         logger.debug(
             "Converted %(parsed_lines)d lines to %(blocks)d blocks",
@@ -131,14 +166,14 @@ class NotionBlockConverter:
         )
         return blocks
 
-    def _convert_line_to_block(self, parsed_line: ParsedLine) -> BlockObject | None:  # noqa: PLR0911
+    def _convert_line_to_block(self, parsed_line: ParsedLine) -> BlockObject | list[BlockObject] | None:  # noqa: PLR0911
         """Convert a single parsed line to a Notion block.
 
         Args:
             parsed_line: Parsed line from Scrapbox
 
         Returns:
-            Notion block object or None if line should be skipped
+            Notion block object, list of block objects (for split blocks), or None if line should be skipped
         """
         # Skip empty lines
         if not parsed_line.content and parsed_line.line_type == LineType.PARAGRAPH:
@@ -158,10 +193,10 @@ class NotionBlockConverter:
 
         # Code blocks
         if parsed_line.line_type == LineType.CODE_START:
-            return self.notion_service.create_code_block(parsed_line.content, parsed_line.language)
+            return self.notion_service.create_code_block(parsed_line.content, parsed_line.language)  # ty:ignore[invalid-return-type]
 
         if parsed_line.line_type == LineType.CODE:
-            return self.notion_service.create_code_block(parsed_line.content, parsed_line.language)
+            return self.notion_service.create_code_block(parsed_line.content, parsed_line.language)  # ty:ignore[invalid-return-type]
 
         # Image blocks
         if parsed_line.line_type == LineType.IMAGE:
@@ -208,7 +243,8 @@ class NotionBlockConverter:
         # Table blocks
         if parsed_line.line_type == LineType.TABLE:
             if parsed_line.table_rows:
-                return self.notion_service.create_table_block(parsed_line.table_rows)
+                # create_table_block may return a single table or a list of tables (if split)
+                return self.notion_service.create_table_block(parsed_line.table_rows)  # type: ignore[return-value]
             # Fallback if no rows
             return self.notion_service.create_heading_block(f"Table: {parsed_line.table_name}", 3)
 

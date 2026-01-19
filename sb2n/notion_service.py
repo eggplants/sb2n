@@ -331,7 +331,7 @@ class NotionService:
             bulleted_list_item={"rich_text": rich_text_array, "color": "default"},
         )
 
-    def create_code_block(self, code: str, language: str = "plain text") -> CodeBlock:
+    def create_code_block(self, code: str, language: str = "plain text") -> CodeBlock | list[CodeBlock]:
         """Create a code block.
 
         Args:
@@ -339,9 +339,26 @@ class NotionService:
             language: Programming language (default: "plain text")
 
         Returns:
-            Code block object
+            Code block object, or list of code blocks if content exceeds 2000 characters
         """
-        return CodeBlock.new(code=code, language=language)
+        # Notion API limit: code.rich_text[0].text.content.length should be ≤ 2000
+        MAX_CODE_LENGTH = 2000  # noqa: N806
+
+        if len(code) <= MAX_CODE_LENGTH:
+            return CodeBlock.new(code=code, language=language)
+
+        # Split code into chunks
+        logger.warning(
+            "Code block exceeds %(max)d characters (%(length)d). Splitting into multiple blocks.",
+            {"max": MAX_CODE_LENGTH, "length": len(code)},
+        )
+
+        blocks = []
+        for i in range(0, len(code), MAX_CODE_LENGTH):
+            chunk = code[i : i + MAX_CODE_LENGTH]
+            blocks.append(CodeBlock.new(code=chunk, language=language))
+
+        return blocks
 
     def create_image_block(self, url: str, file_upload_id: str | None = None) -> ImageBlock | None:
         """Create an image block.
@@ -431,7 +448,7 @@ class NotionService:
 
     def create_table_block(
         self, table_rows: list[list[str]], *, has_column_header: bool = True, has_row_header: bool = False
-    ) -> TableBlockWithChildren:
+    ) -> TableBlockWithChildren | list[TableBlockWithChildren]:
         """Create a table block with rows.
 
         Args:
@@ -440,8 +457,11 @@ class NotionService:
             has_row_header: Whether the first column is a header
 
         Returns:
-            TableBlockWithChildren instance
+            TableBlockWithChildren instance, or list of instances if table exceeds 100 rows
         """
+        # Notion API limit: table.children.length should be ≤ 100
+        MAX_TABLE_ROWS = 100  # noqa: N806
+
         if not table_rows:
             msg = "Table must have at least one row"
             raise ValueError(msg)
@@ -453,6 +473,44 @@ class NotionService:
         normalized_rows = [
             row + [""] * (table_width - len(row)) if len(row) < table_width else row for row in table_rows
         ]
+
+        # Check if table exceeds max rows limit
+        if len(normalized_rows) > MAX_TABLE_ROWS:
+            logger.warning(
+                "Table has %(count)d rows (max %(max)d). Splitting into multiple tables.",
+                {"count": len(normalized_rows), "max": MAX_TABLE_ROWS},
+            )
+
+            # Split table into chunks
+            result_tables = []
+            header_row = normalized_rows[0] if has_column_header else None
+
+            # Calculate effective max rows per table (including header if present)
+            effective_max = MAX_TABLE_ROWS - 1 if has_column_header else MAX_TABLE_ROWS
+
+            # Start from index 1 if there's a header, otherwise from 0
+            start_idx = 1 if has_column_header else 0
+
+            for i in range(start_idx, len(normalized_rows), effective_max):
+                chunk_rows = normalized_rows[i : i + effective_max]
+
+                # Add header to each chunk if has_column_header
+                if has_column_header and header_row:
+                    chunk_rows = [header_row, *chunk_rows]
+
+                # Create table block for this chunk
+                table_block = TableBlock.new(
+                    table_width=table_width, has_column_header=has_column_header, has_row_header=has_row_header
+                )
+
+                # Create table row blocks
+                row_blocks = [TableRowBlock.new(cells=row) for row in chunk_rows]
+
+                result_tables.append(TableBlockWithChildren(block=table_block, children=row_blocks))
+
+            return result_tables
+
+        # Single table (within limit)
         # Create table block
         table_block = TableBlock.new(
             table_width=table_width, has_column_header=has_column_header, has_row_header=has_row_header
@@ -472,6 +530,9 @@ class NotionService:
         Returns:
             List of Notion rich_text objects
         """
+        # Notion API limit: text.link.url.length should be ≤ 2000
+        MAX_URL_LENGTH = 2000  # noqa: N806
+
         result = []
         for elem in elements:
             annotations = {
@@ -487,14 +548,29 @@ class NotionService:
                 # Sanitize and validate URL
                 sanitized_url = self._sanitize_url(elem.link_url)
                 if sanitized_url:
-                    # Link with annotations
-                    result.append(
-                        {
-                            "type": "text",
-                            "text": {"content": elem.text, "link": {"url": sanitized_url}},
-                            "annotations": annotations,
-                        }
-                    )
+                    # Check URL length limit
+                    if len(sanitized_url) > MAX_URL_LENGTH:
+                        logger.warning(
+                            "URL exceeds %(max)d characters (%(length)d), treating as plain text: %(url)s",
+                            {"max": MAX_URL_LENGTH, "length": len(sanitized_url), "url": sanitized_url[:100] + "..."},
+                        )
+                        # If URL is too long, treat as plain text
+                        result.append(
+                            {
+                                "type": "text",
+                                "text": {"content": elem.text},
+                                "annotations": annotations,
+                            }
+                        )
+                    else:
+                        # Link with annotations
+                        result.append(
+                            {
+                                "type": "text",
+                                "text": {"content": elem.text, "link": {"url": sanitized_url}},
+                                "annotations": annotations,
+                            }
+                        )
                 else:
                     # If URL is invalid, treat as plain text
                     logger.warning("Invalid URL, treating as plain text: %(url)s", {"url": elem.link_url})
