@@ -104,11 +104,17 @@ pipx<span class="w"> </span>install<span class="w"> </span>sb2n
 <h3 id="3-run-migration">3. Run migration</h3>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="c1"># Basic migration</span>
+<pre><span></span><code><span class="c1"># Basic migration (using .env file)</span>
 sb2n<span class="w"> </span>migrate
 
 <span class="c1"># Specify custom .env file</span>
 sb2n<span class="w"> </span>migrate<span class="w"> </span>--env-file<span class="w"> </span>/path/to/.env
+
+<span class="c1"># Specify credentials directly via command line options</span>
+sb2n<span class="w"> </span>migrate<span class="w"> </span>-P<span class="w"> </span>your-project<span class="w"> </span>-S<span class="w"> </span>your-sid<span class="w"> </span>-N<span class="w"> </span>secret_token<span class="w"> </span>-D<span class="w"> </span>database-id
+
+<span class="c1"># Mix .env and options (options take precedence)</span>
+sb2n<span class="w"> </span>migrate<span class="w"> </span>--env-file<span class="w"> </span>.env<span class="w"> </span>-P<span class="w"> </span>override-project
 
 <span class="c1"># Dry run (no actual changes)</span>
 sb2n<span class="w"> </span>migrate<span class="w"> </span>--dry-run
@@ -127,24 +133,37 @@ sb2n<span class="w"> </span>-v<span class="w"> </span>migrate
 </code></pre>
 </div>
 
-<h3 id="4-restore-internal-links">4. Restore internal links</h3>
+<h4 id="common-options-for-all-commands">Common Options (for all commands)</h4>
 
-<p>After migration, restore <a href="https://scrapbox.io/help-jp/ページをリンクする">Scrapbox internal links</a> (<code>[PageName]</code> format) to actual <a href="https://www.notion.com/help/create-links-and-backlinks#inline-in-a-paragraph">Notion page mentions</a>:</p>
+<ul>
+<li><code>-P, --project</code>: Scrapbox project name (overrides <code>SCRAPBOX_PROJECT</code> in .env)</li>
+<li><code>-S, --sid</code>: Scrapbox connect.sid cookie (overrides <code>SCRAPBOX_COOKIE_CONNECT_SID</code> in .env)</li>
+<li><code>-N, --ntn</code>: Notion integration token (overrides <code>NOTION_API_KEY</code> in .env)</li>
+<li><code>-D, --db</code>: Notion database ID (overrides <code>NOTION_DATABASE_ID</code> in .env)</li>
+<li><code>--env-file</code>: Path to .env file (default: <code>.env</code>)</li>
+<li><code>-v, --verbose</code>: Enable verbose logging</li>
+</ul>
 
-<div class="pdoc-code codehilite">
-<pre><span></span><code><span class="c1"># Restore links in all pages</span>
-sb2n<span class="w"> </span>restore-link
+<p><strong>Note</strong>: When both .env and command line options are specified, command line options take precedence.</p>
 
-<span class="c1"># Dry run (preview changes without applying)</span>
-sb2n<span class="w"> </span>restore-link<span class="w"> </span>--dry-run
+<pre><code>
+### 4. Restore internal links
 
-<span class="c1"># Restore links in specific pages only</span>
-sb2n<span class="w"> </span>restore-link<span class="w"> </span>--pages<span class="w"> </span><span class="s2">&quot;HomePage,Getting Started&quot;</span>
+After migration, restore [Scrapbox internal links](https://scrapbox.io/help-jp/ページをリンクする) (`[PageName]` format) to actual [Notion page mentions](https://www.notion.com/help/create-links-and-backlinks#inline-in-a-paragraph):
 
-<span class="c1"># Enable verbose logging</span>
-sb2n<span class="w"> </span>-v<span class="w"> </span>restore-link
+```sh
+# Restore links in all pages
+sb2n restore-link
+
+# Dry run (preview changes without applying)
+sb2n restore-link --dry-run
+
+# Restore links in specific pages only
+sb2n restore-link --pages "HomePage,Getting Started"
+
+# Enable verbose logging
+sb2n -v restore-link
 </code></pre>
-</div>
 
 <h3 id="appendix-1-export-as-markdown-with-images">Appendix 1. Export as Markdown with images</h3>
 
