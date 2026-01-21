@@ -27,11 +27,23 @@ class Config:
     notion_database_id: str
 
     @classmethod
-    def from_env(cls, env_file: Path | str | None = None) -> Config:
+    def from_env(
+        cls,
+        env_file: Path | str | None = None,
+        *,
+        project: str | None = None,
+        sid: str | None = None,
+        ntn: str | None = None,
+        db: str | None = None,
+    ) -> Config:
         """Load configuration from environment variables.
 
         Args:
             env_file: Path to .env file. If None, uses default .env file in current directory.
+            project: Scrapbox project name (overrides env var if provided)
+            sid: Scrapbox connect.sid cookie (overrides env var if provided)
+            ntn: Notion API token (overrides env var if provided)
+            db: Notion database ID (overrides env var if provided)
 
         Returns:
             Config instance with loaded values
@@ -44,10 +56,11 @@ class Config:
         else:
             load_dotenv()
 
-        scrapbox_project = os.getenv("SCRAPBOX_PROJECT")
-        scrapbox_connect_sid = os.getenv("SCRAPBOX_COOKIE_CONNECT_SID")
-        notion_api_key = os.getenv("NOTION_API_KEY")
-        notion_database_id = os.getenv("NOTION_DATABASE_ID")
+        # Use command-line options if provided, otherwise use environment variables
+        scrapbox_project = project or os.getenv("SCRAPBOX_PROJECT")
+        scrapbox_connect_sid = sid or os.getenv("SCRAPBOX_COOKIE_CONNECT_SID")
+        notion_api_key = ntn or os.getenv("NOTION_API_KEY")
+        notion_database_id = db or os.getenv("NOTION_DATABASE_ID")
 
         missing = []
         if not scrapbox_project:

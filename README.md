@@ -44,11 +44,17 @@ Create a database in Notion with the following properties:
 ### 3. Run migration
 
 ```sh
-# Basic migration
+# Basic migration (using .env file)
 sb2n migrate
 
 # Specify custom .env file
 sb2n migrate --env-file /path/to/.env
+
+# Specify credentials directly via command line options
+sb2n migrate -P your-project -S your-sid -N secret_token -D database-id
+
+# Mix .env and options (options take precedence)
+sb2n migrate --env-file .env -P override-project
 
 # Dry run (no actual changes)
 sb2n migrate --dry-run
@@ -64,6 +70,19 @@ sb2n migrate --dry-run -n 5 --skip
 
 # Enable verbose logging
 sb2n -v migrate
+```
+
+#### Common Options (for all commands)
+
+- `-P, --project`: Scrapbox project name (overrides `SCRAPBOX_PROJECT` in .env)
+- `-S, --sid`: Scrapbox connect.sid cookie (overrides `SCRAPBOX_COOKIE_CONNECT_SID` in .env)
+- `-N, --ntn`: Notion integration token (overrides `NOTION_API_KEY` in .env)
+- `-D, --db`: Notion database ID (overrides `NOTION_DATABASE_ID` in .env)
+- `--env-file`: Path to .env file (default: `.env`)
+- `-v, --verbose`: Enable verbose logging
+
+**Note**: When both .env and command line options are specified, command line options take precedence.
+
 ```
 
 ### 4. Restore internal links

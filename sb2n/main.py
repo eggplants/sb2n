@@ -39,6 +39,10 @@ class Args(argparse.Namespace):
     enable_icon: bool
     output_dir: str
     log: bool
+    project: str | None
+    sid: str | None
+    ntn: str | None
+    db: str | None
 
 
 def setup_logging(*, verbose: bool = False, log_file: str | None = None) -> None:
@@ -90,7 +94,13 @@ def migrate_command(args: Args) -> int:
     try:
         # Load configuration
         env_file = Path(args.env_file) if args.env_file else None
-        config = Config.from_env(env_file)
+        config = Config.from_env(
+            env_file,
+            project=args.project,
+            sid=args.sid,
+            ntn=args.ntn,
+            db=args.db,
+        )
         config.validate()
 
         # Parse page filter
@@ -132,7 +142,13 @@ def restore_link_command(args: Args) -> int:
     try:
         # Load configuration
         env_file = Path(args.env_file) if args.env_file else None
-        config = Config.from_env(env_file)
+        config = Config.from_env(
+            env_file,
+            project=args.project,
+            sid=args.sid,
+            ntn=args.ntn,
+            db=args.db,
+        )
         config.validate()
 
         # Create restorer
@@ -181,7 +197,13 @@ def export_command(args: Args) -> int:
     try:
         # Load configuration
         env_file = Path(args.env_file) if args.env_file else None
-        config = Config.from_env(env_file)
+        config = Config.from_env(
+            env_file,
+            project=args.project,
+            sid=args.sid,
+            ntn=args.ntn,
+            db=args.db,
+        )
 
         # Set up output directory
         output_dir = Path(args.output_dir)
@@ -287,6 +309,34 @@ def main() -> None:
         "--verbose",
         action="store_true",
         help="Enable verbose output (DEBUG level logging)",
+    )
+
+    parser.add_argument(
+        "-P",
+        "--project",
+        type=str,
+        help="Scrapbox project name (overrides SCRAPBOX_PROJECT env var)",
+    )
+
+    parser.add_argument(
+        "-S",
+        "--sid",
+        type=str,
+        help="Scrapbox connect.sid cookie (overrides SCRAPBOX_COOKIE_CONNECT_SID env var)",
+    )
+
+    parser.add_argument(
+        "-N",
+        "--ntn",
+        type=str,
+        help="Notion API token (overrides NOTION_API_KEY env var)",
+    )
+
+    parser.add_argument(
+        "-D",
+        "--db",
+        type=str,
+        help="Notion database ID (overrides NOTION_DATABASE_ID env var)",
     )
 
     subparsers = parser.add_subparsers(dest="command", help="Available commands")

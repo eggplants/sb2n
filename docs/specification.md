@@ -69,6 +69,10 @@ Notionの移行先データベースは**フルページデータベース（Ful
 
 ### 4. 認証情報の管理
 
+認証情報は以下の2つの方法で指定できます：
+
+#### 方法1: `.env` ファイル
+
 `.env` ファイルから以下の認証情報を読み込む：
 
 ```env
@@ -81,12 +85,20 @@ NOTION_API_KEY=secret_xxxxxxxxxxxxx
 NOTION_DATABASE_ID=xxxxxxxxxxxxx
 ```
 
+#### 方法2: コマンドラインオプション（優先）
+
+コマンドライン引数で直接指定することも可能です。`.env`ファイルと同時に指定された場合、コマンドラインオプションが優先されます。
+
+```bash
+sb2n migrate -P project-name -S connect-sid -N token -D database-id
+```
+
 #### 認証情報の説明
 
-- **SCRAPBOX_PROJECT**: 移行元のScrapboxプロジェクト名
-- **SCRAPBOX_COOKIE_CONNECT_SID**: Scrapbox APIアクセス用のCookie（プライベートプロジェクトの場合に必要）
-- **NOTION_API_KEY**: Notion Integration Token
-- **NOTION_DATABASE_ID**: 移行先のNotionデータベースID
+- **SCRAPBOX_PROJECT** / `-P, --project`: 移行元のScrapboxプロジェクト名
+- **SCRAPBOX_COOKIE_CONNECT_SID** / `-S, --sid`: Scrapbox APIアクセス用のCookie（プライベートプロジェクトの場合に必要）
+- **NOTION_API_KEY** / `-N, --ntn`: Notion Integration Token
+- **NOTION_DATABASE_ID** / `-D, --db`: 移行先のNotionデータベースID
 
 ## 技術仕様
 
@@ -459,22 +471,25 @@ Scrapboxのアイコン記法は、指定したページに設定されている
 
 ```bash
 # Notion移行コマンド
-sb2n migrate                      # 基本的な実行
+sb2n migrate                      # 基本的な実行（.envファイル使用）
 sb2n migrate --env-file /path/to/.env  # .envファイルを指定
+sb2n migrate -P project -S sid -N token -D db  # コマンドラインで認証情報を指定
 sb2n migrate --dry-run            # ドライラン（実際には移行しない）
 sb2n migrate --pages "ページ1,ページ2"  # 特定のページのみ移行
-sb2n migrate --skip      # 既存ページをスキップ
+sb2n migrate --skip               # 既存ページをスキップ
 sb2n migrate --icon               # アイコン画像も移行
 
 # 内部リンク復元コマンド
 sb2n restore-link                 # 移行済みページの内部リンクを復元
 sb2n restore-link --dry-run       # リンク復元のドライラン
 sb2n restore-link --pages "ページ1"  # 特定ページのみ処理
+sb2n restore-link -N token -D db  # コマンドラインで認証情報を指定
 
 # Markdownエクスポートコマンド
 sb2n export                       # デフォルト（./out）にエクスポート
 sb2n export -d /path/to/output    # 出力先ディレクトリを指定
 sb2n export --limit 10            # エクスポートするページ数を制限
+sb2n export -P project -S sid     # コマンドラインで認証情報を指定
 ```
 
 ### `migrate` コマンド
@@ -483,12 +498,21 @@ ScrapboxページをNotionデータベースに移行します。
 
 #### `migrate` のオプション
 
+##### 共通オプション（全コマンド共通）
+
+- `-P, --project TEXT`: Scrapboxプロジェクト名（.envの`SCRAPBOX_PROJECT`を上書き）
+- `-S, --sid TEXT`: Scrapbox connect.sid cookie（.envの`SCRAPBOX_COOKIE_CONNECT_SID`を上書き）
+- `-N, --ntn TEXT`: Notion統合トークン（.envの`NOTION_API_KEY`を上書き）
+- `-D, --db TEXT`: NotionデータベースID（.envの`NOTION_DATABASE_ID`を上書き）
 - `--env-file PATH`: 環境変数ファイルのパス（デフォルト: `.env`）
+- `-v, --verbose`: 詳細ログを出力
+
+##### migrateコマンド固有のオプション
+
 - `--dry-run`: 実際には移行せず、動作を確認
 - `--limit N`: 移行するページ数の上限
 - `-s`, `--skip`: Notionに既存のページをスキップ
 - `--icon`: Scrapboxのアイコン記法（`[icon.icon]`）の画像も移行
-- `-v, --verbose`: 詳細ログを出力
 
 ### `export` コマンド
 
@@ -544,10 +568,19 @@ output-dir/
 
 #### `export` のオプション
 
+##### 共通オプション（全コマンド共通）
+
+- `-P, --project TEXT`: Scrapboxプロジェクト名（.envの`SCRAPBOX_PROJECT`を上書き）
+- `-S, --sid TEXT`: Scrapbox connect.sid cookie（.envの`SCRAPBOX_COOKIE_CONNECT_SID`を上書き）
 - `--env-file PATH`: 環境変数ファイルのパス（デフォルト: `.env`）
+- `-v, --verbose`: 詳細ログを出力
+
+##### exportコマンド固有のオプション
+
 - `-d, --output-dir DIR`: 出力先ディレクトリ（デフォルト: `./out`）
 - `--limit N`: エクスポートするページ数の上限
-- `-v, --verbose`: 詳細ログを出力
+- `--pages TEXT`: カンマ区切りで特定のページのみエクスポート
+- `-s, --skip`: 既存ファイルをスキップ
 
 #### 注意事項
 
