@@ -507,6 +507,7 @@ class ScrapboxParser:
                                 line_type=LineType.CODE,
                                 content=code_content,
                                 language=code_language,
+                                indent_level=code_indent_level,
                             )
                         )
                     in_code_block = False
@@ -533,7 +534,7 @@ class ScrapboxParser:
             if in_table_block:
                 # Calculate current line's indent level
                 current_indent = len(line) - len(line.lstrip())
-                
+
                 # Table block ends if:
                 # Non-empty line with indent <= table block start indent
                 if line.strip() and current_indent <= table_indent_level:
@@ -596,6 +597,7 @@ class ScrapboxParser:
                     line_type=LineType.CODE,
                     content=code_content,
                     language=code_language,
+                    indent_level=code_indent_level,
                 )
             )
 

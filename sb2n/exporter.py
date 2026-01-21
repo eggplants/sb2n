@@ -105,6 +105,16 @@ class MarkdownExporter:
         # Code block
         if parsed_line.line_type == LineType.CODE:
             language = parsed_line.language if parsed_line.language != "plain text" else ""  # noqa: PLR2004
+            # Apply indent if needed
+            indent = "  " * max(0, parsed_line.indent_level - 1)
+            if indent:
+                # Add indent to each line of the code block
+                code_lines = (
+                    [f"{indent}```{language}"]
+                    + [f"{indent}{line}" for line in parsed_line.content.split("\n")]
+                    + [f"{indent}```"]
+                )
+                return "\n".join(code_lines) + "\n"
             return f"```{language}\n{parsed_line.content}\n```\n"
 
         # Image
@@ -149,26 +159,29 @@ class MarkdownExporter:
         if parsed_line.line_type == LineType.TABLE:
             if not parsed_line.table_rows:
                 return None
-            
+
             # Find maximum column count
             max_columns = max(len(row) for row in parsed_line.table_rows)
-            
+
+            # Apply indent if needed
+            indent = "  " * max(0, parsed_line.indent_level - 1)
+
             # Build Markdown table
             table_lines = []
-            
+
             # Add rows, padding to max column count
             for row in parsed_line.table_rows:
                 # Ensure all cells are strings and handle empty cells
                 cells = [str(cell) if cell else "" for cell in row]
                 # Pad with empty cells to match max column count
                 cells.extend([""] * (max_columns - len(cells)))
-                table_lines.append("|" + "|".join(cells) + "|")
-            
+                table_lines.append(indent + "|" + "|".join(cells) + "|")
+
             # Insert header separator after first row (if exists)
             if table_lines:
-                separator = "|" + "|".join(["-"] * max_columns) + "|"
+                separator = indent + "|" + "|".join(["-"] * max_columns) + "|"
                 table_lines.insert(1, separator)
-            
+
             return "\n".join(table_lines) + "\n"
 
         # Paragraph (includes text with inline decorations)
