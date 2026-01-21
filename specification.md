@@ -463,7 +463,7 @@ sb2n migrate                      # 基本的な実行
 sb2n migrate --env-file /path/to/.env  # .envファイルを指定
 sb2n migrate --dry-run            # ドライラン（実際には移行しない）
 sb2n migrate --pages "ページ1,ページ2"  # 特定のページのみ移行
-sb2n migrate --skip-existing      # 既存ページをスキップ
+sb2n migrate --skip      # 既存ページをスキップ
 sb2n migrate --icon               # アイコン画像も移行
 
 # 内部リンク復元コマンド
@@ -486,7 +486,7 @@ ScrapboxページをNotionデータベースに移行します。
 - `--env-file PATH`: 環境変数ファイルのパス（デフォルト: `.env`）
 - `--dry-run`: 実際には移行せず、動作を確認
 - `--limit N`: 移行するページ数の上限
-- `--skip-existing`: Notionに既存のページをスキップ
+- `-s`, `--skip`: Notionに既存のページをスキップ
 - `--icon`: Scrapboxのアイコン記法（`[icon.icon]`）の画像も移行
 - `-v, --verbose`: 詳細ログを出力
 
