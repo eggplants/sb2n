@@ -199,14 +199,13 @@ class ScrapboxParser:
             # Check if we're exiting a code block
             if in_code_block:
                 current_indent = len(line) - len(line.lstrip())
-                # Exit code block if empty line or indent level decreased
-                if not line.strip() or current_indent <= code_indent_level:
+                # Exit code block if non-empty line with indent level decreased
+                if line.strip() and current_indent <= code_indent_level:
                     in_code_block = False
                     code_indent_level = 0
-                    # Process this line normally if it's not empty
-                    if line.strip():
-                        filtered_lines.append(line)
-                # Skip lines inside code blocks
+                    # Process this line normally
+                    filtered_lines.append(line)
+                # Skip lines inside code blocks (including empty lines)
                 continue
 
             # Add non-code lines
@@ -490,25 +489,15 @@ class ScrapboxParser:
         table_indent_level = 0
 
         for line in lines:
-            parsed = ScrapboxParser.parse_line(line, project_name)
-
-            # Handle code blocks
-            if parsed.line_type == LineType.CODE_START:
-                in_code_block = True
-                code_language = parsed.language
-                code_buffer = []
-                # Store the indent level of the code block start line
-                code_indent_level = parsed.indent_level
-                continue
-
+            # Handle code blocks first (before parsing)
+            # Check if we're in a code block
             if in_code_block:
                 # Calculate current line's indent level
                 current_indent = len(line) - len(line.lstrip())
 
                 # Code block ends if:
-                # 1. Empty line
-                # 2. Line with indent <= code block start indent
-                if not line.strip() or current_indent <= code_indent_level:
+                # Non-empty line with indent <= code block start indent
+                if line.strip() and current_indent <= code_indent_level:
                     # Save code block
                     if code_buffer:
                         code_content = "\n".join(code_buffer)
@@ -523,33 +512,31 @@ class ScrapboxParser:
                     in_code_block = False
                     code_buffer = []
                     code_indent_level = 0
-                    # Process current line normally
-                    if line.strip():
-                        parsed = ScrapboxParser.parse_line(line)
-                        parsed_lines.append(parsed)
+                    # Process current line normally (fall through to parse_line)
                 else:
                     # Add to code buffer, removing the base indent level + 1
                     # Code content should be indented one level more than the code: line
-                    indent_to_remove = code_indent_level + 1
-                    line_indent = len(line) - len(line.lstrip())
-                    if line_indent >= indent_to_remove:
-                        code_buffer.append(line[indent_to_remove:])
+                    # Empty lines are added as-is
+                    if not line.strip():
+                        code_buffer.append("")
                     else:
-                        # Line has less indent than expected, keep as-is
-                        code_buffer.append(line.lstrip())
-                continue
+                        indent_to_remove = code_indent_level + 1
+                        line_indent = len(line) - len(line.lstrip())
+                        if line_indent >= indent_to_remove:
+                            code_buffer.append(line[indent_to_remove:])
+                        else:
+                            # Line has less indent than expected, keep as-is
+                            code_buffer.append(line.lstrip())
+                    continue
 
-            # Handle table blocks
-            if parsed.line_type == LineType.TABLE_START:
-                in_table_block = True
-                table_name = parsed.content
-                table_buffer = []
-                table_indent_level = parsed.indent_level
-                continue
-
+            # Handle table blocks (before parsing)
             if in_table_block:
-                # Empty line or unindented line ends table block
-                if not line.strip() or (line and not line.startswith(" ") and not line.startswith("\t")):
+                # Calculate current line's indent level
+                current_indent = len(line) - len(line.lstrip())
+                
+                # Table block ends if:
+                # Non-empty line with indent <= table block start indent
+                if line.strip() and current_indent <= table_indent_level:
                     # Save table block
                     if table_buffer:
                         parsed_lines.append(
@@ -564,15 +551,38 @@ class ScrapboxParser:
                         )
                     in_table_block = False
                     table_buffer = []
-                    # Process current line normally
-                    if line.strip():
-                        parsed = ScrapboxParser.parse_line(line)
-                        parsed_lines.append(parsed)
+                    # Process current line normally (fall through to parse_line)
                 else:
                     # Add to table buffer (split by tabs, remove one level of indent)
-                    row_content = line.removeprefix(" ").removeprefix("\t")
-                    cells = row_content.split("\t")
-                    table_buffer.append(cells)
+                    # Skip empty lines in tables
+                    if line.strip():
+                        indent_to_remove = table_indent_level + 1
+                        if current_indent >= indent_to_remove:
+                            row_content = line[indent_to_remove:]
+                        else:
+                            row_content = line.lstrip()
+                        cells = row_content.split("\t")
+                        table_buffer.append(cells)
+                    continue
+
+            # Parse the line (only if not handled by code/table block logic)
+            parsed = ScrapboxParser.parse_line(line, project_name)
+
+            # Handle code block start
+            if parsed.line_type == LineType.CODE_START:
+                in_code_block = True
+                code_language = parsed.language
+                code_buffer = []
+                # Store the indent level of the code block start line
+                code_indent_level = parsed.indent_level
+                continue
+
+            # Handle table block start
+            if parsed.line_type == LineType.TABLE_START:
+                in_table_block = True
+                table_name = parsed.content
+                table_buffer = []
+                table_indent_level = parsed.indent_level
                 continue
 
             parsed_lines.append(parsed)

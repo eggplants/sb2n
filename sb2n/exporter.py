@@ -145,6 +145,32 @@ class MarkdownExporter:
                 content = parsed_line.content
             return f"{indent}- {content}\n"
 
+        # Table
+        if parsed_line.line_type == LineType.TABLE:
+            if not parsed_line.table_rows:
+                return None
+            
+            # Find maximum column count
+            max_columns = max(len(row) for row in parsed_line.table_rows)
+            
+            # Build Markdown table
+            table_lines = []
+            
+            # Add rows, padding to max column count
+            for row in parsed_line.table_rows:
+                # Ensure all cells are strings and handle empty cells
+                cells = [str(cell) if cell else "" for cell in row]
+                # Pad with empty cells to match max column count
+                cells.extend([""] * (max_columns - len(cells)))
+                table_lines.append("|" + "|".join(cells) + "|")
+            
+            # Insert header separator after first row (if exists)
+            if table_lines:
+                separator = "|" + "|".join(["-"] * max_columns) + "|"
+                table_lines.insert(1, separator)
+            
+            return "\n".join(table_lines) + "\n"
+
         # Paragraph (includes text with inline decorations)
         if parsed_line.rich_text:
             content = self._convert_rich_text_to_markdown(parsed_line.rich_text)
