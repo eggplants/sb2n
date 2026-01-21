@@ -166,7 +166,7 @@ class NotionBlockConverter:
         )
         return blocks
 
-    def _convert_line_to_block(self, parsed_line: ParsedLine) -> BlockObject | list[BlockObject] | None:  # noqa: PLR0911
+    def _convert_line_to_block(self, parsed_line: ParsedLine) -> BlockObject | list[BlockObject] | None:
         """Convert a single parsed line to a Notion block.
 
         Args:

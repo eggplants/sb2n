@@ -127,7 +127,7 @@ sb2n -v export
 #### Structure of extracted data
 
 ```text
-output-dir/
+output-dir/project-name/
 ├── assets/              # Downloaded images
 │   ├── abc123def456.png
 │   ├── 789ghijk012.jpg

@@ -28,8 +28,8 @@ class MarkdownExporter:
             output_dir: Base output directory
         """
         self.scrapbox_service = scrapbox_service
-        self.output_dir = output_dir
-        self.assets_dir = output_dir / "assets"
+        self.output_dir = output_dir / scrapbox_service.project_name
+        self.assets_dir = self.output_dir / "assets"
         self.assets_dir.mkdir(parents=True, exist_ok=True)
 
     def export_page(self, page_title: str, page_text: str, *, skip_existing: bool = False) -> Path | None:

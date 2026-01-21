@@ -558,10 +558,7 @@ class ScrapboxParser:
                     # Skip empty lines in tables
                     if line.strip():
                         indent_to_remove = table_indent_level + 1
-                        if current_indent >= indent_to_remove:
-                            row_content = line[indent_to_remove:]
-                        else:
-                            row_content = line.lstrip()
+                        row_content = line[indent_to_remove:] if current_indent >= indent_to_remove else line.lstrip()
                         cells = row_content.split("\t")
                         table_buffer.append(cells)
                     continue
