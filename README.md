@@ -57,10 +57,10 @@ sb2n migrate --dry-run
 sb2n migrate -n 10
 
 # Skip pages that already exist in Notion
-sb2n migrate --skip-existing
+sb2n migrate --skip
 
 # Combine options: dry run with limit and skip existing
-sb2n migrate --dry-run -n 5 --skip-existing
+sb2n migrate --dry-run -n 5 --skip
 
 # Enable verbose logging
 sb2n -v migrate

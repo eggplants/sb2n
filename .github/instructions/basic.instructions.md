@@ -16,7 +16,7 @@ Scrapboxのページを Notion または Markdown にエクスポートするCLI
 
 ```bash
 # マイグレーション: Scrapbox → Notion
-sb2n migrate [--icon] [--skip-existing] [--dry-run] [-n LIMIT]
+sb2n migrate [--icon] [-s/--skip] [--dry-run] [-n LIMIT]
 
 # 内部リンク修復
 sb2n restore-link

@@ -317,8 +317,10 @@ def main() -> None:
     )
 
     migrate_parser.add_argument(
-        "--skip-existing",
+        "-s",
+        "--skip",
         action="store_true",
+        dest="skip_existing",
         help="Skip pages that already exist in Notion database",
     )
 
@@ -413,8 +415,10 @@ def main() -> None:
     )
 
     export_parser.add_argument(
-        "--skip-existing",
+        "-s",
+        "--skip",
         action="store_true",
+        dest="skip_existing",
         help="Skip exporting pages that already exist in the output directory",
     )
 
