@@ -146,24 +146,24 @@ sb2n<span class="w"> </span>-v<span class="w"> </span>migrate
 
 <p><strong>Note</strong>: When both .env and command line options are specified, command line options take precedence.</p>
 
-<pre><code>
-### 4. Restore internal links
+<h3 id="4-restore-internal-links">4. Restore internal links</h3>
 
-After migration, restore [Scrapbox internal links](https://scrapbox.io/help-jp/ページをリンクする) (`[PageName]` format) to actual [Notion page mentions](https://www.notion.com/help/create-links-and-backlinks#inline-in-a-paragraph):
+<p>After migration, restore <a href="https://scrapbox.io/help-jp/ページをリンクする">Scrapbox internal links</a> (<code>[PageName]</code> format) to actual <a href="https://www.notion.com/help/create-links-and-backlinks#inline-in-a-paragraph">Notion page mentions</a>:</p>
 
-```sh
-# Restore links in all pages
-sb2n restore-link
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="c1"># Restore links in all pages</span>
+sb2n<span class="w"> </span>restore-link
 
-# Dry run (preview changes without applying)
-sb2n restore-link --dry-run
+<span class="c1"># Dry run (preview changes without applying)</span>
+sb2n<span class="w"> </span>restore-link<span class="w"> </span>--dry-run
 
-# Restore links in specific pages only
-sb2n restore-link --pages "HomePage,Getting Started"
+<span class="c1"># Restore links in specific pages only</span>
+sb2n<span class="w"> </span>restore-link<span class="w"> </span>--pages<span class="w"> </span><span class="s2">&quot;HomePage,Getting Started&quot;</span>
 
-# Enable verbose logging
-sb2n -v restore-link
+<span class="c1"># Enable verbose logging</span>
+sb2n<span class="w"> </span>-v<span class="w"> </span>restore-link
 </code></pre>
+</div>
 
 <h3 id="appendix-1-export-as-markdown-with-images">Appendix 1. Export as Markdown with images</h3>
 
@@ -181,6 +181,9 @@ sb2n<span class="w"> </span><span class="nb">export</span><span class="w"> </spa
 
 <span class="c1"># Combine options</span>
 sb2n<span class="w"> </span><span class="nb">export</span><span class="w"> </span>-d<span class="w"> </span>./my-export<span class="w"> </span>--limit<span class="w"> </span><span class="m">5</span>
+
+<span class="c1"># Export as plain Scrapbox format</span>
+sb2n<span class="w"> </span><span class="nb">export</span><span class="w"> </span>--f<span class="w"> </span>txt
 
 <span class="c1"># Enable verbose logging</span>
 sb2n<span class="w"> </span>-v<span class="w"> </span><span class="nb">export</span>
