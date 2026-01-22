@@ -6,6 +6,7 @@ import sys
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
+from typing import Literal
 from zoneinfo import ZoneInfo
 
 from sb2n.config import Config
@@ -43,6 +44,7 @@ class Args(argparse.Namespace):
     sid: str | None
     ntn: str | None
     db: str | None
+    format: Literal["md", "txt"]
 
 
 def setup_logging(*, verbose: bool = False, log_file: str | None = None) -> None:
@@ -218,7 +220,7 @@ def export_command(args: Args) -> int:
 
         # Get pages and export
         with scrapbox_service:
-            exporter = MarkdownExporter(scrapbox_service, output_dir)
+            exporter = MarkdownExporter(scrapbox_service, output_dir, export_format=args.format)
 
             # Get pages
             logger.info("Fetching pages from Scrapbox project: %s", config.scrapbox_project)
@@ -470,6 +472,15 @@ def main() -> None:
         action="store_true",
         dest="skip_existing",
         help="Skip exporting pages that already exist in the output directory",
+    )
+
+    export_parser.add_argument(
+        "-f",
+        "--format",
+        type=str,
+        choices=["md", "txt"],
+        default="md",
+        help="Export format: md (Markdown) or txt (raw Scrapbox text) (default: md)",
     )
 
     args = parser.parse_args(namespace=Args())

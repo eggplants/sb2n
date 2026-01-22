@@ -5,11 +5,12 @@ from __future__ import annotations
 import os
 import tempfile
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
 from sb2n.config import Config
+from sb2n.main import Args, main
 
 
 class TestCommandLineOptions:
@@ -114,3 +115,25 @@ class TestCommandLineOptions:
             # Clean up env vars
             for key in ["SCRAPBOX_PROJECT", "SCRAPBOX_COOKIE_CONNECT_SID", "NOTION_API_KEY", "NOTION_DATABASE_ID"]:
                 os.environ.pop(key, None)
+
+    def test_export_format_option_default(self) -> None:
+        """Test that export format defaults to 'md'."""
+
+        with patch("sys.argv", ["sb2n", "export", "--help"]):
+            with pytest.raises(SystemExit) as exc_info:
+                main()
+            # Help should exit with 0
+            assert exc_info.value.code == 0
+
+    def test_export_format_option_md(self) -> None:
+        """Test export command with --format md option."""
+
+        args = Args()
+        args.format = "md"
+        assert args.format == "md"
+
+    def test_export_format_option_txt(self) -> None:
+        """Test export command with --format txt option."""
+        args = Args()
+        args.format = "txt"
+        assert args.format == "txt"

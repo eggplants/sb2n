@@ -83,8 +83,6 @@ sb2n -v migrate
 
 **Note**: When both .env and command line options are specified, command line options take precedence.
 
-```
-
 ### 4. Restore internal links
 
 After migration, restore [Scrapbox internal links](https://scrapbox.io/help-jp/ページをリンクする) (`[PageName]` format) to actual [Notion page mentions](https://www.notion.com/help/create-links-and-backlinks#inline-in-a-paragraph):
@@ -119,6 +117,9 @@ sb2n export --limit 10
 
 # Combine options
 sb2n export -d ./my-export --limit 5
+
+# Export as plain Scrapbox format
+sb2n export --f txt
 
 # Enable verbose logging
 sb2n -v export

@@ -5,7 +5,7 @@ from __future__ import annotations
 import hashlib
 import logging
 import re
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 from sb2n.parser import LineType, ParsedLine, RichTextElement, ScrapboxParser
 
@@ -20,20 +20,24 @@ logger = logging.getLogger(__name__)
 class MarkdownExporter:
     """Convert Scrapbox pages to Markdown format."""
 
-    def __init__(self, scrapbox_service: ScrapboxService, output_dir: Path) -> None:
+    def __init__(
+        self, scrapbox_service: ScrapboxService, output_dir: Path, export_format: Literal["md", "txt"] = "md"
+    ) -> None:
         """Initialize the Markdown exporter.
 
         Args:
             scrapbox_service: Scrapbox API service
             output_dir: Base output directory
+            export_format: Export format: "md" (Markdown) or "txt" (raw Scrapbox text)
         """
         self.scrapbox_service = scrapbox_service
         self.output_dir = output_dir / scrapbox_service.project_name
         self.assets_dir = self.output_dir / "assets"
         self.assets_dir.mkdir(parents=True, exist_ok=True)
+        self.export_format = export_format
 
     def export_page(self, page_title: str, page_text: str, *, skip_existing: bool = False) -> Path | None:
-        """Export a single page as Markdown.
+        """Export a single page as Markdown or raw text.
 
         Args:
             page_title: Title of the page
@@ -41,18 +45,26 @@ class MarkdownExporter:
             skip_existing: If True, skip exporting if the file already exists
 
         Returns:
-            Path to the exported Markdown file, or None if skipped
+            Path to the exported file, or None if skipped
         """
         logger.info("Exporting page: %s", page_title)
 
         # Check if file already exists
         safe_filename = self._sanitize_filename(page_title)
-        output_path = self.output_dir / f"{safe_filename}.md"
+        file_extension = self.export_format
+        output_path = self.output_dir / f"{safe_filename}.{file_extension}"
 
         if skip_existing and output_path.exists():
             logger.debug("Skipping existing file: %s", output_path)
             return None
 
+        # Handle txt format: save raw Scrapbox text
+        if self.export_format == "txt":  # noqa: PLR2004
+            output_path.write_text(page_text, encoding="utf-8")
+            logger.info("Exported to: %s", output_path)
+            return output_path
+
+        # Handle md format: parse and convert to Markdown
         # Parse the page with project name for internal fragment links
         parsed_lines = ScrapboxParser.parse_text(page_text, self.scrapbox_service.project_name)
 
