@@ -3,7 +3,9 @@
 import logging
 from typing import TYPE_CHECKING, Any
 
-from sb2n.parser import LineType, ParsedLine, RichTextElement, ScrapboxParser
+from sb2n.lark_adapter import LarkParserAdapter
+from sb2n.lark_parser import ScrapboxLarkParser
+from sb2n.legacy_parser import LineType, ParsedLine, RichTextElement
 
 if TYPE_CHECKING:
     from sb2n.models import BlockObject
@@ -38,6 +40,7 @@ class NotionBlockConverter:
         self.scrapbox_service = scrapbox_service
         self.enable_icon = enable_icon
         self.scrapbox_service = scrapbox_service
+        self.lark_parser = ScrapboxLarkParser()
 
     def convert_to_blocks(self, text: str) -> list[BlockObject]:
         """Convert Scrapbox text to Notion blocks.
@@ -48,8 +51,23 @@ class NotionBlockConverter:
         Returns:
             List of Notion block objects
         """
-        project_name = self.scrapbox_service.project_name if self.scrapbox_service else None
-        parsed_lines = ScrapboxParser.parse_text(text, project_name)
+        # Parse with Lark parser
+        try:
+            document = self.lark_parser.parse(text)
+            parsed_lines = LarkParserAdapter.convert_document(document)
+        except Exception:
+            logger.exception("Failed to parse with Lark parser, creating fallback blocks")
+            # If parsing fails, create simple paragraph blocks
+            parsed_lines = [
+                ParsedLine(
+                    original=line,
+                    line_type=LineType.PARAGRAPH,
+                    content=line,
+                    indent_level=0,
+                )
+                for line in text.split("\n")
+            ]
+
         blocks = []
 
         # Stack to track parent blocks and their dictionaries at each indent level

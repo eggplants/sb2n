@@ -224,7 +224,7 @@ def export_command(args: Args) -> int:
 
             # Get pages
             logger.info("Fetching pages from Scrapbox project: %s", config.scrapbox_project)
-            all_pages = scrapbox_service.get_all_pages(limit=args.limit or 1000)
+            all_pages = scrapbox_service.get_all_pages()
 
             # Apply page title filter if specified
             if args.pages:
@@ -391,6 +391,7 @@ def main() -> None:
     )
 
     migrate_parser.add_argument(
+        "-p",
         "--pages",
         type=str,
         help="Comma-separated list of specific page titles to migrate",
@@ -415,6 +416,7 @@ def main() -> None:
     )
 
     restore_link_parser.add_argument(
+        "-p",
         "--pages",
         type=str,
         help="Comma-separated list of specific page titles to process",
@@ -448,6 +450,7 @@ def main() -> None:
     )
 
     export_parser.add_argument(
+        "-n",
         "--limit",
         type=int,
         help="Limit the number of pages to export",
@@ -461,6 +464,7 @@ def main() -> None:
     )
 
     export_parser.add_argument(
+        "-p",
         "--pages",
         type=str,
         help="Comma-separated list of specific page titles to export",

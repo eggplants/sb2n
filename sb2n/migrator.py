@@ -7,8 +7,9 @@ from enum import Enum
 from typing import TYPE_CHECKING
 
 from sb2n.converter import NotionBlockConverter
+from sb2n.lark_adapter import LarkParserAdapter
+from sb2n.lark_parser import ScrapboxLarkParser
 from sb2n.notion_service import NotionService
-from sb2n.parser import ScrapboxParser
 from sb2n.scrapbox_service import ScrapboxService
 
 if TYPE_CHECKING:
@@ -98,6 +99,8 @@ class Migrator:
         self.notion_service = NotionService(config.notion_api_key, config.notion_database_id)
         # Converter will be initialized with scrapbox_service in migrate_all
         self.converter: NotionBlockConverter | None = None
+        # Initialize Lark parser for tag extraction
+        self.lark_parser = ScrapboxLarkParser()
 
     def migrate_all(self) -> MigrationSummary:
         """Migrate all pages from Scrapbox to Notion.
@@ -228,8 +231,8 @@ class Migrator:
             page_detail = scrapbox.get_page_detail(page_title)
             created_timestamp = page_detail.created
 
-            # Extract tags
-            tags = ScrapboxParser.extract_tags(page_text)
+            # Extract tags using Lark parser
+            tags = LarkParserAdapter.extract_tags(page_text, self.lark_parser)
 
             # Convert creation date
             created_date = datetime.fromtimestamp(created_timestamp, tz=UTC)

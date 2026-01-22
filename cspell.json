@@ -18,6 +18,7 @@
     "htmlcov",
     "httpx",
     "junitxml",
+    "lalr",
     "mccabe",
     "myproject",
     "naibu",

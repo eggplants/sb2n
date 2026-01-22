@@ -26,7 +26,8 @@
         "charliermarsh.ruff",
         "astral-sh.ty@prerelease",
         "tombi-toml.tombi",
-        "-ms-python.vscode-pylance"
+        "-ms-python.vscode-pylance",
+        "dirk-thomas.vscode-lark"
       ],
       "settings": {
         // Python

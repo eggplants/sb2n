@@ -29,7 +29,7 @@ if TYPE_CHECKING:
 
     from notion_client.typing import SyncAsync
 
-    from sb2n.parser import RichTextElement
+    from sb2n.legacy_parser import RichTextElement
 
 logger = logging.getLogger(__name__)
 

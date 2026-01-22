@@ -1,7 +1,7 @@
 """Tests for notion_service module."""
 
+from sb2n.legacy_parser import RichTextElement
 from sb2n.notion_service import NotionService
-from sb2n.parser import RichTextElement
 
 
 class TestNotionService:

@@ -1,0 +1,104 @@
+?start: document
+
+document: line* last_line?
+
+line: INDENT content NEWLINE -> indented_line
+    | content NEWLINE
+    | NEWLINE
+
+last_line: INDENT content -> indented_last_line
+         | content
+
+INDENT.11: /[ \t\u3000]+/
+
+?content: code_block_header
+        | table_header  
+        | quote
+        | callout
+        | command
+        | indented_plain_line
+        | paragraph
+
+indented_plain_line: text_content
+
+code_block_header: CODE_BLOCK_PREFIX CODE_NAME
+
+table_header: TABLE_PREFIX TABLE_NAME
+
+quote: QUOTE_PREFIX text_content
+
+callout: CALLOUT_PREFIX text_content
+
+command: COMMAND_SYMBOL text_content
+
+paragraph: inline_elements
+
+inline_elements: inline_element+
+
+?inline_element: double_bracket
+               | bracket
+               | inline_code
+               | hashtag
+               | plain_text
+
+double_bracket: DOUBLE_LSQB double_bracket_content+ DOUBLE_RSQB
+
+double_bracket_content: BRACKET_CONTENT
+                      | LSQB
+                      | RSQB  // Allow single [ and ] inside double brackets
+
+bracket: LSQB bracket_content RSQB
+
+bracket_content: BRACKET_CONTENT+
+
+hashtag: "#" HASHTAG_NAME
+
+inline_code: "`" CODE_TEXT? "`"
+           | "`" CODE_TEXT_EOL  // Unclosed inline code at end of line
+
+plain_text: PLAIN_TEXT
+
+URL: HTTP_SCHEME URL_PATH
+HTTP_SCHEME: "http://" | "https://"
+URL_PATH: /[^\s\]]+/
+
+IMAGE_URL: GYAZO_URL
+         | URL "." IMAGE_EXT
+
+GYAZO_URL: "https://gyazo.com/" /[a-f0-9]+/
+         | "https://i.gyazo.com/" /[a-f0-9]+/ "." IMAGE_EXT
+
+IMAGE_EXT: "png" | "jpg" | "jpeg" | "gif" | "svg" | "webp" | "bmp"
+
+PROJECT_NAME: /[^\s\/\]#]+/
+PAGE_NAME: /[^\s\/\]#]+/
+FRAGMENT: "#" FRAGMENT_TEXT
+FRAGMENT_TEXT: /[^\]]+/
+
+CODE_NAME: /[^\n]+/
+TABLE_NAME: /[^\n]+/
+CODE_TEXT: /[^`\n]+/
+CODE_TEXT_EOL: /[^`\n]+(?=\n)/  // Code text at end of line (lookahead for newline)
+
+BRACKET_CONTENT.12: /[^\[\]\n]+/
+HASHTAG_NAME: /[^\s\[\]`#\n]+/
+
+text_content: /[^\n]+/
+
+// Priority terminals (must come before PLAIN_TEXT)
+CODE_BLOCK_PREFIX.10: "code:"
+TABLE_PREFIX.10: "table:"
+QUOTE_PREFIX.10: ">"
+CALLOUT_PREFIX.10: "?"
+COMMAND_SYMBOL.10: "$" | "%"
+BACKQUOTE.10: "`"
+HASH.10: "#"
+DOUBLE_LSQB.11: "[["
+DOUBLE_RSQB.11: "]]"
+LSQB.10: "["
+RSQB.10: "]"
+
+PLAIN_TEXT: /[^\[\]`#\n]+/
+
+NEWLINE: /\r?\n/
+INT: /\d+/

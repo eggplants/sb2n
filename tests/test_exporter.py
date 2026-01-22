@@ -57,7 +57,8 @@ def test_export_md_format(mock_scrapbox_service: MagicMock, temp_output_dir: Pat
 
     page_title = "Test Page"
     page_text = """Test Page
-This is a test"""
+This is a test
+"""
 
     result = exporter.export_page(page_title, page_text)
 
@@ -96,3 +97,54 @@ def test_export_skip_existing_txt(mock_scrapbox_service: MagicMock, temp_output_
     # Content should still be original
     content = result1.read_text(encoding="utf-8")
     assert content == "Original content"
+
+
+def test_export_md_parse_failure_with_fallback(mock_scrapbox_service: MagicMock, temp_output_dir: Path) -> None:
+    """Test that parsing failure falls back to legacy parser."""
+    exporter = MarkdownExporter(mock_scrapbox_service, temp_output_dir, export_format="md")
+
+    page_title = "Incomplete Bracket"
+    # Text with invalid syntax (unclosed bracket in middle of line)
+    # Lark parser will fail, but legacy parser should handle it
+    page_text = """Line 1
+[incomplete bracket
+Line 3
+"""
+
+    # Export should succeed with fallback to legacy parser
+    result = exporter.export_page(page_title, page_text)
+
+    # File should be created
+    assert result is not None
+    assert result.exists()
+    assert result.name == "Incomplete Bracket.md"
+
+
+def test_export_image_url_converts_to_markdown_image(mock_scrapbox_service: MagicMock, temp_output_dir: Path) -> None:
+    """Test that image URLs are converted to Markdown image syntax."""
+    exporter = MarkdownExporter(mock_scrapbox_service, temp_output_dir, export_format="md")
+
+    page_title = "Image Test"
+    page_text = """Image Test
+[https://example.com/image.png]
+[alt text https://example.com/photo.jpg]
+[https://example.com/pic.gif description]
+[https://example.com/page]
+"""
+
+    result = exporter.export_page(page_title, page_text)
+
+    assert result is not None
+    content = result.read_text(encoding="utf-8")
+
+    # Image URL only should convert to ![](url)
+    assert "![](https://example.com/image.png)" in content
+
+    # Text + Image URL should convert to ![alt text](url)
+    assert "![alt text](https://example.com/photo.jpg)" in content
+
+    # Image URL + Text should convert to ![text](url)
+    assert "![description](https://example.com/pic.gif)" in content
+
+    # Regular URL (not image) should remain as link
+    assert "[https://example.com/page](https://example.com/page)" in content

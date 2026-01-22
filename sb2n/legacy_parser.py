@@ -113,7 +113,7 @@ class ParsedLine:
     image_url: str | None = None
 
 
-class ScrapboxParser:
+class LegacyScrapboxParser:
     """Parser for Scrapbox notation.
 
     This parser extracts tags, image URLs, and converts Scrapbox syntax
@@ -190,7 +190,7 @@ class ScrapboxParser:
             stripped = line.strip()
 
             # Check if this is a code block start
-            code_match = ScrapboxParser.CODE_BLOCK_PATTERN.match(stripped)
+            code_match = LegacyScrapboxParser.CODE_BLOCK_PATTERN.match(stripped)
             if code_match:
                 in_code_block = True
                 code_indent_level = len(line) - len(line.lstrip())
@@ -218,7 +218,7 @@ class ScrapboxParser:
         # Match both single backticks and triple backticks
         text_without_code = re.sub(r"`[^`]*`", "", text_without_code_blocks)
 
-        return ScrapboxParser.TAG_PATTERN.findall(text_without_code)
+        return LegacyScrapboxParser.TAG_PATTERN.findall(text_without_code)
 
     @staticmethod
     def extract_image_urls(text: str) -> list[str]:
@@ -233,10 +233,10 @@ class ScrapboxParser:
             List of image URLs
         """
         # First try Gyazo URLs
-        gyazo_urls = ScrapboxParser.GYAZO_PATTERN.findall(text)
+        gyazo_urls = LegacyScrapboxParser.GYAZO_PATTERN.findall(text)
 
         # Then try general image URLs
-        image_urls = ScrapboxParser.IMAGE_PATTERN.findall(text)
+        image_urls = LegacyScrapboxParser.IMAGE_PATTERN.findall(text)
 
         # Combine and deduplicate
         return gyazo_urls + [url for url in image_urls if url not in gyazo_urls]
@@ -251,7 +251,7 @@ class ScrapboxParser:
         Returns:
             List of URLs
         """
-        return ScrapboxParser.URL_PATTERN.findall(text)
+        return LegacyScrapboxParser.URL_PATTERN.findall(text)
 
     @staticmethod
     def parse_line(line: str, project_name: str | None = None) -> ParsedLine:
@@ -278,13 +278,13 @@ class ScrapboxParser:
         if stripped.startswith(">"):
             quote_prefix_removed = stripped[1:].lstrip()
             # Check if the remaining content is a heading
-            heading_check = ScrapboxParser.HEADING_PATTERN.match(quote_prefix_removed)
+            heading_check = LegacyScrapboxParser.HEADING_PATTERN.match(quote_prefix_removed)
             if heading_check:
                 # This is a heading with quote prefix - ignore the quote
                 stripped = quote_prefix_removed
 
         # Heading: [* Title], [** Title], [*** Title]
-        heading_match = ScrapboxParser.HEADING_PATTERN.match(stripped)
+        heading_match = LegacyScrapboxParser.HEADING_PATTERN.match(stripped)
         if heading_match:
             asterisks = heading_match.group(1)
             title = heading_match.group(2)
@@ -300,7 +300,7 @@ class ScrapboxParser:
                 line_type = LineType.HEADING_1
 
             # Parse rich text in heading
-            rich_text = ScrapboxParser._parse_rich_text(title)
+            rich_text = LegacyScrapboxParser._parse_rich_text(title)
             return ParsedLine(
                 original=line,
                 line_type=line_type,
@@ -309,10 +309,10 @@ class ScrapboxParser:
             )
 
         # Quote: > quote text
-        quote_match = ScrapboxParser.QUOTE_PATTERN.match(stripped)
+        quote_match = LegacyScrapboxParser.QUOTE_PATTERN.match(stripped)
         if quote_match:
             quote_text = quote_match.group(1)
-            rich_text = ScrapboxParser._parse_rich_text(quote_text)
+            rich_text = LegacyScrapboxParser._parse_rich_text(quote_text)
             return ParsedLine(
                 original=line,
                 line_type=LineType.QUOTE,
@@ -321,11 +321,11 @@ class ScrapboxParser:
             )
 
         # Code block start: code:filename
-        code_match = ScrapboxParser.CODE_BLOCK_PATTERN.match(stripped)
+        code_match = LegacyScrapboxParser.CODE_BLOCK_PATTERN.match(stripped)
         if code_match:
             filename = code_match.group(1)
             # Try to detect language from filename extension
-            language = ScrapboxParser._detect_language(filename)
+            language = LegacyScrapboxParser._detect_language(filename)
             return ParsedLine(
                 original=line,
                 line_type=LineType.CODE_START,
@@ -335,7 +335,7 @@ class ScrapboxParser:
             )
 
         # Table start: table:name
-        table_match = ScrapboxParser.TABLE_PATTERN.match(stripped)
+        table_match = LegacyScrapboxParser.TABLE_PATTERN.match(stripped)
         if table_match:
             table_name = table_match.group(1)
             return ParsedLine(
@@ -349,7 +349,7 @@ class ScrapboxParser:
         # Image link: [url image_url] or [image_url url]
         # Check this BEFORE regular image check to avoid false positives
         # Check URL-first format: [url image_url]
-        image_link_url_first = ScrapboxParser.IMAGE_LINK_URL_FIRST_PATTERN.match(stripped)
+        image_link_url_first = LegacyScrapboxParser.IMAGE_LINK_URL_FIRST_PATTERN.match(stripped)
         if image_link_url_first:
             url = image_link_url_first.group(1)
             image_url = image_link_url_first.group(2)
@@ -362,7 +362,7 @@ class ScrapboxParser:
             )
 
         # Check image-first format: [image_url url]
-        image_link_image_first = ScrapboxParser.IMAGE_LINK_IMAGE_FIRST_PATTERN.match(stripped)
+        image_link_image_first = LegacyScrapboxParser.IMAGE_LINK_IMAGE_FIRST_PATTERN.match(stripped)
         if image_link_image_first:
             image_url = image_link_image_first.group(1)
             url = image_link_image_first.group(2)
@@ -375,12 +375,12 @@ class ScrapboxParser:
             )
 
         # Image URL
-        image_urls = ScrapboxParser.extract_image_urls(stripped)
+        image_urls = LegacyScrapboxParser.extract_image_urls(stripped)
         if image_urls:
             return ParsedLine(original=line, line_type=LineType.IMAGE, content=image_urls[0], indent_level=indent_level)
 
         # Icon notation: [page_name.icon] or [/icons/page_name.icon]
-        icon_match = ScrapboxParser.ICON_PATTERN.match(stripped)
+        icon_match = LegacyScrapboxParser.ICON_PATTERN.match(stripped)
         if icon_match:
             is_icons_project = icon_match.group(1) is not None  # /icons/ prefix
             page_name = icon_match.group(2)
@@ -395,7 +395,7 @@ class ScrapboxParser:
             )
 
         # Cross-project link: [/project/page]
-        cross_project_match = ScrapboxParser.CROSS_PROJECT_LINK_PATTERN.match(stripped)
+        cross_project_match = LegacyScrapboxParser.CROSS_PROJECT_LINK_PATTERN.match(stripped)
         if cross_project_match:
             project = cross_project_match.group(1)
             page = cross_project_match.group(2)
@@ -411,7 +411,7 @@ class ScrapboxParser:
 
         # Internal link with fragment: [page#fragment] (same project)
         if project_name:
-            internal_fragment_match = ScrapboxParser.INTERNAL_FRAGMENT_LINK_PATTERN.match(stripped)
+            internal_fragment_match = LegacyScrapboxParser.INTERNAL_FRAGMENT_LINK_PATTERN.match(stripped)
             if internal_fragment_match:
                 page_title = internal_fragment_match.group(1)
                 fragment = internal_fragment_match.group(2)
@@ -425,7 +425,7 @@ class ScrapboxParser:
 
         # External link with display text: [text url] or [url text]
         # Only treat as external_link if the entire line is the link
-        external_link_match = ScrapboxParser.EXTERNAL_LINK_PATTERN.search(stripped)
+        external_link_match = LegacyScrapboxParser.EXTERNAL_LINK_PATTERN.search(stripped)
         if external_link_match and external_link_match.group(0) == stripped:
             # Check which group matched
             if external_link_match.group(1):  # [text url] format
@@ -442,15 +442,15 @@ class ScrapboxParser:
             )
 
         # Regular URL (bookmark)
-        urls = ScrapboxParser.extract_urls(stripped)
+        urls = LegacyScrapboxParser.extract_urls(stripped)
         if urls and stripped.startswith("[") and stripped.endswith("]"):
             return ParsedLine(
                 original=line, line_type=LineType.URL, content=urls[0], indent_level=indent_level
             )  # List item (indented)
         if indent_level > 0:
             # Parse rich text for list items
-            rich_text = ScrapboxParser._parse_rich_text(stripped)
-            content = ScrapboxParser._clean_links(stripped)
+            rich_text = LegacyScrapboxParser._parse_rich_text(stripped)
+            content = LegacyScrapboxParser._clean_links(stripped)
             return ParsedLine(
                 original=line,
                 line_type=LineType.LIST,
@@ -460,8 +460,8 @@ class ScrapboxParser:
             )
 
         # Regular paragraph
-        rich_text = ScrapboxParser._parse_rich_text(stripped)
-        content = ScrapboxParser._clean_links(stripped)
+        rich_text = LegacyScrapboxParser._parse_rich_text(stripped)
+        content = LegacyScrapboxParser._clean_links(stripped)
         return ParsedLine(
             original=line,
             line_type=LineType.PARAGRAPH,
@@ -564,7 +564,7 @@ class ScrapboxParser:
                     continue
 
             # Parse the line (only if not handled by code/table block logic)
-            parsed = ScrapboxParser.parse_line(line, project_name)
+            parsed = LegacyScrapboxParser.parse_line(line, project_name)
 
             # Handle code block start
             if parsed.line_type == LineType.CODE_START:
@@ -634,32 +634,32 @@ class ScrapboxParser:
             # Bold: `[[text]]`
             *[
                 Decoration(match.start(), match.end(), DecorationType.BOLD, match.group(1), None)
-                for match in ScrapboxParser.BOLD_PATTERN.finditer(text)
+                for match in LegacyScrapboxParser.BOLD_PATTERN.finditer(text)
             ],
             # Bold asterisk: `[* text]`
             *[
                 Decoration(match.start(), match.end(), DecorationType.BOLD, match.group(1), None)
-                for match in ScrapboxParser.BOLD_ASTERISK_PATTERN.finditer(text)
+                for match in LegacyScrapboxParser.BOLD_ASTERISK_PATTERN.finditer(text)
             ],
             # Italic: `[/ text]`
             *[
                 Decoration(match.start(), match.end(), DecorationType.ITALIC, match.group(1), None)
-                for match in ScrapboxParser.ITALIC_PATTERN.finditer(text)
+                for match in LegacyScrapboxParser.ITALIC_PATTERN.finditer(text)
             ],
             # Strikethrough: `[- text]`
             *[
                 Decoration(match.start(), match.end(), DecorationType.STRIKETHROUGH, match.group(1), None)
-                for match in ScrapboxParser.STRIKETHROUGH_PATTERN.finditer(text)
+                for match in LegacyScrapboxParser.STRIKETHROUGH_PATTERN.finditer(text)
             ],
             # Underline: `[_ text]`
             *[
                 Decoration(match.start(), match.end(), DecorationType.UNDERLINE, match.group(1), None)
-                for match in ScrapboxParser.UNDERLINE_PATTERN.finditer(text)
+                for match in LegacyScrapboxParser.UNDERLINE_PATTERN.finditer(text)
             ],
             # Inline code: `code`
             *[
                 Decoration(match.start(), match.end(), DecorationType.CODE, match.group(1), None)
-                for match in ScrapboxParser.INLINE_CODE_PATTERN.finditer(text)
+                for match in LegacyScrapboxParser.INLINE_CODE_PATTERN.finditer(text)
             ],
             # External links: [text url] or [url text]
             *[
@@ -670,7 +670,7 @@ class ScrapboxParser:
                     match.group(1) if match.group(1) else match.group(4),
                     match.group(2) if match.group(1) else match.group(3),
                 )
-                for match in ScrapboxParser.EXTERNAL_LINK_PATTERN.finditer(text)
+                for match in LegacyScrapboxParser.EXTERNAL_LINK_PATTERN.finditer(text)
             ],
             # Plain URLs: https://... or http://...
             *[
@@ -681,22 +681,22 @@ class ScrapboxParser:
                     match.group(0),  # Use the URL itself as the text
                     match.group(0),  # And as the link URL
                 )
-                for match in ScrapboxParser.PLAIN_URL_PATTERN.finditer(text)
+                for match in LegacyScrapboxParser.PLAIN_URL_PATTERN.finditer(text)
             ],
             # Red background: [! text]
             *[
                 Decoration(match.start(), match.end(), DecorationType.RED_BACKGROUND, match.group(1), None)
-                for match in ScrapboxParser.RED_BACKGROUND_PATTERN.finditer(text)
+                for match in LegacyScrapboxParser.RED_BACKGROUND_PATTERN.finditer(text)
             ],
             # Green background: [# text]
             *[
                 Decoration(match.start(), match.end(), DecorationType.GREEN_BACKGROUND, match.group(1), None)
-                for match in ScrapboxParser.GREEN_BACKGROUND_PATTERN.finditer(text)
+                for match in LegacyScrapboxParser.GREEN_BACKGROUND_PATTERN.finditer(text)
             ],
             # Blue background: [% text]
             *[
                 Decoration(match.start(), match.end(), DecorationType.BLUE_BACKGROUND, match.group(1), None)
-                for match in ScrapboxParser.BLUE_BACKGROUND_PATTERN.finditer(text)
+                for match in LegacyScrapboxParser.BLUE_BACKGROUND_PATTERN.finditer(text)
             ],
         ]
 
@@ -783,7 +783,7 @@ class ScrapboxParser:
             # Otherwise, just return the content
             return content
 
-        return ScrapboxParser.LINK_PATTERN.sub(replace_link, text)
+        return LegacyScrapboxParser.LINK_PATTERN.sub(replace_link, text)
 
     @staticmethod
     def _detect_language(filename: str) -> str:

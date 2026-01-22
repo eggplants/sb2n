@@ -7,7 +7,9 @@ import logging
 import re
 from typing import TYPE_CHECKING, Literal
 
-from sb2n.parser import LineType, ParsedLine, RichTextElement, ScrapboxParser
+from sb2n.lark_adapter import LarkParserAdapter
+from sb2n.lark_parser import ScrapboxLarkParser
+from sb2n.legacy_parser import LegacyScrapboxParser, LineType, ParsedLine, RichTextElement
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -35,6 +37,7 @@ class MarkdownExporter:
         self.assets_dir = self.output_dir / "assets"
         self.assets_dir.mkdir(parents=True, exist_ok=True)
         self.export_format = export_format
+        self.lark_parser = ScrapboxLarkParser()
 
     def export_page(self, page_title: str, page_text: str, *, skip_existing: bool = False) -> Path | None:
         """Export a single page as Markdown or raw text.
@@ -65,20 +68,36 @@ class MarkdownExporter:
             return output_path
 
         # Handle md format: parse and convert to Markdown
-        # Parse the page with project name for internal fragment links
-        parsed_lines = ScrapboxParser.parse_text(page_text, self.scrapbox_service.project_name)
+        # Parse the page with Lark parser
+        try:
+            document = self.lark_parser.parse(page_text)
+            parsed_lines = LarkParserAdapter.convert_document(document)
+        except Exception as e:  # noqa: BLE001
+            logger.warning("Failed to parse page '%s' with Lark parser: %s", page_title, str(e).split("\n")[0])
+            logger.info("Falling back to legacy parser for page '%s'", page_title)
+            # Fall back to legacy parser
+            try:
+                parsed_lines = LegacyScrapboxParser.parse_text(
+                    page_text, project_name=self.scrapbox_service.project_name
+                )
+            except Exception:
+                logger.exception(
+                    "Failed to parse page '%(page_title)s' with legacy parser as well", {"page_title": page_title}
+                )
+                raise
 
         # Convert to Markdown
         markdown_lines = []
-        markdown_lines.append(f"# {page_title}\n")
+        markdown_lines.append(f"# {page_title}")
+        markdown_lines.append("")  # Empty line after title
 
         for parsed_line in parsed_lines:
             md_line = self._convert_line_to_markdown(parsed_line)
-            if md_line:
+            if md_line is not None:
                 markdown_lines.append(md_line)
 
         # Write to file
-        output_path.write_text("\n".join(markdown_lines), encoding="utf-8")
+        output_path.write_text("\n".join(markdown_lines) + "\n", encoding="utf-8")
 
         logger.info("Exported to: %s", output_path)
         return output_path
@@ -92,9 +111,9 @@ class MarkdownExporter:
         Returns:
             Markdown string or None if line should be skipped
         """
-        # Skip empty paragraphs
+        # Empty paragraphs become blank lines
         if not parsed_line.content and parsed_line.line_type == LineType.PARAGRAPH:
-            return None
+            return ""
 
         # Headings
         if parsed_line.line_type in [LineType.HEADING_1, LineType.HEADING_2, LineType.HEADING_3]:
@@ -104,7 +123,7 @@ class MarkdownExporter:
                 content = self._convert_rich_text_to_markdown(parsed_line.rich_text)
             else:
                 content = parsed_line.content
-            return f"{hashes} {content}\n"
+            return f"{hashes} {content}"
 
         # Quote
         if parsed_line.line_type == LineType.QUOTE:
@@ -112,7 +131,7 @@ class MarkdownExporter:
                 content = self._convert_rich_text_to_markdown(parsed_line.rich_text)
             else:
                 content = parsed_line.content
-            return f"> {content}\n"
+            return f"> {content}"
 
         # Code block
         if parsed_line.line_type == LineType.CODE:
@@ -126,8 +145,8 @@ class MarkdownExporter:
                     + [f"{indent}{line}" for line in parsed_line.content.split("\n")]
                     + [f"{indent}```"]
                 )
-                return "\n".join(code_lines) + "\n"
-            return f"```{language}\n{parsed_line.content}\n```\n"
+                return "\n".join(code_lines)
+            return f"```{language}\n{parsed_line.content}\n```"
 
         # Image
         if parsed_line.line_type == LineType.IMAGE:
@@ -135,17 +154,17 @@ class MarkdownExporter:
             image_path = self._download_image(parsed_line.content)
             if image_path:
                 relative_path = image_path.relative_to(self.output_dir)
-                return f"![image]({relative_path})\n"
-            return f"![image]({parsed_line.content})\n"
+                return f"![image]({relative_path})"
+            return f"![image]({parsed_line.content})"
 
         # URL
         if parsed_line.line_type == LineType.URL:
-            return f"[{parsed_line.content}]({parsed_line.content})\n"
+            return f"[{parsed_line.content}]({parsed_line.content})"
 
         # External link with text
         if parsed_line.line_type == LineType.EXTERNAL_LINK:
             link_text = parsed_line.link_text or parsed_line.content
-            return f"[{link_text}]({parsed_line.content})\n"
+            return f"[{link_text}]({parsed_line.content})"
 
         # Image link (link with thumbnail image)
         if parsed_line.line_type == LineType.IMAGE_LINK:
@@ -154,9 +173,9 @@ class MarkdownExporter:
             if image_path:
                 relative_path = image_path.relative_to(self.output_dir)
                 # Create a linked image in Markdown
-                return f"[![image]({relative_path})]({parsed_line.content})\n"
+                return f"[![image]({relative_path})]({parsed_line.content})"
             # Fallback if image download fails
-            return f"[![image]({parsed_line.image_url})]({parsed_line.content})\n"
+            return f"[![image]({parsed_line.image_url})]({parsed_line.content})"
 
         # List item
         if parsed_line.line_type == LineType.LIST:
@@ -165,7 +184,7 @@ class MarkdownExporter:
                 content = self._convert_rich_text_to_markdown(parsed_line.rich_text)
             else:
                 content = parsed_line.content
-            return f"{indent}- {content}\n"
+            return f"{indent}- {content}"
 
         # Table
         if parsed_line.line_type == LineType.TABLE:
@@ -194,14 +213,26 @@ class MarkdownExporter:
                 separator = indent + "|" + "|".join(["-"] * max_columns) + "|"
                 table_lines.insert(1, separator)
 
-            return "\n".join(table_lines) + "\n"
+            return "\n".join(table_lines)
 
         # Paragraph (includes text with inline decorations)
         if parsed_line.rich_text:
-            content = self._convert_rich_text_to_markdown(parsed_line.rich_text)
-            return f"{content}\n"
+            return self._convert_rich_text_to_markdown(parsed_line.rich_text)
 
-        return f"{parsed_line.content}\n"
+        return parsed_line.content
+
+    def _is_image_url(self, url: str) -> bool:
+        """Check if URL points to an image file.
+
+        Args:
+            url: URL to check
+
+        Returns:
+            True if URL appears to be an image
+        """
+        image_extensions = {".png", ".jpg", ".jpeg", ".gif", ".svg", ".webp", ".bmp", ".ico"}
+        url_lower = url.lower()
+        return any(url_lower.endswith(ext) for ext in image_extensions)
 
     def _convert_rich_text_to_markdown(self, rich_text: list[RichTextElement]) -> str:
         """Convert rich text elements to Markdown.
@@ -229,7 +260,15 @@ class MarkdownExporter:
                 # Markdown doesn't have native underline, use HTML
                 text = f"<u>{text}</u>"
             if elem.link_url:
-                text = f"[{text}]({elem.link_url})"
+                # Check if URL is an image
+                if self._is_image_url(elem.link_url):
+                    # Use Markdown image syntax
+                    # If text is the same as URL or just the URL in brackets, use empty alt text
+                    alt_text = "" if text in (elem.link_url, f"[{elem.link_url}]") else text
+                    text = f"![{alt_text}]({elem.link_url})"
+                else:
+                    # Regular link
+                    text = f"[{text}]({elem.link_url})"
 
             # Background colors - use HTML/CSS
             if elem.background_color:
