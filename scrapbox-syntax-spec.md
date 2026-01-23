@@ -212,7 +212,7 @@ code:mermaid
 
 #### 3.8.1
 
-行頭が `?` (U+003F QUESTION MARK) で始まり、その後に空白文字が続く行は**コールアウト** (callout) として扱われる。これはHelpfeel記法とも呼ばれる。
+行頭が `?` (U+003F QUESTION MARK) で始まり、その後に空白文字が続く行は**コールアウト** (callout) として扱われる。
 
 **Example 9:**
 
