@@ -229,7 +229,7 @@ class Migrator:
             created_timestamp = page_detail.created
 
             # Extract tags
-            tags = ScrapboxParser.extract_tags(page_text)
+            tags = [tag.replace(",", "") for tag in ScrapboxParser.extract_tags(page_text)]
 
             # Convert creation date
             created_date = datetime.fromtimestamp(created_timestamp, tz=UTC)
