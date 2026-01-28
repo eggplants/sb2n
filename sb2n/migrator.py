@@ -261,7 +261,29 @@ class Migrator:
             # Convert and append blocks
             if self.converter:
                 try:
-                    self.notion_service.append_blocks(notion_page_id, self.converter.convert_to_blocks(page_text))
+                    blocks = self.converter.convert_to_blocks(page_text)
+
+                    max_block_count = 1000
+
+                    if len(blocks) > max_block_count:
+                        logger.info(
+                            "Page has %(total)d blocks. Splitting into chunks of %(max)d blocks.",
+                            {"total": len(blocks), "max": max_block_count},
+                        )
+
+                        for i in range(0, len(blocks), max_block_count):
+                            chunk = blocks[i : i + max_block_count]
+                            chunk_num = i // max_block_count + 1
+                            total_chunks = (len(blocks) + max_block_count - 1) // max_block_count
+
+                            logger.info(
+                                "Appending chunk %(current)d/%(total)d (%(count)d blocks)",
+                                {"current": chunk_num, "total": total_chunks, "count": len(chunk)},
+                            )
+                            self.notion_service.append_blocks(notion_page_id, chunk)
+                    else:
+                        self.notion_service.append_blocks(notion_page_id, blocks)
+
                 except Exception:
                     # If block append fails, delete the created page
                     logger.exception(
