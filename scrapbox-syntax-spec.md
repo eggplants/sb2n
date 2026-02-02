@@ -321,6 +321,36 @@ $ git status
 https://scrapbox.io/{project}/{page}
 ```
 
+#### 4.3.4
+
+クロスプロジェクトリンクでページ名を省略した場合（スラッシュの後にページ名がない場合）、そのプロジェクトのトップページへのリンクとなる。
+
+**Example 14-2:**
+
+入力:
+
+```txt
+[/help-jp]
+```
+
+出力: `help-jp` プロジェクトのトップページへのリンク。URL は以下のように変換される:
+
+```txt
+https://scrapbox.io/help-jp
+```
+
+**備考:** `/project/` の形式（末尾にスラッシュあり）も同様に動作する。
+
+**Example 14-3:**
+
+入力:
+
+```txt
+[/help-jp/]
+```
+
+出力: 上記と同じく `help-jp` プロジェクトのトップページへのリンク。
+
 ### 4.4 外部リンク
 
 #### 4.4.1
@@ -837,49 +867,3 @@ Scrapboxには明示的なエスケープ機構は存在しない。
 - Gyazo: <https://gyazo.com>
 - Mermaid: <https://mermaid.js.org/>
 - Helpfeel: <https://helpfeel.com/>
-
-## 付録 C: EBNF文法
-
-以下は、Scrapbox記法の主要部分を EBNF 風の記法で表現した非公式な文法定義である。不完全である可能性がある。
-
-```ebnf
-document        = line*
-
-line            = indent? content EOL
-indent          = (SPACE | TAB)+
-content         = bullet_item | code_block_header | table_header | quote | callout | command | paragraph
-bullet_item     = text
-code_block_header = "code:" identifier
-table_header    = "table:" identifier
-quote           = ">" SPACE text
-callout         = "?" SPACE text
-command         = ("$" | "%") text
-paragraph       = text
-
-text            = (bracket | inline_code | plain_text)*
-bracket         = "[" bracket_content "]"
-bracket_content = location | inline_math | image | link | icon | decoration | page_link
-
-location        = location_coords (SPACE text)? | text SPACE location_coords
-location_coords = "N" number "," "E" number ("," "Z" number)?
-inline_math     = "$" tex_expression SPACE
-image           = image_url | "[[" image_url "]]"
-link            = url (SPACE text)? | text SPACE url
-icon            = page_ref ".icon" ("*" digit+)?
-decoration      = decoration_symbol+ SPACE text
-page_link       = page_ref ("#" fragment)?
-page_ref        = ("/" project_name "/")? page_name
-
-inline_code     = "`" code_text "`"
-
-url             = ("http://" | "https://") url_chars+
-image_url       = url ("." image_ext) | gyazo_url
-gyazo_url       = "https://gyazo.com/" id | "https://i.gyazo.com/" id "." image_ext
-image_ext       = "png" | "jpg" | "jpeg" | "gif" | "svg" | "webp"
-
-decoration_symbol = "*" | "/" | "-" | "_" | "!" | "#" | "%" | "{" | "}" | ...
-
-EOL             = "\n"
-SPACE           = " "
-TAB             = "\t"
-```
