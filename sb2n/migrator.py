@@ -228,7 +228,7 @@ class Migrator:
                     continue
 
                 try:
-                    result = self._migrate_page(scrapbox, page_title)
+                    result = self._migrate_page(scrapbox, page_title, existing_titles)
                     results.append(result)
 
                     if result.success:
@@ -262,12 +262,18 @@ class Migrator:
         self._print_summary(summary)
         return summary
 
-    def _migrate_page(self, scrapbox: ScrapboxService, page_title: str) -> MigrationResult:
+    def _migrate_page(
+        self,
+        scrapbox: ScrapboxService,
+        page_title: str,
+        existing_titles: set[str],
+    ) -> MigrationResult:
         """Migrate a single page.
 
         Args:
             scrapbox: Scrapbox service
             page_title: Title of the page to migrate
+            existing_titles: Set of existing page titles in Notion (for skip-existing check)
 
         Returns:
             Migration result for this page
@@ -299,26 +305,77 @@ class Migrator:
                     notion_page_id=SpecialPageId.DRY_RUN_ID,
                 )
 
-            # Create Notion page
-            notion_page = self.notion_service.create_database_page(
-                title=page_title,
-                scrapbox_url=scrapbox_url,
-                created_date=created_date,
-                tags=tags,
-            )
+            # Convert blocks first to determine if splitting is needed
+            blocks = []
+            total_block_count = 0
+            chunks = []
+            total_chunks = 1
 
-            notion_page_id = notion_page["id"]  # ty:ignore[not-subscriptable]
-
-            # Convert and append blocks
             if self.converter:
+                blocks = self.converter.convert_to_blocks(page_text)
+                total_block_count = sum(_count_blocks_recursive(block) for block in blocks)
+                max_block_count = 1000
+
+                # Check if we need to split into multiple pages
+                if total_block_count > max_block_count:
+                    chunks = _split_blocks_into_chunks(blocks, max_block_count)
+                    total_chunks = len(chunks)
+
+                    logger.warning(
+                        "Page '%(title)s' has %(total)d blocks (including nested children), "
+                        "which exceeds the limit of %(max)d. This page will be split into %(chunks)d pages.",
+                        {
+                            "title": page_title,
+                            "total": total_block_count,
+                            "max": max_block_count,
+                            "chunks": total_chunks,
+                        },
+                    )
+
+            # Check if split pages already exist (for skip-existing)
+            if self.skip_existing and total_chunks > 1:
+                all_split_pages_exist = True
+                for i in range(1, total_chunks + 1):
+                    split_title = f"{page_title} - {i}/{total_chunks}"
+                    if split_title not in existing_titles:
+                        all_split_pages_exist = False
+                        break
+
+                if all_split_pages_exist:
+                    logger.info(
+                        "⊘ Skipping page '%(title)s' - all %(chunks)d split pages already exist",
+                        {"title": page_title, "chunks": total_chunks},
+                    )
+                    return MigrationResult(
+                        page_title=page_title,
+                        success=True,
+                        notion_page_id=SpecialPageId.SKIPPED_ID,
+                    )
+
+            # Determine the title for the first page
+            first_page_title = f"{page_title} - 1/{total_chunks}" if total_chunks > 1 else page_title
+
+            # Check if the first page already exists (for skip-existing with split pages)
+            if self.skip_existing and total_chunks > 1 and first_page_title in existing_titles:
+                logger.info(
+                    "⊘ Skipping first split page: '%(title)s' (already exists)",
+                    {"title": first_page_title},
+                )
+                # Skip creating the first page, but continue to check other pages
+                notion_page_id = None
+            else:
+                # Create Notion page with appropriate title
+                notion_page = self.notion_service.create_database_page(
+                    title=first_page_title,
+                    scrapbox_url=scrapbox_url,
+                    created_date=created_date,
+                    tags=tags,
+                )
+                notion_page_id = notion_page["id"]  # ty:ignore[not-subscriptable]
+
+            # Append blocks
+            if self.converter and blocks:
                 try:
-                    blocks = self.converter.convert_to_blocks(page_text)
-
-                    max_block_count = 1000
-
-                    # Count total blocks including nested children
-                    total_block_count = sum(_count_blocks_recursive(block) for block in blocks)
-
                     # Log block statistics
                     block_types = {}
                     for block in blocks:
@@ -330,42 +387,29 @@ class Migrator:
                         {"title": page_title, "stats": block_types, "total": total_block_count},
                     )
 
-                    # Check if we need to split into multiple pages
-                    if total_block_count > max_block_count:
-                        logger.warning(
-                            "Page '%(title)s' has %(total)d blocks (including nested children), "
-                            "which exceeds the limit of %(max)d. This page will be split into multiple pages.",
-                            {"title": page_title, "total": total_block_count, "max": max_block_count},
-                        )
-
-                        # Split blocks into chunks
-                        chunks = _split_blocks_into_chunks(blocks, max_block_count)
-                        total_chunks = len(chunks)
-
-                        logger.info(
-                            "Splitting page '%(title)s' into %(chunks)d pages",
-                            {"title": page_title, "chunks": total_chunks},
-                        )
-
-                        # Append first chunk to the already created page
-                        first_chunk = chunks[0]
-                        first_chunk_count = sum(_count_blocks_recursive(block) for block in first_chunk)
-                        logger.info(
-                            "Appending chunk 1/%(total)d to page '%(title)s - 1/%(total)d' (%(count)d blocks)",
-                            {"total": total_chunks, "title": page_title, "count": first_chunk_count},
-                        )
-                        self.notion_service.append_blocks(notion_page_id, first_chunk)
-
-                        # Update the title of the first page to include suffix
-                        self.notion_service.update_page_title(
-                            notion_page_id,
-                            f"{page_title} - 1/{total_chunks}",
-                        )
+                    if total_chunks > 1:
+                        # Append first chunk to the already created page (if not skipped)
+                        if notion_page_id is not None:
+                            first_chunk = chunks[0]
+                            first_chunk_count = sum(_count_blocks_recursive(block) for block in first_chunk)
+                            logger.info(
+                                "Appending chunk 1/%(total)d to page '%(title)s' (%(count)d blocks)",
+                                {"total": total_chunks, "title": first_page_title, "count": first_chunk_count},
+                            )
+                            self.notion_service.append_blocks(notion_page_id, first_chunk)
 
                         # Create additional pages for remaining chunks
                         for i, chunk in enumerate(chunks[1:], start=2):
                             chunk_count = sum(_count_blocks_recursive(block) for block in chunk)
                             chunk_page_title = f"{page_title} - {i}/{total_chunks}"
+
+                            # Check if this split page already exists (for skip-existing)
+                            if self.skip_existing and chunk_page_title in existing_titles:
+                                logger.info(
+                                    "⊘ Skipping split page %(page_num)d/%(total)d: '%(title)s' (already exists)",
+                                    {"page_num": i, "total": total_chunks, "title": chunk_page_title},
+                                )
+                                continue
 
                             logger.info(
                                 "Creating additional page %(page_num)d/%(total)d: '%(title)s' (%(count)d blocks)",

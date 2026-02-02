@@ -154,3 +154,81 @@ class TestBlockSplitting:
         assert len(chunks[0]) == 1000
         assert len(chunks[1]) == 1000
         assert len(chunks[2]) == 500
+
+
+class TestSkipExistingWithSplitting:
+    """Test skip-existing functionality with page splitting."""
+
+    def test_generates_correct_split_titles(self):
+        """Test that split page titles are generated correctly."""
+        page_title = "Test Page"
+        total_chunks = 3
+
+        expected_titles = [
+            "Test Page - 1/3",
+            "Test Page - 2/3",
+            "Test Page - 3/3",
+        ]
+
+        for i in range(1, total_chunks + 1):
+            split_title = f"{page_title} - {i}/{total_chunks}"
+            assert split_title == expected_titles[i - 1]
+
+    def test_all_split_pages_exist(self):
+        """Test detection when all split pages already exist."""
+        page_title = "Test Page"
+        total_chunks = 3
+
+        existing_titles = {
+            "Test Page - 1/3",
+            "Test Page - 2/3",
+            "Test Page - 3/3",
+        }
+
+        # Check if all split pages exist
+        all_exist = True
+        for i in range(1, total_chunks + 1):
+            split_title = f"{page_title} - {i}/{total_chunks}"
+            if split_title not in existing_titles:
+                all_exist = False
+                break
+
+        assert all_exist is True
+
+    def test_some_split_pages_exist(self):
+        """Test detection when only some split pages exist."""
+        page_title = "Test Page"
+        total_chunks = 3
+
+        existing_titles = {
+            "Test Page - 1/3",
+            # "Test Page - 2/3" is missing
+            "Test Page - 3/3",
+        }
+
+        # Check if all split pages exist
+        all_exist = True
+        for i in range(1, total_chunks + 1):
+            split_title = f"{page_title} - {i}/{total_chunks}"
+            if split_title not in existing_titles:
+                all_exist = False
+                break
+
+        assert all_exist is False
+
+    def test_no_split_pages_exist(self):
+        """Test detection when no split pages exist."""
+        page_title = "Test Page"
+        total_chunks = 3
+
+        existing_titles = set()
+
+        # Check if all split pages exist
+        all_exist = True
+        for i in range(1, total_chunks + 1):
+            split_title = f"{page_title} - {i}/{total_chunks}"
+            if split_title not in existing_titles:
+                all_exist = False
+                break
+
+        assert all_exist is False
