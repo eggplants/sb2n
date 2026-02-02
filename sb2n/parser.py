@@ -156,9 +156,9 @@ class ScrapboxParser:
     INLINE_CODE_PATTERN = re.compile(r"`([^`]+)`")
     # Icon notation: [page_name.icon] or [/icons/page_name.icon]
     ICON_PATTERN = re.compile(r"^\[(/icons/)?([^\]]+)\.icon\]$")
-    # Cross-project link: [/project/page] (not ending in .icon)
+    # Cross-project link: [/project/page] or [/project] or [/project/] (not ending in .icon)
     CROSS_PROJECT_LINK_PATTERN = re.compile(
-        r"^\[/([^/\]]+)/([^\]]+)\]$"
+        r"^\[/([^/\]]+)(?:/([^\]]*))?\]$"
     )  # Internal link with fragment: [page#fragment] (not starting with /)
     INTERNAL_FRAGMENT_LINK_PATTERN = re.compile(
         r"^\[([^/\]]+)#([^\]]+)\]$"
@@ -398,10 +398,14 @@ class ScrapboxParser:
         cross_project_match = ScrapboxParser.CROSS_PROJECT_LINK_PATTERN.match(stripped)
         if cross_project_match:
             project = cross_project_match.group(1)
-            page = cross_project_match.group(2)
+            page = cross_project_match.group(2) or ""  # Page can be empty for project-only links
             # Don't match if it ends with .icon (that should be handled by ICON_PATTERN)
             if not page.endswith(".icon"):
-                url = f"https://scrapbox.io/{project}/{page}"
+                # If page is empty or just whitespace, link to project top page
+                if page.strip():
+                    url = f"https://scrapbox.io/{project}/{page}"
+                else:
+                    url = f"https://scrapbox.io/{project}"
                 return ParsedLine(
                     original=line,
                     line_type=LineType.URL,
