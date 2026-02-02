@@ -19,6 +19,57 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
+def _count_blocks_recursive(block) -> int:
+    """Count blocks recursively including nested children.
+
+    Args:
+        block: A Notion block object
+
+    Returns:
+        Total count of blocks including nested children
+    """
+    count = 1  # Count the block itself
+    # Check for children in bulleted_list_item
+    if hasattr(block, "bulleted_list_item") and isinstance(block.bulleted_list_item, dict):
+        children = block.bulleted_list_item.get("children", [])
+        for child in children:
+            count += _count_blocks_recursive(child)
+    return count
+
+
+def _split_blocks_into_chunks(blocks: list, max_blocks: int = 1000) -> list[list]:
+    """Split blocks into chunks that don't exceed max_blocks (including nested children).
+
+    Args:
+        blocks: List of top-level blocks
+        max_blocks: Maximum number of blocks per chunk (including nested children)
+
+    Returns:
+        List of block chunks
+    """
+    chunks = []
+    current_chunk = []
+    current_count = 0
+
+    for block in blocks:
+        block_count = _count_blocks_recursive(block)
+
+        # If adding this block would exceed the limit, start a new chunk
+        if current_chunk and current_count + block_count > max_blocks:
+            chunks.append(current_chunk)
+            current_chunk = []
+            current_count = 0
+
+        current_chunk.append(block)
+        current_count += block_count
+
+    # Add the last chunk if it has any blocks
+    if current_chunk:
+        chunks.append(current_chunk)
+
+    return chunks
+
+
 class SpecialPageId(str, Enum):
     """Special Notion page IDs used in migration."""
 
@@ -265,23 +316,79 @@ class Migrator:
 
                     max_block_count = 1000
 
-                    if len(blocks) > max_block_count:
-                        logger.info(
-                            "Page has %(total)d blocks. Splitting into chunks of %(max)d blocks.",
-                            {"total": len(blocks), "max": max_block_count},
+                    # Count total blocks including nested children
+                    total_block_count = sum(_count_blocks_recursive(block) for block in blocks)
+
+                    # Log block statistics
+                    block_types = {}
+                    for block in blocks:
+                        block_type = block.type
+                        block_types[block_type] = block_types.get(block_type, 0) + 1
+
+                    logger.debug(
+                        "Block statistics for page '%(title)s': %(stats)s (total: %(total)d including nested)",
+                        {"title": page_title, "stats": block_types, "total": total_block_count},
+                    )
+
+                    # Check if we need to split into multiple pages
+                    if total_block_count > max_block_count:
+                        logger.warning(
+                            "Page '%(title)s' has %(total)d blocks (including nested children), "
+                            "which exceeds the limit of %(max)d. This page will be split into multiple pages.",
+                            {"title": page_title, "total": total_block_count, "max": max_block_count},
                         )
 
-                        for i in range(0, len(blocks), max_block_count):
-                            chunk = blocks[i : i + max_block_count]
-                            chunk_num = i // max_block_count + 1
-                            total_chunks = (len(blocks) + max_block_count - 1) // max_block_count
+                        # Split blocks into chunks
+                        chunks = _split_blocks_into_chunks(blocks, max_block_count)
+                        total_chunks = len(chunks)
+
+                        logger.info(
+                            "Splitting page '%(title)s' into %(chunks)d pages",
+                            {"title": page_title, "chunks": total_chunks},
+                        )
+
+                        # Append first chunk to the already created page
+                        first_chunk = chunks[0]
+                        first_chunk_count = sum(_count_blocks_recursive(block) for block in first_chunk)
+                        logger.info(
+                            "Appending chunk 1/%(total)d to page '%(title)s - 1/%(total)d' (%(count)d blocks)",
+                            {"total": total_chunks, "title": page_title, "count": first_chunk_count},
+                        )
+                        self.notion_service.append_blocks(notion_page_id, first_chunk)
+
+                        # Update the title of the first page to include suffix
+                        self.notion_service.update_page_title(
+                            notion_page_id,
+                            f"{page_title} - 1/{total_chunks}",
+                        )
+
+                        # Create additional pages for remaining chunks
+                        for i, chunk in enumerate(chunks[1:], start=2):
+                            chunk_count = sum(_count_blocks_recursive(block) for block in chunk)
+                            chunk_page_title = f"{page_title} - {i}/{total_chunks}"
 
                             logger.info(
-                                "Appending chunk %(current)d/%(total)d (%(count)d blocks)",
-                                {"current": chunk_num, "total": total_chunks, "count": len(chunk)},
+                                "Creating additional page %(page_num)d/%(total)d: '%(title)s' (%(count)d blocks)",
+                                {"page_num": i, "total": total_chunks, "title": chunk_page_title, "count": chunk_count},
                             )
-                            self.notion_service.append_blocks(notion_page_id, chunk)
+
+                            # Create new page with the same metadata
+                            chunk_page = self.notion_service.create_database_page(
+                                title=chunk_page_title,
+                                scrapbox_url=scrapbox_url,
+                                created_date=created_date,
+                                tags=tags,
+                            )
+                            chunk_page_id = chunk_page["id"]
+
+                            # Append blocks to the new page
+                            self.notion_service.append_blocks(chunk_page_id, chunk)
+
                     else:
+                        logger.debug(
+                            "Appending %(count)d blocks to page '%(title)s'",
+                            {"count": len(blocks), "title": page_title},
+                        )
                         self.notion_service.append_blocks(notion_page_id, blocks)
 
                 except Exception:

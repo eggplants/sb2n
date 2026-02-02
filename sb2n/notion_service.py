@@ -214,6 +214,24 @@ class NotionService:
             logger.exception("Failed to delete page: %(page_id)s", {"page_id": page_id})
             raise
 
+    def update_page_title(self, page_id: UUID | str, title: str) -> None:
+        """Update the title of a Notion page.
+
+        Args:
+            page_id: Notion page ID to update
+            title: New title for the page
+
+        Raises:
+            Exception: If page update fails
+        """
+        try:
+            properties = {"Title": {"title": [{"text": {"content": title}}]}}
+            self.client.pages.update(page_id=str(page_id), properties=properties)
+            logger.info("Updated page title: %(page_id)s -> '%(title)s'", {"page_id": page_id, "title": title})
+        except Exception:
+            logger.exception("Failed to update page title: %(page_id)s", {"page_id": page_id})
+            raise
+
     def append_blocks(self, page_id: UUID, blocks: list[BlockObject]) -> None:
         """Append blocks to a Notion page.
 
@@ -251,6 +269,20 @@ class NotionService:
                         batch_dicts.append(block.model_dump(mode="json", exclude_none=True))
                     else:
                         batch_dicts.append(block)
+
+                # Debug: Check for code blocks that exceed 2000 chars
+                for idx, block_dict in enumerate(batch_dicts):
+                    if block_dict.get("type") == "code":
+                        content_len = len(block_dict["code"]["rich_text"][0]["text"]["content"])
+                        if content_len > 2000:
+                            logger.error(
+                                "Code block at children[%(idx)d] exceeds 2000 chars: %(len)d chars. This will cause API error!",
+                                {"idx": idx, "len": content_len},
+                            )
+                        logger.debug(
+                            "Code block at children[%(idx)d]: %(len)d chars",
+                            {"idx": idx, "len": content_len},
+                        )
 
                 self.client.blocks.children.append(block_id=str(page_id), children=batch_dicts)
                 logger.debug(
@@ -342,21 +374,53 @@ class NotionService:
             Code block object, or list of code blocks if content exceeds 2000 characters
         """
         # Notion API limit: code.rich_text[0].text.content.length should be ≤ 2000
+        # Note: Notion API uses JavaScript's string.length which counts UTF-16 code units
         MAX_CODE_LENGTH = 2000  # noqa: N806
 
-        if len(code) <= MAX_CODE_LENGTH:
+        def utf16_length(s: str) -> int:
+            """Calculate string length as UTF-16 code units (JavaScript string.length equivalent)."""
+            return len(s.encode("utf-16-le")) // 2
+
+        def split_at_utf16_boundary(s: str, max_utf16_length: int) -> str:
+            """Split string at UTF-16 boundary, ensuring we don't exceed max_utf16_length."""
+            # Binary search for the right split point
+            left, right = 0, len(s)
+            while left < right:
+                mid = (left + right + 1) // 2
+                if utf16_length(s[:mid]) <= max_utf16_length:
+                    left = mid
+                else:
+                    right = mid - 1
+            return s[:left]
+
+        if utf16_length(code) <= MAX_CODE_LENGTH:
             return CodeBlock.new(code=code, language=language)
 
-        # Split code into chunks
+        # Split code into chunks based on UTF-16 code units
+        num_blocks = (utf16_length(code) + MAX_CODE_LENGTH - 1) // MAX_CODE_LENGTH
         logger.warning(
-            "Code block exceeds %(max)d characters (%(length)d). Splitting into multiple blocks.",
-            {"max": MAX_CODE_LENGTH, "length": len(code)},
+            "Code block exceeds %(max)d characters (%(length)d UTF-16 code units, language=%(lang)s). "
+            "Splitting into %(num_blocks)d blocks.",
+            {"max": MAX_CODE_LENGTH, "length": utf16_length(code), "lang": language, "num_blocks": num_blocks},
         )
 
         blocks = []
-        for i in range(0, len(code), MAX_CODE_LENGTH):
-            chunk = code[i : i + MAX_CODE_LENGTH]
+        remaining = code
+        while remaining:
+            # Find the split point that doesn't exceed MAX_CODE_LENGTH UTF-16 code units
+            chunk = split_at_utf16_boundary(remaining, MAX_CODE_LENGTH)
+            if not chunk:  # Safety check
+                # If we can't fit even one character, something is very wrong
+                logger.error("Cannot split code block - single character exceeds limit")
+                break
+
             blocks.append(CodeBlock.new(code=chunk, language=language))
+            remaining = remaining[len(chunk) :]
+
+            logger.debug(
+                "Created code block chunk %(current)d/%(total)d (%(size)d UTF-16 code units)",
+                {"current": len(blocks), "total": num_blocks, "size": utf16_length(chunk)},
+            )
 
         return blocks
 
