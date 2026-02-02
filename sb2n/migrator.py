@@ -371,7 +371,7 @@ class Migrator:
                     created_date=created_date,
                     tags=tags,
                 )
-                notion_page_id = notion_page["id"]  # ty:ignore[not-subscriptable]
+                notion_page_id = notion_page["id"]
 
             # Append blocks
             if self.converter and blocks:
@@ -428,7 +428,7 @@ class Migrator:
                             # Append blocks to the new page
                             self.notion_service.append_blocks(chunk_page_id, chunk)
 
-                    else:
+                    elif notion_page_id is not None:
                         logger.debug(
                             "Appending %(count)d blocks to page '%(title)s'",
                             {"count": len(blocks), "title": page_title},
@@ -441,14 +441,15 @@ class Migrator:
                         "Failed to append blocks to page '%(title)s'. Deleting the page...",
                         {"title": page_title},
                     )
-                    try:
-                        self.notion_service.delete_page(notion_page_id)
-                        logger.info("Successfully deleted incomplete page: %(title)s", {"title": page_title})
-                    except Exception:
-                        logger.exception(
-                            "Failed to delete incomplete page '%(title)s'",
-                            {"title": page_title},
-                        )
+                    if notion_page_id is not None:
+                        try:
+                            self.notion_service.delete_page(notion_page_id)
+                            logger.info("Successfully deleted incomplete page: %(title)s", {"title": page_title})
+                        except Exception:
+                            logger.exception(
+                                "Failed to delete incomplete page '%(title)s'",
+                                {"title": page_title},
+                            )
                     # Re-raise the original error
                     raise
 

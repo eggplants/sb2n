@@ -84,11 +84,11 @@ class TestBlockLimits:
         # Should have 2 code blocks (split by UTF-16 length)
         assert len(blocks) == 2
         assert all(block.type == "code" for block in blocks)
-        assert blocks[0].code["language"] == "python"
-        assert blocks[1].code["language"] == "python"
+        assert blocks[0].code["language"] == "python"  # ty:ignore[possibly-missing-attribute]
+        assert blocks[1].code["language"] == "python"  # ty:ignore[possibly-missing-attribute]
         # All blocks should be within UTF-16 limit
-        assert utf16_length(blocks[0].code["rich_text"][0]["text"]["content"]) <= 2000
-        assert utf16_length(blocks[1].code["rich_text"][0]["text"]["content"]) <= 2000
+        assert utf16_length(blocks[0].code["rich_text"][0]["text"]["content"]) <= 2000  # ty:ignore[possibly-missing-attribute]
+        assert utf16_length(blocks[1].code["rich_text"][0]["text"]["content"]) <= 2000  # ty:ignore[possibly-missing-attribute]
 
     def test_converter_handles_multiple_long_code_blocks(self) -> None:
         """Test that converter handles multiple long code blocks in the same page."""
@@ -110,20 +110,20 @@ class TestBlockLimits:
 
         # First code block (split into 2)
         assert blocks[0].type == "code"
-        assert blocks[0].code["language"] == "javascript"
+        assert blocks[0].code["language"] == "javascript"  # ty:ignore[possibly-missing-attribute]
         assert blocks[1].type == "code"
-        assert blocks[1].code["language"] == "javascript"
+        assert blocks[1].code["language"] == "javascript"  # ty:ignore[possibly-missing-attribute]
 
         # Paragraph
         assert blocks[2].type == "paragraph"
 
         # Second code block (split into 2)
         assert blocks[3].type == "code"
-        assert blocks[3].code["language"] == "python"
-        assert utf16_length(blocks[3].code["rich_text"][0]["text"]["content"]) <= 2000
+        assert blocks[3].code["language"] == "python"  # ty:ignore[possibly-missing-attribute]
+        assert utf16_length(blocks[3].code["rich_text"][0]["text"]["content"]) <= 2000  # ty:ignore[possibly-missing-attribute]
         assert blocks[4].type == "code"
-        assert blocks[4].code["language"] == "python"
-        assert utf16_length(blocks[4].code["rich_text"][0]["text"]["content"]) <= 2000
+        assert blocks[4].code["language"] == "python"  # ty:ignore[possibly-missing-attribute]
+        assert utf16_length(blocks[4].code["rich_text"][0]["text"]["content"]) <= 2000  # ty:ignore[possibly-missing-attribute]
 
     def test_code_block_with_emojis(self) -> None:
         """Test that code blocks with emojis are split correctly based on UTF-16 length."""

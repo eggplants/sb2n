@@ -3,7 +3,7 @@
 import logging
 import urllib.parse
 from io import BytesIO
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Any, Literal, cast
 
 from notion_client import Client
 from pydantic import BaseModel
@@ -144,7 +144,7 @@ class NotionService:
         scrapbox_url: str,
         created_date: datetime,
         tags: list[str],
-    ) -> dict | SyncAsync:
+    ) -> dict:
         """Create a new page in the Notion database.
 
         Args:
@@ -187,11 +187,15 @@ class NotionService:
             )
 
             # Execute request
-            response_dict = self.client.pages.create(**create_request.model_dump(mode="json", exclude_none=True))
+            response: dict | SyncAsync = self.client.pages.create(
+                **create_request.model_dump(mode="json", exclude_none=True)
+            )
 
             # Return raw dict instead of validating with Page model
             # because pydantic-api-models-notion may not support all parent types (e.g., data_source_id)
-            logger.info("Created page: %(title)s (ID: %(id)s)", {"title": title, "id": response_dict["id"]})  # ty:ignore[not-subscriptable]
+            # Type assertion: client is used synchronously, so response is a dict
+            response_dict = cast("dict", response)
+            logger.info("Created page: %(title)s (ID: %(id)s)", {"title": title, "id": response_dict["id"]})
         except Exception:
             logger.exception("Failed to create page: %(title)s", {"title": title})
             raise
