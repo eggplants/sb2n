@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Literal
 from zoneinfo import ZoneInfo
 
+from sb2n import __version__
 from sb2n.config import Config
 from sb2n.exporter import MarkdownExporter
 from sb2n.link_restorer import LinkRestorer
@@ -296,7 +297,7 @@ def main() -> None:
     parser.add_argument(
         "--version",
         action="version",
-        version="%(prog)s 0.1.0",
+        version=f"%(prog)s {__version__}",
     )
 
     parser.add_argument(
