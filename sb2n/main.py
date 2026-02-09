@@ -168,16 +168,9 @@ def restore_link_command(args: Args) -> int:
         # Run restore
         summary = restorer.restore_all_links(page_titles=page_titles)
 
-        # Print summary
-        logger.info("=" * 60)
-        logger.info("LINK RESTORATION SUMMARY")
-        logger.info("=" * 60)
-        logger.info("Total pages processed: %d", summary["total_pages"])
-        logger.info("Successful: %d", summary["successful"])
-        logger.info("Failed: %d", summary["failed"])
-        logger.info("=" * 60)
-
-        return summary["failed"]
+        # Summary is already logged by restorer._log_summary()
+        # Return error count as exit code
+        return summary["errors"]
 
     except ValueError:
         logger.exception("Configuration error")

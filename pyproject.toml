@@ -7,7 +7,7 @@ name = "sb2n"
 description = "Helpfeel Cosense (Scrapbox) to Notion Migration Tool"
 readme = "README.md"
 keywords = [ "notion", "scrapbox" ]
-license = { text = "MIT" }
+license = "MIT"
 authors = [ { name = "eggplants", email = "w10776e8w@yahoo.co.jp" } ]
 requires-python = ">=3.14,<4"
 classifiers = [
