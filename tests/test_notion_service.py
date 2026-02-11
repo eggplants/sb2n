@@ -1,6 +1,10 @@
 """Tests for notion_service module."""
 
-from sb2n.notion_service import NotionService
+from unittest.mock import Mock, patch
+
+import pytest
+
+from sb2n.notion_service import DatabasePropertyValidationError, NotionService
 from sb2n.parser import RichTextElement
 
 
@@ -184,3 +188,209 @@ class TestNotionService:
         # Should return a single table (not a list)
         assert not isinstance(result, list)
         assert len(result.children) == 100
+
+
+class TestDatabaseValidation:
+    """Test cases for database property validation."""
+
+    @patch("sb2n.notion_service.Client")
+    def test_validate_database_properties_success(self, mock_client: Mock) -> None:
+        """Test successful database validation with all required properties."""
+        # Mock database response
+        mock_database = {
+            "properties": {
+                "Title": {"type": "title"},
+                "Scrapbox URL": {"type": "url"},
+                "Created Date": {"type": "date"},
+                "Tags": {"type": "multi_select"},
+            }
+        }
+        mock_client_instance = Mock()
+        mock_client_instance.databases.retrieve.return_value = mock_database
+        mock_client.return_value = mock_client_instance
+
+        service = NotionService(api_key="test_key", database_id="test_db")
+
+        # Should not raise any exception
+        service.validate_database_properties()
+
+        # Verify that database was retrieved
+        mock_client_instance.databases.retrieve.assert_called_once_with(database_id="test_db")
+
+    @patch("sb2n.notion_service.Client")
+    def test_validate_database_properties_with_name_instead_of_title(self, mock_client: Mock) -> None:
+        """Test database validation with 'Name' property instead of 'Title'."""
+        # Mock database response with 'Name' instead of 'Title'
+        mock_database = {
+            "properties": {
+                "Name": {"type": "title"},
+                "Scrapbox URL": {"type": "url"},
+                "Created Date": {"type": "date"},
+            }
+        }
+        mock_client_instance = Mock()
+        mock_client_instance.databases.retrieve.return_value = mock_database
+        mock_client.return_value = mock_client_instance
+
+        service = NotionService(api_key="test_key", database_id="test_db")
+
+        # Should not raise any exception
+        service.validate_database_properties()
+
+    @patch("sb2n.notion_service.Client")
+    def test_validate_database_properties_without_tags(self, mock_client: Mock) -> None:
+        """Test database validation without optional Tags property (should still pass)."""
+        # Mock database response without Tags
+        mock_database = {
+            "properties": {
+                "Title": {"type": "title"},
+                "Scrapbox URL": {"type": "url"},
+                "Created Date": {"type": "date"},
+            }
+        }
+        mock_client_instance = Mock()
+        mock_client_instance.databases.retrieve.return_value = mock_database
+        mock_client.return_value = mock_client_instance
+
+        service = NotionService(api_key="test_key", database_id="test_db")
+
+        # Should not raise any exception (Tags is optional)
+        service.validate_database_properties()
+
+    @patch("sb2n.notion_service.Client")
+    def test_validate_database_properties_missing_title(self, mock_client: Mock) -> None:
+        """Test database validation failure when Title property is missing."""
+        # Mock database response without Title or Name
+        mock_database = {
+            "properties": {
+                "Scrapbox URL": {"type": "url"},
+                "Created Date": {"type": "date"},
+            }
+        }
+        mock_client_instance = Mock()
+        mock_client_instance.databases.retrieve.return_value = mock_database
+        mock_client.return_value = mock_client_instance
+
+        service = NotionService(api_key="test_key", database_id="test_db")
+
+        # Should raise DatabasePropertyValidationError
+        with pytest.raises(DatabasePropertyValidationError, match="must have a 'Title' or 'Name' property"):
+            service.validate_database_properties()
+
+    @patch("sb2n.notion_service.Client")
+    def test_validate_database_properties_wrong_title_type(self, mock_client: Mock) -> None:
+        """Test database validation failure when Title has wrong type."""
+        # Mock database response with wrong type for Title
+        mock_database = {
+            "properties": {
+                "Title": {"type": "rich_text"},  # Wrong type
+                "Scrapbox URL": {"type": "url"},
+                "Created Date": {"type": "date"},
+            }
+        }
+        mock_client_instance = Mock()
+        mock_client_instance.databases.retrieve.return_value = mock_database
+        mock_client.return_value = mock_client_instance
+
+        service = NotionService(api_key="test_key", database_id="test_db")
+
+        # Should raise DatabasePropertyValidationError
+        with pytest.raises(DatabasePropertyValidationError, match="must be of type 'title'"):
+            service.validate_database_properties()
+
+    @patch("sb2n.notion_service.Client")
+    def test_validate_database_properties_missing_scrapbox_url(self, mock_client: Mock) -> None:
+        """Test database validation failure when Scrapbox URL property is missing."""
+        # Mock database response without Scrapbox URL
+        mock_database = {
+            "properties": {
+                "Title": {"type": "title"},
+                "Created Date": {"type": "date"},
+            }
+        }
+        mock_client_instance = Mock()
+        mock_client_instance.databases.retrieve.return_value = mock_database
+        mock_client.return_value = mock_client_instance
+
+        service = NotionService(api_key="test_key", database_id="test_db")
+
+        # Should raise DatabasePropertyValidationError
+        with pytest.raises(DatabasePropertyValidationError, match="must have a 'Scrapbox URL' property"):
+            service.validate_database_properties()
+
+    @patch("sb2n.notion_service.Client")
+    def test_validate_database_properties_wrong_url_type(self, mock_client: Mock) -> None:
+        """Test database validation failure when Scrapbox URL has wrong type."""
+        # Mock database response with wrong type for Scrapbox URL
+        mock_database = {
+            "properties": {
+                "Title": {"type": "title"},
+                "Scrapbox URL": {"type": "rich_text"},  # Wrong type
+                "Created Date": {"type": "date"},
+            }
+        }
+        mock_client_instance = Mock()
+        mock_client_instance.databases.retrieve.return_value = mock_database
+        mock_client.return_value = mock_client_instance
+
+        service = NotionService(api_key="test_key", database_id="test_db")
+
+        # Should raise DatabasePropertyValidationError
+        with pytest.raises(DatabasePropertyValidationError, match="'Scrapbox URL' property must be of type 'url'"):
+            service.validate_database_properties()
+
+    @patch("sb2n.notion_service.Client")
+    def test_validate_database_properties_missing_created_date(self, mock_client: Mock) -> None:
+        """Test database validation failure when Created Date property is missing."""
+        # Mock database response without Created Date
+        mock_database = {
+            "properties": {
+                "Title": {"type": "title"},
+                "Scrapbox URL": {"type": "url"},
+            }
+        }
+        mock_client_instance = Mock()
+        mock_client_instance.databases.retrieve.return_value = mock_database
+        mock_client.return_value = mock_client_instance
+
+        service = NotionService(api_key="test_key", database_id="test_db")
+
+        # Should raise DatabasePropertyValidationError
+        with pytest.raises(DatabasePropertyValidationError, match="must have a 'Created Date' property"):
+            service.validate_database_properties()
+
+    @patch("sb2n.notion_service.Client")
+    def test_validate_database_properties_wrong_date_type(self, mock_client: Mock) -> None:
+        """Test database validation failure when Created Date has wrong type."""
+        # Mock database response with wrong type for Created Date
+        mock_database = {
+            "properties": {
+                "Title": {"type": "title"},
+                "Scrapbox URL": {"type": "url"},
+                "Created Date": {"type": "rich_text"},  # Wrong type
+            }
+        }
+        mock_client_instance = Mock()
+        mock_client_instance.databases.retrieve.return_value = mock_database
+        mock_client.return_value = mock_client_instance
+
+        service = NotionService(api_key="test_key", database_id="test_db")
+
+        # Should raise DatabasePropertyValidationError
+        with pytest.raises(DatabasePropertyValidationError, match="'Created Date' property must be of type 'date'"):
+            service.validate_database_properties()
+
+    @patch("sb2n.notion_service.Client")
+    def test_validate_database_properties_no_properties(self, mock_client: Mock) -> None:
+        """Test database validation failure when database has no properties."""
+        # Mock database response with no properties
+        mock_database = {"properties": {}}
+        mock_client_instance = Mock()
+        mock_client_instance.databases.retrieve.return_value = mock_database
+        mock_client.return_value = mock_client_instance
+
+        service = NotionService(api_key="test_key", database_id="test_db")
+
+        # Should raise DatabasePropertyValidationError
+        with pytest.raises(DatabasePropertyValidationError, match="Database has no properties"):
+            service.validate_database_properties()

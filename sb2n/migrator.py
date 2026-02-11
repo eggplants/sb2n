@@ -160,6 +160,14 @@ class Migrator:
         if self.dry_run:
             logger.info("DRY RUN MODE: No actual changes will be made")
 
+        # Validate database properties before migration
+        if not self.dry_run:
+            try:
+                self.notion_service.validate_database_properties()
+            except Exception:
+                logger.error("Database validation failed. Migration aborted.")
+                raise
+
         # Get existing pages if skip_existing is enabled
         existing_titles: set[str] = set()
         if self.skip_existing:

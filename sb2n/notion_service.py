@@ -8,6 +8,11 @@ from typing import TYPE_CHECKING, Any, Literal, cast
 from notion_client import Client
 from pydantic import BaseModel
 
+
+class DatabasePropertyValidationError(Exception):
+    """Raised when database properties are invalid or missing."""
+
+
 from sb2n.models import (
     BlockObject,
     BookmarkBlock,
@@ -72,6 +77,77 @@ class NotionService:
         self.api_key = api_key
         self.database_id = database_id
         self.client = Client(auth=api_key)
+
+    def validate_database_properties(self) -> None:
+        """Validate that required database properties exist.
+
+        Checks that the database has the following required properties:
+        - Title (or Name) - title type
+        - Scrapbox URL - url type
+        - Created Date - date type
+
+        Optional properties:
+        - Tags - multi_select type
+
+        Raises:
+            DatabasePropertyValidationError: If required properties are missing or have incorrect types
+        """
+        logger.info("Validating Notion database properties")
+
+        try:
+            # Retrieve database schema
+            database = self.client.databases.retrieve(database_id=self.database_id)
+            properties = database.get("properties", {})  # ty:ignore[possibly-missing-attribute]
+
+            if not properties:
+                msg = "Database has no properties"
+                raise DatabasePropertyValidationError(msg)
+
+            # Check for title property (Title or Name)
+            title_prop = properties.get("Title") or properties.get("Name")
+            if not title_prop:
+                msg = "Database must have a 'Title' or 'Name' property"
+                raise DatabasePropertyValidationError(msg)
+            if title_prop.get("type") != "title":
+                msg = f"'Title' or 'Name' property must be of type 'title', got '{title_prop.get('type')}'"
+                raise DatabasePropertyValidationError(msg)
+
+            # Check for Scrapbox URL property
+            url_prop = properties.get("Scrapbox URL")
+            if not url_prop:
+                msg = "Database must have a 'Scrapbox URL' property"
+                raise DatabasePropertyValidationError(msg)
+            if url_prop.get("type") != "url":
+                msg = f"'Scrapbox URL' property must be of type 'url', got '{url_prop.get('type')}'"
+                raise DatabasePropertyValidationError(msg)
+
+            # Check for Created Date property
+            date_prop = properties.get("Created Date")
+            if not date_prop:
+                msg = "Database must have a 'Created Date' property"
+                raise DatabasePropertyValidationError(msg)
+            if date_prop.get("type") != "date":
+                msg = f"'Created Date' property must be of type 'date', got '{date_prop.get('type')}'"
+                raise DatabasePropertyValidationError(msg)
+
+            # Check for optional Tags property (warn if missing or wrong type)
+            tags_prop = properties.get("Tags")
+            if not tags_prop:
+                logger.warning("Database does not have a 'Tags' property (optional)")
+            elif tags_prop.get("type") != "multi_select":
+                logger.warning(
+                    "'Tags' property should be of type 'multi_select', got '%(type)s'",
+                    {"type": tags_prop.get("type")},
+                )
+
+            logger.info("✓ Database properties validation passed")
+
+        except DatabasePropertyValidationError:
+            logger.error("Database property validation failed")
+            raise
+        except Exception:
+            logger.exception("Failed to validate database properties")
+            raise
 
     def get_existing_page_titles(self) -> set[str]:
         """Get all existing page titles from the database.
