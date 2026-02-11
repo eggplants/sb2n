@@ -29,6 +29,8 @@ Notionの移行先データベースは**フルページデータベース（Ful
 | Created Date | Date | ✓ | Scrapboxでのページ作成日時 |
 | Tags | Multi-select | | Scrapboxページに含まれるタグ |
 
+**注意**: マイグレーション実行時に、これらの必須プロパティが正しく設定されているかを自動的に検証します。検証に失敗した場合、マイグレーションは中止されます。
+
 ##### データベース作成手順
 
 1. **Notionでフルページデータベースを作成**
@@ -59,6 +61,40 @@ Notionの移行先データベースは**フルページデータベース（Ful
 - **作成日**: Scrapboxページの作成日時（Unix timestamp から変換）
 - **タグ**: Scrapboxページ内のハッシュタグ（`#tag` 形式）を抽出してMulti-selectとして設定
 - **本文**: Notionページの本文として、Scrapbox記法からNotion Blocksへ変換して格納
+
+#### データベース検証
+
+マイグレーション実行時には、Notionデータベースのプロパティを自動的に検証します。
+
+##### 検証項目
+
+1. **必須プロパティの存在確認**:
+   - `Title` (または `Name`) プロパティが存在するか
+   - `Scrapbox URL` プロパティが存在するか
+   - `Created Date` プロパティが存在するか
+
+2. **プロパティタイプの確認**:
+   - `Title`/`Name` が `title` タイプであるか
+   - `Scrapbox URL` が `url` タイプであるか
+   - `Created Date` が `date` タイプであるか
+
+3. **オプションプロパティの確認**:
+   - `Tags` プロパティが存在しない場合は警告を表示（タグ情報は無視される）
+   - `Tags` が存在するが `multi_select` タイプでない場合も警告を表示
+
+##### 検証の実行タイミング
+
+- `sb2n migrate` コマンド実行時、最初のページを移行する前に自動的に実行されます
+- `--dry-run` モードでは検証をスキップします（実際にAPIアクセスしないため）
+- 検証に失敗した場合、エラーメッセージを表示してマイグレーションを中止します
+
+##### エラー例
+
+```text
+ERROR: Database property validation failed
+ERROR: Database must have a 'Scrapbox URL' property
+ERROR: Migration aborted.
+```
 
 ### 3. 画像の移行
 
