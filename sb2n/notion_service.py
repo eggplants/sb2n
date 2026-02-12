@@ -8,11 +8,6 @@ from typing import TYPE_CHECKING, Any, Literal, cast
 from notion_client import Client
 from pydantic import BaseModel
 
-
-class DatabasePropertyValidationError(Exception):
-    """Raised when database properties are invalid or missing."""
-
-
 from sb2n.models import (
     BlockObject,
     BookmarkBlock,
@@ -37,6 +32,10 @@ if TYPE_CHECKING:
     from sb2n.parser import RichTextElement
 
 logger = logging.getLogger(__name__)
+
+
+class DatabasePropertyValidationError(Exception):
+    """Raised when database properties are invalid or missing."""
 
 
 class FileUploadResponse(BaseModel):
@@ -101,40 +100,40 @@ class NotionService:
 
             if not properties:
                 msg = "Database has no properties"
-                raise DatabasePropertyValidationError(msg)
+                raise DatabasePropertyValidationError(msg)  # noqa: TRY301
 
             # Check for title property (Title or Name)
             title_prop = properties.get("Title") or properties.get("Name")
             if not title_prop:
                 msg = "Database must have a 'Title' or 'Name' property"
-                raise DatabasePropertyValidationError(msg)
-            if title_prop.get("type") != "title":
+                raise DatabasePropertyValidationError(msg)  # noqa: TRY301
+            if title_prop.get("type") != "title":  # noqa: PLR2004
                 msg = f"'Title' or 'Name' property must be of type 'title', got '{title_prop.get('type')}'"
-                raise DatabasePropertyValidationError(msg)
+                raise DatabasePropertyValidationError(msg)  # noqa: TRY301
 
             # Check for Scrapbox URL property
             url_prop = properties.get("Scrapbox URL")
             if not url_prop:
                 msg = "Database must have a 'Scrapbox URL' property"
-                raise DatabasePropertyValidationError(msg)
-            if url_prop.get("type") != "url":
+                raise DatabasePropertyValidationError(msg)  # noqa: TRY301
+            if url_prop.get("type") != "url":  # noqa: PLR2004
                 msg = f"'Scrapbox URL' property must be of type 'url', got '{url_prop.get('type')}'"
-                raise DatabasePropertyValidationError(msg)
+                raise DatabasePropertyValidationError(msg)  # noqa: TRY301
 
             # Check for Created Date property
             date_prop = properties.get("Created Date")
             if not date_prop:
                 msg = "Database must have a 'Created Date' property"
-                raise DatabasePropertyValidationError(msg)
-            if date_prop.get("type") != "date":
+                raise DatabasePropertyValidationError(msg)  # noqa: TRY301
+            if date_prop.get("type") != "date":  # noqa: PLR2004
                 msg = f"'Created Date' property must be of type 'date', got '{date_prop.get('type')}'"
-                raise DatabasePropertyValidationError(msg)
+                raise DatabasePropertyValidationError(msg)  # noqa: TRY301
 
             # Check for optional Tags property (warn if missing or wrong type)
             tags_prop = properties.get("Tags")
             if not tags_prop:
                 logger.warning("Database does not have a 'Tags' property (optional)")
-            elif tags_prop.get("type") != "multi_select":
+            elif tags_prop.get("type") != "multi_select":  # noqa: PLR2004
                 logger.warning(
                     "'Tags' property should be of type 'multi_select', got '%(type)s'",
                     {"type": tags_prop.get("type")},
@@ -142,11 +141,12 @@ class NotionService:
 
             logger.info("✓ Database properties validation passed")
 
-        except DatabasePropertyValidationError:
-            logger.error("Database property validation failed")
-            raise
-        except Exception:
-            logger.exception("Failed to validate database properties")
+        except Exception as e:
+            logger.exception(
+                "Database property validation failed"
+                if isinstance(e, DatabasePropertyValidationError)  # noqa: TRY401
+                else "Failed to validate database properties"
+            )
             raise
 
     def get_existing_page_titles(self) -> set[str]:
@@ -349,20 +349,6 @@ class NotionService:
                         batch_dicts.append(block.model_dump(mode="json", exclude_none=True))
                     else:
                         batch_dicts.append(block)
-
-                # Debug: Check for code blocks that exceed 2000 chars
-                for idx, block_dict in enumerate(batch_dicts):
-                    if block_dict.get("type") == "code":
-                        content_len = len(block_dict["code"]["rich_text"][0]["text"]["content"])
-                        if content_len > 2000:
-                            logger.error(
-                                "Code block at children[%(idx)d] exceeds 2000 chars: %(len)d chars. This will cause API error!",
-                                {"idx": idx, "len": content_len},
-                            )
-                        logger.debug(
-                            "Code block at children[%(idx)d]: %(len)d chars",
-                            {"idx": idx, "len": content_len},
-                        )
 
                 self.client.blocks.children.append(block_id=str(page_id), children=batch_dicts)
                 logger.debug(
@@ -685,7 +671,7 @@ class NotionService:
                 "strikethrough": elem.strikethrough,
                 "underline": elem.underline,
                 "code": elem.code,
-                "color": elem.background_color if elem.background_color else "default",
+                "color": elem.background_color or "default",
             }
 
             if elem.link_url:

@@ -402,10 +402,7 @@ class ScrapboxParser:
             # Don't match if it ends with .icon (that should be handled by ICON_PATTERN)
             if not page.endswith(".icon"):
                 # If page is empty or just whitespace, link to project top page
-                if page.strip():
-                    url = f"https://scrapbox.io/{project}/{page}"
-                else:
-                    url = f"https://scrapbox.io/{project}"
+                url = f"https://scrapbox.io/{project}/{page}" if page.strip() else f"https://scrapbox.io/{project}"
                 return ParsedLine(
                     original=line,
                     line_type=LineType.URL,
@@ -671,7 +668,7 @@ class ScrapboxParser:
                     match.start(),
                     match.end(),
                     DecorationType.LINK,
-                    match.group(1) if match.group(1) else match.group(4),
+                    match.group(1) or match.group(4),
                     match.group(2) if match.group(1) else match.group(3),
                 )
                 for match in ScrapboxParser.EXTERNAL_LINK_PATTERN.finditer(text)
@@ -764,7 +761,7 @@ class ScrapboxParser:
             if remaining:
                 elements.append(RichTextElement(text=remaining))
 
-        return elements if elements else [RichTextElement(text=text)]
+        return elements or [RichTextElement(text=text)]
 
     @staticmethod
     def _clean_links(text: str) -> str:

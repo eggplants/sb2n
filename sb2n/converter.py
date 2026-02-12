@@ -183,12 +183,12 @@ class NotionBlockConverter:
         if parsed_line.line_type in [LineType.HEADING_1, LineType.HEADING_2, LineType.HEADING_3]:
             level = int(parsed_line.line_type.value.split("_")[1])
             # Use rich_text if available, otherwise use plain content
-            text = parsed_line.rich_text if parsed_line.rich_text else parsed_line.content
+            text = parsed_line.rich_text or parsed_line.content
             return self.notion_service.create_heading_block(text, level)
 
         # Quote blocks
         if parsed_line.line_type == LineType.QUOTE:
-            text = parsed_line.rich_text if parsed_line.rich_text else parsed_line.content
+            text = parsed_line.rich_text or parsed_line.content
             return self.notion_service.create_quote_block(text)
 
         # Code blocks
@@ -201,7 +201,7 @@ class NotionBlockConverter:
         # Image blocks
         if parsed_line.line_type == LineType.IMAGE:
             block = self._create_image_block(parsed_line.content)
-            return block if block else None
+            return block or None
 
         # Icon blocks - fetch icon URL from Scrapbox and create image block
         if parsed_line.line_type == LineType.ICON:
@@ -232,7 +232,7 @@ class NotionBlockConverter:
                 return self.notion_service.create_paragraph_block([link_element])
             # Fallback to bookmark
             block = self.notion_service.create_bookmark_block(parsed_line.content)
-            return block if block else None
+            return block or None
 
         # URL/Bookmark blocks - convert to paragraph with link
         if parsed_line.line_type == LineType.URL:
@@ -256,12 +256,12 @@ class NotionBlockConverter:
 
         # List items
         if parsed_line.line_type == LineType.LIST:
-            text = parsed_line.rich_text if parsed_line.rich_text else parsed_line.content
+            text = parsed_line.rich_text or parsed_line.content
             return self.notion_service.create_bulleted_list_block(text)
 
         # Paragraphs
         if parsed_line.content:
-            text = parsed_line.rich_text if parsed_line.rich_text else parsed_line.content
+            text = parsed_line.rich_text or parsed_line.content
             return self.notion_service.create_paragraph_block(text)
 
         return None
@@ -285,7 +285,7 @@ class NotionBlockConverter:
 
                 # Extract filename from URL
                 filename = (
-                    image_url.split("/")[-1]
+                    image_url.rsplit("/", maxsplit=1)[-1]
                     if "/" in image_url  # noqa: PLR2004
                     else "image.png"
                 )

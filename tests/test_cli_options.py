@@ -137,3 +137,176 @@ class TestCommandLineOptions:
         args = Args()
         args.format = "txt"
         assert args.format == "txt"
+
+
+class TestRequireCredentials:
+    """Test selective credential requirements."""
+
+    def test_require_scrapbox_only(self) -> None:
+        """Test loading config with only Scrapbox credentials required."""
+        # Clear existing env vars
+        for key in ["SCRAPBOX_PROJECT", "SCRAPBOX_COOKIE_CONNECT_SID", "NOTION_API_KEY", "NOTION_DATABASE_ID"]:
+            os.environ.pop(key, None)
+
+        # Use empty temp file to prevent loading actual .env
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".env", delete=False) as f:
+            env_file = f.name
+
+        try:
+            # Only provide Scrapbox credentials - should succeed
+            config = Config.from_env(
+                env_file,
+                project="test-project",
+                sid="test-sid",
+                require_scrapbox=True,
+                require_notion=False,
+            )
+            assert config.scrapbox_project == "test-project"
+            assert config.scrapbox_connect_sid == "test-sid"
+            assert config.notion_api_key is None
+            assert config.notion_database_id is None
+        finally:
+            Path(env_file).unlink()
+            for key in ["SCRAPBOX_PROJECT", "SCRAPBOX_COOKIE_CONNECT_SID", "NOTION_API_KEY", "NOTION_DATABASE_ID"]:
+                os.environ.pop(key, None)
+
+    def test_require_notion_only(self) -> None:
+        """Test loading config with only Notion credentials required."""
+        # Clear existing env vars
+        for key in ["SCRAPBOX_PROJECT", "SCRAPBOX_COOKIE_CONNECT_SID", "NOTION_API_KEY", "NOTION_DATABASE_ID"]:
+            os.environ.pop(key, None)
+
+        # Use empty temp file to prevent loading actual .env
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".env", delete=False) as f:
+            env_file = f.name
+
+        try:
+            # Only provide Notion credentials - should succeed
+            config = Config.from_env(
+                env_file,
+                ntn="test-token",
+                db="test-db",
+                require_scrapbox=False,
+                require_notion=True,
+            )
+            assert config.scrapbox_project is None
+            assert config.scrapbox_connect_sid is None
+            assert config.notion_api_key == "test-token"
+            assert config.notion_database_id == "test-db"
+        finally:
+            Path(env_file).unlink()
+            for key in ["SCRAPBOX_PROJECT", "SCRAPBOX_COOKIE_CONNECT_SID", "NOTION_API_KEY", "NOTION_DATABASE_ID"]:
+                os.environ.pop(key, None)
+
+    def test_require_both(self) -> None:
+        """Test loading config with both credentials required (default)."""
+        # Clear existing env vars
+        for key in ["SCRAPBOX_PROJECT", "SCRAPBOX_COOKIE_CONNECT_SID", "NOTION_API_KEY", "NOTION_DATABASE_ID"]:
+            os.environ.pop(key, None)
+
+        # Use empty temp file to prevent loading actual .env
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".env", delete=False) as f:
+            env_file = f.name
+
+        try:
+            config = Config.from_env(
+                env_file,
+                project="test-project",
+                sid="test-sid",
+                ntn="test-token",
+                db="test-db",
+            )
+            assert config.scrapbox_project == "test-project"
+            assert config.scrapbox_connect_sid == "test-sid"
+            assert config.notion_api_key == "test-token"
+            assert config.notion_database_id == "test-db"
+        finally:
+            Path(env_file).unlink()
+            for key in ["SCRAPBOX_PROJECT", "SCRAPBOX_COOKIE_CONNECT_SID", "NOTION_API_KEY", "NOTION_DATABASE_ID"]:
+                os.environ.pop(key, None)
+
+    def test_missing_scrapbox_when_required(self) -> None:
+        """Test error when Scrapbox credentials are missing but required."""
+        # Clear existing env vars
+        for key in ["SCRAPBOX_PROJECT", "SCRAPBOX_COOKIE_CONNECT_SID", "NOTION_API_KEY", "NOTION_DATABASE_ID"]:
+            os.environ.pop(key, None)
+
+        # Use empty temp file to prevent loading actual .env
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".env", delete=False) as f:
+            env_file = f.name
+
+        try:
+            with pytest.raises(
+                ValueError,
+                match="Missing required environment variables: SCRAPBOX_PROJECT, SCRAPBOX_COOKIE_CONNECT_SID",
+            ):
+                Config.from_env(
+                    env_file,
+                    ntn="test-token",
+                    db="test-db",
+                    require_scrapbox=True,
+                    require_notion=False,
+                )
+        finally:
+            Path(env_file).unlink()
+            for key in ["SCRAPBOX_PROJECT", "SCRAPBOX_COOKIE_CONNECT_SID", "NOTION_API_KEY", "NOTION_DATABASE_ID"]:
+                os.environ.pop(key, None)
+
+    def test_missing_notion_when_required(self) -> None:
+        """Test error when Notion credentials are missing but required."""
+        # Clear existing env vars
+        for key in ["SCRAPBOX_PROJECT", "SCRAPBOX_COOKIE_CONNECT_SID", "NOTION_API_KEY", "NOTION_DATABASE_ID"]:
+            os.environ.pop(key, None)
+
+        # Use empty temp file to prevent loading actual .env
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".env", delete=False) as f:
+            env_file = f.name
+
+        try:
+            with pytest.raises(
+                ValueError, match="Missing required environment variables: NOTION_API_KEY, NOTION_DATABASE_ID"
+            ):
+                Config.from_env(
+                    env_file,
+                    project="test-project",
+                    sid="test-sid",
+                    require_scrapbox=False,
+                    require_notion=True,
+                )
+        finally:
+            Path(env_file).unlink()
+            for key in ["SCRAPBOX_PROJECT", "SCRAPBOX_COOKIE_CONNECT_SID", "NOTION_API_KEY", "NOTION_DATABASE_ID"]:
+                os.environ.pop(key, None)
+
+    def test_validate_scrapbox_only(self) -> None:
+        """Test validate with only Scrapbox credentials."""
+        config = Config(
+            scrapbox_project="test-project",
+            scrapbox_connect_sid="test-sid",
+            notion_api_key=None,
+            notion_database_id=None,
+        )
+        # Should not raise when only requiring Scrapbox
+        config.validate(require_scrapbox=True, require_notion=False)
+
+    def test_validate_notion_only(self) -> None:
+        """Test validate with only Notion credentials."""
+        config = Config(
+            scrapbox_project=None,
+            scrapbox_connect_sid=None,
+            notion_api_key="test-token",
+            notion_database_id="test-db",
+        )
+        # Should not raise when only requiring Notion
+        config.validate(require_scrapbox=False, require_notion=True)
+
+    def test_validate_empty_string(self) -> None:
+        """Test validate raises error for empty strings."""
+        config = Config(
+            scrapbox_project="",
+            scrapbox_connect_sid="test-sid",
+            notion_api_key=None,
+            notion_database_id=None,
+        )
+        with pytest.raises(ValueError, match="SCRAPBOX_PROJECT cannot be empty"):
+            config.validate(require_scrapbox=True, require_notion=False)

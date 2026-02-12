@@ -3,8 +3,8 @@
 import logging
 from dataclasses import dataclass
 from datetime import UTC, datetime
-from enum import Enum
-from typing import TYPE_CHECKING
+from enum import StrEnum
+from typing import TYPE_CHECKING, Any
 
 from sb2n.converter import NotionBlockConverter
 from sb2n.notion_service import NotionService
@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-def _count_blocks_recursive(block) -> int:
+def _count_blocks_recursive(block: Any) -> int:  # noqa: ANN401
     """Count blocks recursively including nested children.
 
     Args:
@@ -37,7 +37,7 @@ def _count_blocks_recursive(block) -> int:
     return count
 
 
-def _split_blocks_into_chunks(blocks: list, max_blocks: int = 1000) -> list[list]:
+def _split_blocks_into_chunks(blocks: list[Any], max_blocks: int = 1000) -> list[list[Any]]:
     """Split blocks into chunks that don't exceed max_blocks (including nested children).
 
     Args:
@@ -70,7 +70,7 @@ def _split_blocks_into_chunks(blocks: list, max_blocks: int = 1000) -> list[list
     return chunks
 
 
-class SpecialPageId(str, Enum):
+class SpecialPageId(StrEnum):
     """Special Notion page IDs used in migration."""
 
     DRY_RUN_ID = "dry-run-id"
@@ -146,7 +146,7 @@ class Migrator:
         self.skip_existing = skip_existing
         self.enable_icon = enable_icon
         self.page_titles = page_titles
-        self.notion_service = NotionService(config.notion_api_key, config.notion_database_id)
+        self.notion_service = NotionService(str(config.notion_api_key), str(config.notion_database_id))
         # Converter will be initialized with scrapbox_service in migrate_all
         self.converter: NotionBlockConverter | None = None
 
@@ -165,7 +165,7 @@ class Migrator:
             try:
                 self.notion_service.validate_database_properties()
             except Exception:
-                logger.error("Database validation failed. Migration aborted.")
+                logger.exception("Database validation failed. Migration aborted.")
                 raise
 
         # Get existing pages if skip_existing is enabled
@@ -179,7 +179,7 @@ class Migrator:
 
         results: list[MigrationResult] = []
 
-        with ScrapboxService(self.config.scrapbox_project, self.config.scrapbox_connect_sid) as scrapbox:
+        with ScrapboxService(str(self.config.scrapbox_project), str(self.config.scrapbox_connect_sid)) as scrapbox:
             # Initialize converter with scrapbox service for image downloads
             self.converter = NotionBlockConverter(self.notion_service, scrapbox, enable_icon=self.enable_icon)
 

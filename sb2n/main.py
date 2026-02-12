@@ -95,7 +95,7 @@ def migrate_command(args: Args) -> int:
         Exit code (0 for success, 1 for failure)
     """
     try:
-        # Load configuration
+        # Load configuration - migrate needs both Scrapbox and Notion credentials
         env_file = Path(args.env_file) if args.env_file else None
         config = Config.from_env(
             env_file,
@@ -103,8 +103,10 @@ def migrate_command(args: Args) -> int:
             sid=args.sid,
             ntn=args.ntn,
             db=args.db,
+            require_scrapbox=True,
+            require_notion=True,
         )
-        config.validate()
+        config.validate(require_scrapbox=True, require_notion=True)
 
         # Parse page filter
         page_titles = None
@@ -143,7 +145,7 @@ def restore_link_command(args: Args) -> int:
         Exit code (0 for success, 1 for failure)
     """
     try:
-        # Load configuration
+        # Load configuration - restore-link only needs Notion credentials
         env_file = Path(args.env_file) if args.env_file else None
         config = Config.from_env(
             env_file,
@@ -151,13 +153,15 @@ def restore_link_command(args: Args) -> int:
             sid=args.sid,
             ntn=args.ntn,
             db=args.db,
+            require_scrapbox=False,
+            require_notion=True,
         )
-        config.validate()
+        config.validate(require_scrapbox=False, require_notion=True)
 
         # Create restorer
         notion_service = NotionService(
-            api_key=config.notion_api_key,
-            database_id=config.notion_database_id,
+            api_key=str(config.notion_api_key),
+            database_id=str(config.notion_database_id),
         )
         restorer = LinkRestorer(notion_service, dry_run=args.dry_run)
 
@@ -191,7 +195,7 @@ def export_command(args: Args) -> int:
         Exit code (0 for success, 1 for failure)
     """
     try:
-        # Load configuration
+        # Load configuration - export only needs Scrapbox credentials
         env_file = Path(args.env_file) if args.env_file else None
         config = Config.from_env(
             env_file,
@@ -199,7 +203,10 @@ def export_command(args: Args) -> int:
             sid=args.sid,
             ntn=args.ntn,
             db=args.db,
+            require_scrapbox=True,
+            require_notion=False,
         )
+        config.validate(require_scrapbox=True, require_notion=False)
 
         # Set up output directory
         output_dir = Path(args.output_dir)
@@ -208,8 +215,8 @@ def export_command(args: Args) -> int:
 
         # Create services
         scrapbox_service = ScrapboxService(
-            project_name=config.scrapbox_project,
-            connect_sid=config.scrapbox_connect_sid,
+            project_name=str(config.scrapbox_project),
+            connect_sid=str(config.scrapbox_connect_sid),
         )
 
         # Get pages and export
