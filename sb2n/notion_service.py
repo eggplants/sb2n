@@ -94,9 +94,22 @@ class NotionService:
         logger.info("Validating Notion database properties")
 
         try:
-            # Retrieve database schema
+            # Retrieve database to get data sources (Notion API v2025-09-03)
             database = self.client.databases.retrieve(database_id=self.database_id)
-            properties = database.get("properties", {})  # ty:ignore[possibly-missing-attribute]
+            data_sources = database.get("data_sources", [])  # ty:ignore[unresolved-attribute]
+
+            if not data_sources:
+                msg = "Database has no data sources"
+                raise DatabasePropertyValidationError(msg)  # noqa: TRY301
+
+            # Retrieve the first data source to get properties
+            data_source_id = data_sources[0].get("id")
+            if not data_source_id:
+                msg = "Data source has no ID"
+                raise DatabasePropertyValidationError(msg)  # noqa: TRY301
+
+            data_source = self.client.data_sources.retrieve(data_source_id=data_source_id)
+            properties = data_source.get("properties", {})  # ty:ignore[unresolved-attribute]
 
             if not properties:
                 msg = "Database has no properties"
@@ -161,7 +174,7 @@ class NotionService:
         try:
             # Step 1: Retrieve database to get data sources
             database = self.client.databases.retrieve(database_id=self.database_id)
-            data_sources = database.get("data_sources", [])  # ty:ignore[possibly-missing-attribute]
+            data_sources = database.get("data_sources", [])  # ty:ignore[unresolved-attribute]
 
             if not data_sources:
                 logger.warning("No data sources found in database")
@@ -810,7 +823,7 @@ class NotionService:
         try:
             # Step 1: Retrieve database to get data sources
             database = self.client.databases.retrieve(database_id=self.database_id)
-            data_sources = database.get("data_sources", [])  # ty:ignore[possibly-missing-attribute]
+            data_sources = database.get("data_sources", [])  # ty:ignore[unresolved-attribute]
 
             if not data_sources:
                 logger.warning("No data sources found in database")
@@ -882,11 +895,11 @@ class NotionService:
                     params["start_cursor"] = start_cursor
 
                 response = self.client.blocks.children.list(**params)
-                blocks = response.get("results", [])  # ty:ignore[possibly-missing-attribute]
+                blocks = response.get("results", [])  # ty:ignore[unresolved-attribute]
                 all_blocks.extend(blocks)
 
-                has_more = response.get("has_more", False)  # ty:ignore[possibly-missing-attribute]
-                start_cursor = response.get("next_cursor")  # ty:ignore[possibly-missing-attribute]
+                has_more = response.get("has_more", False)  # ty:ignore[unresolved-attribute]
+                start_cursor = response.get("next_cursor")  # ty:ignore[unresolved-attribute]
 
             # Recursively fetch child blocks if requested
             if recursive:

@@ -3,6 +3,7 @@
 import logging
 from typing import TYPE_CHECKING, Any
 
+from sb2n.models.blocks import BulletedListItemBlock
 from sb2n.parser import LineType, ParsedLine, RichTextElement, ScrapboxParser
 
 if TYPE_CHECKING:
@@ -110,9 +111,10 @@ class NotionBlockConverter:
                             # so that modifications to it will be reflected in the final output
                             blocks.append(single_block)
                             # Get reference to the block's internal dict for modifications
-                            if single_block == blocks_to_add[0]:  # Only first block goes on stack
-                                block_dict = single_block.bulleted_list_item  # ty:ignore[possibly-missing-attribute]
-                                list_stack.append((effective_indent, single_block, block_dict))
+                            if single_block == blocks_to_add[0] and isinstance(  # Only first block goes on stack
+                                single_block, BulletedListItemBlock
+                            ):
+                                list_stack.append((effective_indent, single_block, single_block.bulleted_list_item))
             else:
                 # For non-list items, check if they should be nested in a list item
                 block = self._convert_line_to_block(parsed_line)
