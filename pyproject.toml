@@ -24,7 +24,6 @@ dependencies = [
   "python-dotenv>=1",
   "scrapbox-client>=0.1",
 ]
-
 urls.repository = "https://github.com/eggplants/sb2n"
 scripts.sb2n = "sb2n.main:main"
 
@@ -40,22 +39,19 @@ docs = [
   "pdoc>=16",
 ]
 
-[tool.hatch.version]
-source = "uv-dynamic-versioning"
-
-[tool.hatch.build.targets.sdist]
-include = [ "sb2n" ]
-
-[tool.hatch.build.targets.wheel]
-include = [ "sb2n" ]
+[tool.hatch]
+build.targets.sdist.include = [ "sb2n" ]
+build.targets.wheel.include = [ "sb2n" ]
+version.source = "uv-dynamic-versioning"
 
 [tool.uv]
-preview = true
+python-downloads = "never"
 default-groups = [
   "dev",
   "docs",
 ]
-# exclude-newer = "P7D"
+exclude-newer = "P7D"
+preview = true
 
 [tool.ruff]
 line-length = 120
