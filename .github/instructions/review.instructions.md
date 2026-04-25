@@ -1,3 +1,6 @@
+---
+description: "Use when: reviewing code, creating PRs, checking implementation quality in sb2n"
+---
 # sb2n プロジェクト - コードレビューガイドライン
 
 ## 🚨 レビュー前の必須確認事項
