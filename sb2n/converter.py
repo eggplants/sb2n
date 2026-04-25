@@ -246,7 +246,7 @@ class NotionBlockConverter:
         if parsed_line.line_type == LineType.TABLE:
             if parsed_line.table_rows:
                 # create_table_block may return a single table or a list of tables (if split)
-                return self.notion_service.create_table_block(parsed_line.table_rows)
+                return self.notion_service.create_table_block(parsed_line.table_rows)  # ty:ignore[invalid-return-type]
             # Fallback if no rows
             return self.notion_service.create_heading_block(f"Table: {parsed_line.table_name}", 3)
 
