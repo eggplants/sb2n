@@ -137,6 +137,7 @@ sb2n<span class="w"> </span>-v<span class="w"> </span>migrate
 
 <ul>
 <li><code>-P, --project</code>: Scrapbox project name (overrides <code>SCRAPBOX_PROJECT</code> in .env)</li>
+<li><code>-T, --pat</code>: Scrapbox personal access token (overrides <code>SCRAPBOX_PAT</code> in .env)</li>
 <li><code>-S, --sid</code>: Scrapbox connect.sid cookie (overrides <code>SCRAPBOX_COOKIE_CONNECT_SID</code> in .env)</li>
 <li><code>-N, --ntn</code>: Notion integration token (overrides <code>NOTION_API_KEY</code> in .env)</li>
 <li><code>-D, --db</code>: Notion database ID (overrides <code>NOTION_DATABASE_ID</code> in .env)</li>
@@ -145,6 +146,9 @@ sb2n<span class="w"> </span>-v<span class="w"> </span>migrate
 </ul>
 
 <p><strong>Note</strong>: When both .env and command line options are specified, command line options take precedence.</p>
+
+<p><strong>Note</strong>: Scrapbox authentication needs either a personal access token or a <code>connect.sid</code> cookie.
+The personal access token is recommended, and takes precedence when both are set.</p>
 
 <h3 id="4-restore-internal-links">4. Restore internal links</h3>
 
