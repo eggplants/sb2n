@@ -110,20 +110,20 @@ class TestBlockLimits:
 
         # First code block (split into 2)
         assert blocks[0].type == "code"
-        assert blocks[0].code["language"] == "javascript"  # ty:ignore[unresolved-attribute]
+        assert blocks[0].code["language"] == "javascript"
         assert blocks[1].type == "code"
-        assert blocks[1].code["language"] == "javascript"  # ty:ignore[unresolved-attribute]
+        assert blocks[1].code["language"] == "javascript"
 
         # Paragraph
         assert blocks[2].type == "paragraph"
 
         # Second code block (split into 2)
         assert blocks[3].type == "code"
-        assert blocks[3].code["language"] == "python"  # ty:ignore[unresolved-attribute]
-        assert utf16_length(blocks[3].code["rich_text"][0]["text"]["content"]) <= 2000  # ty:ignore[unresolved-attribute]
+        assert blocks[3].code["language"] == "python"
+        assert utf16_length(blocks[3].code["rich_text"][0]["text"]["content"]) <= 2000
         assert blocks[4].type == "code"
-        assert blocks[4].code["language"] == "python"  # ty:ignore[unresolved-attribute]
-        assert utf16_length(blocks[4].code["rich_text"][0]["text"]["content"]) <= 2000  # ty:ignore[unresolved-attribute]
+        assert blocks[4].code["language"] == "python"
+        assert utf16_length(blocks[4].code["rich_text"][0]["text"]["content"]) <= 2000
 
     def test_code_block_with_emojis(self) -> None:
         """Test that code blocks with emojis are split correctly based on UTF-16 length."""

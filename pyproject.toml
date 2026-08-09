@@ -22,7 +22,7 @@ dependencies = [
   "notion-client>=2.7",
   "pydantic>=2.12.5",
   "python-dotenv>=1",
-  "scrapbox-client>=0.1",
+  "scrapbox-client>=0.2.1",
 ]
 urls.repository = "https://github.com/eggplants/sb2n"
 scripts.sb2n = "sb2n.main:main"
@@ -40,9 +40,9 @@ docs = [
 ]
 
 [tool.hatch]
-build.targets.sdist.include = [ "sb2n" ]
-build.targets.wheel.include = [ "sb2n" ]
 version.source = "uv-dynamic-versioning"
+build.targets.wheel.include = [ "sb2n" ]
+build.targets.sdist.include = [ "sb2n" ]
 
 [tool.uv]
 python-downloads = "never"
@@ -51,6 +51,10 @@ default-groups = [
   "docs",
 ]
 exclude-newer = "P7D"
+# Own package: no cooldown needed. Can be dropped once 0.2.1 predates the window.
+# Must be an explicit UTC instant: a bare date resolves against the local timezone,
+# so the lockfile would not match between here and CI.
+exclude-newer-package.scrapbox-client = "2026-08-10T00:00:00Z"
 preview = true
 
 [tool.ruff]

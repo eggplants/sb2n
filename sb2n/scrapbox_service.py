@@ -19,20 +19,25 @@ class ScrapboxService:
     fetching pages and files from a Scrapbox project.
     """
 
-    def __init__(self, project_name: str, connect_sid: str) -> None:
+    def __init__(self, project_name: str, connect_sid: str | None = None, pat: str | None = None) -> None:
         """Initialize Scrapbox service.
 
         Args:
             project_name: Scrapbox project name
             connect_sid: Scrapbox authentication cookie (connect.sid)
+            pat: Scrapbox personal access token, sent as the x-personal-access-token header.
+                Takes precedence over connect_sid when both are given.
         """
         self.project_name = project_name
         self.connect_sid = connect_sid
+        self.pat = pat
         self._client: ScrapboxClient | None = None
 
     def __enter__(self) -> Self:
         """Enter context manager."""
-        self._client = ScrapboxClient(connect_sid=self.connect_sid)
+        if self.pat and self.connect_sid:
+            logger.debug("Both SCRAPBOX_PAT and connect.sid are set; using SCRAPBOX_PAT")
+        self._client = ScrapboxClient(connect_sid=self.connect_sid, pat=self.pat)
         return self
 
     def __exit__(self, *args: object) -> None:

@@ -43,6 +43,7 @@ class Args(argparse.Namespace):
     log: bool
     project: str | None
     sid: str | None
+    pat: str | None
     ntn: str | None
     db: str | None
     format: Literal["md", "txt"]
@@ -101,6 +102,7 @@ def migrate_command(args: Args) -> int:
             env_file,
             project=args.project,
             sid=args.sid,
+            pat=args.pat,
             ntn=args.ntn,
             db=args.db,
             require_scrapbox=True,
@@ -151,6 +153,7 @@ def restore_link_command(args: Args) -> int:
             env_file,
             project=args.project,
             sid=args.sid,
+            pat=args.pat,
             ntn=args.ntn,
             db=args.db,
             require_scrapbox=False,
@@ -201,6 +204,7 @@ def export_command(args: Args) -> int:
             env_file,
             project=args.project,
             sid=args.sid,
+            pat=args.pat,
             ntn=args.ntn,
             db=args.db,
             require_scrapbox=True,
@@ -216,7 +220,8 @@ def export_command(args: Args) -> int:
         # Create services
         scrapbox_service = ScrapboxService(
             project_name=str(config.scrapbox_project),
-            connect_sid=str(config.scrapbox_connect_sid),
+            connect_sid=config.scrapbox_connect_sid,
+            pat=config.scrapbox_pat,
         )
 
         # Get pages and export
@@ -326,6 +331,13 @@ def main() -> None:
         "--sid",
         type=str,
         help="Scrapbox connect.sid cookie (overrides SCRAPBOX_COOKIE_CONNECT_SID env var)",
+    )
+
+    parser.add_argument(
+        "-T",
+        "--pat",
+        type=str,
+        help="Scrapbox personal access token (overrides SCRAPBOX_PAT env var, takes precedence over --sid)",
     )
 
     parser.add_argument(

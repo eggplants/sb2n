@@ -75,6 +75,7 @@ sb2n -v migrate
 #### Common Options (for all commands)
 
 - `-P, --project`: Scrapbox project name (overrides `SCRAPBOX_PROJECT` in .env)
+- `-T, --pat`: Scrapbox personal access token (overrides `SCRAPBOX_PAT` in .env)
 - `-S, --sid`: Scrapbox connect.sid cookie (overrides `SCRAPBOX_COOKIE_CONNECT_SID` in .env)
 - `-N, --ntn`: Notion integration token (overrides `NOTION_API_KEY` in .env)
 - `-D, --db`: Notion database ID (overrides `NOTION_DATABASE_ID` in .env)
@@ -82,6 +83,9 @@ sb2n -v migrate
 - `-v, --verbose`: Enable verbose logging
 
 **Note**: When both .env and command line options are specified, command line options take precedence.
+
+**Note**: Scrapbox authentication needs either a personal access token or a `connect.sid` cookie.
+The personal access token is recommended, and takes precedence when both are set.
 
 ### 4. Restore internal links
 

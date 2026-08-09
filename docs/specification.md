@@ -114,6 +114,8 @@ ERROR: Migration aborted.
 ```env
 # Scrapbox API設定
 SCRAPBOX_PROJECT=your-project-name
+# 以下のいずれかを指定する（両方指定した場合は SCRAPBOX_PAT が優先される）
+SCRAPBOX_PAT=your-personal-access-token
 SCRAPBOX_COOKIE_CONNECT_SID=your-connect-sid
 
 # Notion API設定
@@ -126,15 +128,19 @@ NOTION_DATABASE_ID=xxxxxxxxxxxxx
 コマンドライン引数で直接指定することも可能です。`.env`ファイルと同時に指定された場合、コマンドラインオプションが優先されます。
 
 ```bash
-sb2n migrate -P project-name -S connect-sid -N token -D database-id
+sb2n migrate -P project-name -T personal-access-token -N token -D database-id
 ```
 
 #### 認証情報の説明
 
 - **SCRAPBOX_PROJECT** / `-P, --project`: 移行元のScrapboxプロジェクト名
+- **SCRAPBOX_PAT** / `-T, --pat`: Scrapbox APIアクセス用のPersonal Access Token（`x-personal-access-token` ヘッダとして送信）
 - **SCRAPBOX_COOKIE_CONNECT_SID** / `-S, --sid`: Scrapbox APIアクセス用のCookie（プライベートプロジェクトの場合に必要）
 - **NOTION_API_KEY** / `-N, --ntn`: Notion Integration Token
 - **NOTION_DATABASE_ID** / `-D, --db`: 移行先のNotionデータベースID
+
+Scrapboxの認証は **SCRAPBOX_PAT** と **SCRAPBOX_COOKIE_CONNECT_SID** のいずれか一方があればよい。
+両方が設定されている場合は **SCRAPBOX_PAT** を優先し、Cookieは送信しない。
 
 ## 技術仕様
 

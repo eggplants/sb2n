@@ -179,7 +179,11 @@ class Migrator:
 
         results: list[MigrationResult] = []
 
-        with ScrapboxService(str(self.config.scrapbox_project), str(self.config.scrapbox_connect_sid)) as scrapbox:
+        with ScrapboxService(
+            str(self.config.scrapbox_project),
+            connect_sid=self.config.scrapbox_connect_sid,
+            pat=self.config.scrapbox_pat,
+        ) as scrapbox:
             # Initialize converter with scrapbox service for image downloads
             self.converter = NotionBlockConverter(self.notion_service, scrapbox, enable_icon=self.enable_icon)
 

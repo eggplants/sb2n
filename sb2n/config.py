@@ -14,17 +14,22 @@ if TYPE_CHECKING:
 class Config:
     """Configuration for Scrapbox to Notion migration.
 
+    Either ``scrapbox_pat`` or ``scrapbox_connect_sid`` provides Scrapbox authentication.
+    When both are set, the personal access token takes precedence.
+
     Attributes:
         scrapbox_project: Scrapbox project name (optional for Notion-only commands)
         scrapbox_connect_sid: Scrapbox authentication cookie (optional for Notion-only commands)
         notion_api_key: Notion Integration API key (optional for Scrapbox-only commands)
         notion_database_id: Notion database ID (optional for Scrapbox-only commands)
+        scrapbox_pat: Scrapbox personal access token (preferred over scrapbox_connect_sid)
     """
 
     scrapbox_project: str | None
     scrapbox_connect_sid: str | None
     notion_api_key: str | None
     notion_database_id: str | None
+    scrapbox_pat: str | None = None
 
     @classmethod
     def from_env(  # noqa: PLR0913
@@ -33,6 +38,7 @@ class Config:
         *,
         project: str | None = None,
         sid: str | None = None,
+        pat: str | None = None,
         ntn: str | None = None,
         db: str | None = None,
         require_scrapbox: bool = True,
@@ -44,6 +50,7 @@ class Config:
             env_file: Path to .env file. If None, uses default .env file in current directory.
             project: Scrapbox project name (overrides env var if provided)
             sid: Scrapbox connect.sid cookie (overrides env var if provided)
+            pat: Scrapbox personal access token (overrides env var if provided)
             ntn: Notion API token (overrides env var if provided)
             db: Notion database ID (overrides env var if provided)
             require_scrapbox: If True, require Scrapbox credentials
@@ -63,6 +70,7 @@ class Config:
         # Use command-line options if provided, otherwise use environment variables
         scrapbox_project = project or os.getenv("SCRAPBOX_PROJECT")
         scrapbox_connect_sid = sid or os.getenv("SCRAPBOX_COOKIE_CONNECT_SID")
+        scrapbox_pat = pat or os.getenv("SCRAPBOX_PAT")
         notion_api_key = ntn or os.getenv("NOTION_API_KEY")
         notion_database_id = db or os.getenv("NOTION_DATABASE_ID")
 
@@ -70,8 +78,8 @@ class Config:
         if require_scrapbox:
             if not scrapbox_project:
                 missing.append("SCRAPBOX_PROJECT")
-            if not scrapbox_connect_sid:
-                missing.append("SCRAPBOX_COOKIE_CONNECT_SID")
+            if not scrapbox_pat and not scrapbox_connect_sid:
+                missing.append("SCRAPBOX_PAT or SCRAPBOX_COOKIE_CONNECT_SID")
         if require_notion:
             if not notion_api_key:
                 missing.append("NOTION_API_KEY")
@@ -87,6 +95,7 @@ class Config:
             scrapbox_connect_sid=scrapbox_connect_sid,
             notion_api_key=notion_api_key,
             notion_database_id=notion_database_id,
+            scrapbox_pat=scrapbox_pat,
         )
 
     def validate(self, *, require_scrapbox: bool = True, require_notion: bool = True) -> None:
@@ -103,8 +112,10 @@ class Config:
             if not self.scrapbox_project or not self.scrapbox_project.strip():
                 msg = "SCRAPBOX_PROJECT cannot be empty"
                 raise ValueError(msg)
-            if not self.scrapbox_connect_sid or not self.scrapbox_connect_sid.strip():
-                msg = "SCRAPBOX_COOKIE_CONNECT_SID cannot be empty"
+            has_pat = bool(self.scrapbox_pat and self.scrapbox_pat.strip())
+            has_sid = bool(self.scrapbox_connect_sid and self.scrapbox_connect_sid.strip())
+            if not has_pat and not has_sid:
+                msg = "SCRAPBOX_PAT or SCRAPBOX_COOKIE_CONNECT_SID cannot be empty"
                 raise ValueError(msg)
         if require_notion:
             if not self.notion_api_key or not self.notion_api_key.strip():
