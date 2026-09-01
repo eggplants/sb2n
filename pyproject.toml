@@ -6,15 +6,29 @@ requires = [ "hatchling", "uv-dynamic-versioning" ]
 name = "sb2n"
 description = "Helpfeel Cosense (Scrapbox) to Notion Migration Tool"
 readme = "README.md"
-keywords = [ "notion", "scrapbox" ]
+keywords = [
+  "cli",
+  "cosense",
+  "helpfeel",
+  "migration",
+  "notion",
+  "notion-api",
+  "scrapbox",
+]
 license = "MIT"
 authors = [ { name = "eggplants", email = "w10776e8w@yahoo.co.jp" } ]
 requires-python = ">=3.14,<4"
 classifiers = [
   "Development Status :: 3 - Alpha",
+  "Environment :: Console",
+  "Intended Audience :: End Users/Desktop",
   "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
   "Programming Language :: Python :: 3 :: Only",
   "Programming Language :: Python :: 3.14",
+  "Topic :: Internet :: WWW/HTTP",
+  "Topic :: Text Processing :: Markup",
+  "Topic :: Utilities",
   "Typing :: Typed",
 ]
 dynamic = [ "version" ]
@@ -24,7 +38,9 @@ dependencies = [
   "python-dotenv>=1",
   "scrapbox-client>=0.2.1",
 ]
-urls.repository = "https://github.com/eggplants/sb2n"
+urls.Documentation = "https://egpl.dev/sb2n/"
+urls.Issues = "https://github.com/eggplants/sb2n/issues"
+urls.Repository = "https://github.com/eggplants/sb2n"
 scripts.sb2n = "sb2n.main:main"
 
 [dependency-groups]
