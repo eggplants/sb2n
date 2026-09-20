@@ -40,7 +40,7 @@ sb2n export [-d OUTPUT_DIR] [--limit LIMIT]
 ```
 sb2n/
 ├── __init__.py
-├── main.py              # CLIエントリーポイント
+├── cli.py               # CLIエントリーポイント
 ├── config.py            # 設定読み込み
 ├── parser.py            # Scrapbox記法パーサー ⭐
 ├── converter.py         # Notion変換ロジック ⭐

@@ -9,8 +9,8 @@ from unittest.mock import patch
 
 import pytest
 
+from sb2n.cli import Args, main
 from sb2n.config import Config
-from sb2n.main import Args, main
 
 ENV_KEYS = [
     "SCRAPBOX_PROJECT",
